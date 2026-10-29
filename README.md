@@ -74,8 +74,7 @@ tea→honey 的 φ = 0.5847，皆與書中數值一致。
 ## 安裝為 Claude skill
 
 1. 把整個資料夾直接放到 skills 目錄，不用改名：`~/.claude/skills/association-rules-skill/`
-   （專案層級則放在 `.claude/skills/association-rules-skill/`）。例如：
-   `git clone https://github.com/baymax6716/association-rules-skill.git ~/.claude/skills/association-rules-skill`
+   （專案層級則放在 `.claude/skills/association-rules-skill/`）。
 2. 安裝 Python 套件：`pip install mlxtend scipy pandas numpy matplotlib`。
 3. 觸發方式（兩種都可以）：
    - 直接輸入 `/association-rules-skill`，也可以接著寫需求，例如 `/association-rules-skill 分析 data/sample_baskets.csv`；

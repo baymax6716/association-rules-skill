@@ -1,0 +1,15 @@
+# 參考書 PDF 有版權，不上傳
+*.pdf
+
+# 分析輸出與測試工作區
+arules_output/
+*-workspace/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db

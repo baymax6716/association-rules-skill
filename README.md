@@ -31,7 +31,8 @@ skill 會解釋每一步的統計理由，並且一次只做一步。
 
 ```
 association-rules-skill/
-├── SKILL.md                    # 主檔：行為限制 + 步驟 1–6
+├── SKILL.md                    # 主檔：行為限制 + 步驟 1–6（skill 名稱 association-rules）
+├── .gitignore                  # 排除書本 PDF、分析輸出、R 暫存檔
 ├── references/
 │   ├── decision-tree.md        # 各步驟決策節點、Mermaid 流程圖、輸出格式
 │   ├── measures.md             # 指標定義、性質（null-invariance 等）、解讀界線
@@ -72,10 +73,15 @@ tea→honey 的 φ = 0.5847，皆與書中數值一致。
 
 ## 安裝為 Claude skill
 
-1. 把整個資料夾複製到 skills 目錄，例如 `~/.claude/skills/association-rules/`
-   （專案層級則放在 `.claude/skills/association-rules/`）。
+1. 把整個資料夾放到 skills 目錄，**資料夾名稱要取 `association-rules`**，因為 slash 指令名稱來自
+   資料夾名稱：`~/.claude/skills/association-rules/`（專案層級則放在 `.claude/skills/association-rules/`）。
+   - 想讓修改 repo 後直接生效，可以改用連結，不複製：
+     - Windows：`mklink /J "%USERPROFILE%\.claude\skills\association-rules" "<repo 路徑>"`
+     - macOS / Linux：`ln -s <repo 路徑> ~/.claude/skills/association-rules`
 2. 安裝 Python 套件：`pip install mlxtend scipy pandas numpy matplotlib`。
-3. 對 Claude 說「幫我分析這份超市交易資料有哪些商品常一起買」，skill 就會觸發。
+3. 觸發方式（兩種都可以）：
+   - 直接輸入 `/association-rules`，也可以接著寫需求，例如 `/association-rules 分析 data/sample_baskets.csv`；
+   - 用自然語言描述需求，例如「幫我分析這份超市交易資料有哪些商品常一起買」，skill 會自動觸發。
 
 ## 參考文獻
 

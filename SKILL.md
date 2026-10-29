@@ -1,5 +1,5 @@
 ---
-name: association-rules
+name: association-rules-skill
 description: >
   關聯規則 / 購物籃分析（association rules, market basket analysis, frequent itemset mining）的
   統計顧問，屬於 unsupervised learning。當使用者有超市、零售、電商的交易資料（交易編號、購買品項、

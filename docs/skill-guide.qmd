@@ -1,0 +1,439 @@
+---
+title: "association-rules-skill 導覽"
+subtitle: "關聯規則分析的流程、決策與術語"
+lang: zh-TW
+language:
+  toc-title-document: "目錄"
+  title-block-published: "日期"
+  title-block-author-single: "作者"
+  code-tools-source-code: "原始碼"
+  code-tools-view-source: "檢視 QMD 原始碼"
+  copy-button-tooltip: "複製"
+  copy-button-tooltip-success: "已複製"
+  section-title-footnotes: "註腳"
+  callout-note-title: "說明"
+  callout-tip-title: "提示"
+  callout-warning-title: "注意"
+date: "2026-10-30"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+    code-tools: false
+    smooth-scroll: true
+    css: guide.css
+---
+
+<div class="code-toggle-bar"><button type="button" onclick="(function(){var d=[].slice.call(document.querySelectorAll('details.code-fold'));var o=!d.every(function(x){return x.open});d.forEach(function(x){x.open=o})})()">全部顯示 / 隱藏程式碼</button></div>
+
+這份文件說明 **association-rules-skill** 如何引導一次關聯規則分析：每一步要做什麼決定、
+有哪些選項、skill 會建議什麼、為什麼，以及每個專業術語的意思。理論依據是
+Tan, Steinbach, Karpatne & Kumar (2019), *Introduction to Data Mining* (2nd ed.)
+的第 5 章、6.1–6.2 節與 10.4 節。
+
+::: {.callout-note}
+## 這份文件適合誰
+
+- 想知道這個 skill 會怎麼和你互動的使用者
+- 想了解關聯規則分析流程與判斷依據的同學和老師
+- 讀分析報告時遇到看不懂的術語，可以直接跳到[術語表](#sec-glossary)
+:::
+
+# 關聯規則是什麼
+
+關聯規則（association rule）是一種**非監督式學習**（unsupervised learning）方法：資料沒有「正確答案」
+欄位，目標是找出哪些項目**常常一起出現**。寫成
+
+$$
+X \rightarrow Y
+$$
+
+意思是「出現 X 的觀測單位中，Y 也常出現」。X 稱為前件（antecedent），Y 稱為後件（consequent），
+兩者沒有共同的項目。
+
+## 適用的資料
+
+| | 交易資料 | 問卷資料 |
+|---|---|---|
+| 一個觀測單位 | 一張訂單（一個購物籃） | 一位受訪者 |
+| 項目 | 買了的商品，例如 `beer` | 「題目=答案」，例如 `政策A態度=支持` |
+| 典型問題 | 哪些商品常一起買？ | 哪些特徵與哪些態度常一起出現？ |
+| 典型用途 | 陳列、組合促銷、推薦 | 描述族群樣貌、提出研究假說 |
+
+問卷的關鍵轉換是：**basket 不一定是購物籃，也可以是一位受訪者的特徵集合**。項目一定要保留
+「欄位=值」，否則「支持」分不出是支持哪一項政策（Tan et al. 6.1）。
+
+## 它能說什麼、不能說什麼
+
+::: {.callout-warning}
+## 共同出現 ≠ 因果
+
+規則只說明「一起出現的頻率比獨立時高」。「買 A 導致買 B」需要實驗（例如促銷 A/B 測試）才能確認；
+「年輕人因為年輕所以支持政策 A」也不能從規則推出。
+:::
+
+另一個重點是：**關聯規則一定會找到東西**。即使資料完全隨機，在上千個組合裡總會有一些看起來很強。
+所以這個 skill 特別重視**事先安排驗證**。
+
+# 整體流程
+
+skill 內部有 6 個步驟，但和使用者的互動只有 **3 次確認**，確認之間自動執行。這樣既能讓使用者掌握
+重要決定，又不會把所有技術細節都丟給使用者。
+
+```{mermaid}
+flowchart TD
+    D{資料類型} -- 交易 --> P1[profile<br/>清理、建立購物籃]
+    D -- 問卷 --> E1[encode<br/>代碼、缺失、跳題、分組]
+    E1 --> P1
+    P1 --> C1[/確認 ①<br/>資料設定/]
+    C1 -- 調整 --> D
+    C1 -- 同意 --> C2[/確認 ②<br/>探勘與驗證設定/]
+    C2 --> SP[split<br/>驗證標準鎖定]
+    SP --> M[mine]
+    M --> V[validate<br/>permtest / stratify]
+    V --> R[解讀 + report]
+    R --> C3[/確認 ③<br/>結果檢視/]
+    C3 -- 回到 ① 或 ② --> W[標示：驗證已被使用] --> C1
+```
+
+| 確認 | 涵蓋步驟 | 一定會問（核心選項） | 有預設值、可以改（進階選項） |
+|---|---|---|---|
+| ① 資料設定 | 1 | 分析單位、納入欄位、分組與缺失處理 | 分析範圍、項目粒度、次序答案是否合併 |
+| ② 探勘設定 | 2、3 | 是否指定後件、最低支持度、是否保留驗證資料 | 允許的前件、confidence、lift、規則長度、演算法、切分方式、驗證標準 |
+| ③ 結果檢視 | 4、5、6 | 怎麼使用結果、要不要回頭調整 | 排序方式、顯示條數、輸出深度 |
+
+自動完成、不會拿來問使用者的事：讀取格式、欄位對應、計算缺失比例、清理資料、依已確認的鍵彙整、
+各組人數、無意義規則的檢查。
+
+# 逐步說明
+
+## 步驟 1：檢查資料、建立項目集合（確認 ①）
+
+### 交易資料
+
+| 決策 | 選項 | skill 的建議與理由 |
+|---|---|---|
+| 交易的定義 | 依交易編號 / 同一顧客同一天合併 | 預設交易編號；合併是業務問題，要問使用者 |
+| 數量怎麼用 | 只用來清理 | 關聯規則只看「有沒有買」（5.1）；數量 ≤ 0 的退貨會移除並記錄 |
+| 品名不一致 | 自動正規化 | 去空白、轉小寫後合併，並記錄影響列數 |
+| 分析範圍 | 全部 / 某門市 / 某期間 | 列出篩選後剩下的筆數，因為它就是支持度的分母 |
+| 項目粒度 | 單品 / 商品類別 | 分得越細越具體，但每個項目出現次數變少，比較難成為頻繁項目 |
+
+### 問卷資料：五個子步驟
+
+1. **觀測單位**：通常一人一筆。同一 ID 出現多次時，要決定是「人」還是「人 × 訪問波次」。
+2. **欄位角色**：最好有 codebook，因為數字 1、2、3 可能是滿意度，也可能是北、中、南。
+
+    | 類型 | 例子 | 處理 |
+    |---|---|---|
+    | 識別欄位 | 受訪者編號 | 不當項目 |
+    | 名目 / 二元 | 地區、支持與否 | 「欄位=類別」，兩種答案都編成項目 |
+    | 次序 | 非常不同意 ～ 非常同意 | 可保留五級；合併要交代理由 |
+    | 連續 | 年齡、收入 | 先分組 |
+    | 複選 | 關注議題 | 每個選項一個項目 |
+    | 自由文字 | 意見 | 第一版不納入 |
+    | 設計資訊 | 權重 | 不當項目，只提醒 |
+
+3. **缺失、跳題、分組**：
+    - 98「不知道」、99「拒答」依 codebook 轉換，不能當成數值；
+    - 空白不能自動當成「反對」；
+    - 只有就業者回答的題目，要先限定分析對象（`--where 就業狀態=就業`）；
+    - 連續變數優先用有實際意義的切點，並列出各組人數。區間太寬，confidence 會被稀釋；區間太窄，
+      support 不夠（6.2.1）。
+4. **建立項目並檢查**：同一題的兩個答案不會同時出現；偵測「縣市 → 區域」這種函數關係；
+   排除每列都不同的 ID；提醒高頻值（≥ 80%）與低頻類別。
+5. **前處理摘要**：分析單位、分母、納入與排除欄位、缺失處理、切點與人數、合併對照。
+
+::: {.callout-tip}
+## 確認 ① 會看到什麼
+
+一份摘要，加上一個問題：「我建議以什麼為一筆觀測、納入哪些欄位、如何處理缺失與分組，
+有哪些需要調整？」
+:::
+
+## 步驟 2：先安排驗證，再開始探勘（確認 ②）
+
+規則是在同一份資料上「挑」出來的。用同一份資料再評估，結果一定過度樂觀。所以驗證方式要在探勘
+**之前**決定。
+
+| 資料情況 | 建議的切分 | 可以支持的結論 |
+|---|---|---|
+| 有時間戳記 | 前 70% 探勘、後 30% 驗證 | 規則在之後的期間仍成立 |
+| 有關鍵日期 | `--split-date` | 規則在該日之後仍成立 |
+| 同一顧客 / 受訪者多筆 | 依 ID 分組切分 | 避免個人習慣同時出現在兩邊 |
+| 問卷、沒有時間 | 隨機 70 / 30 | 規則不是這批樣本的偶然 |
+| 觀測單位少於約 300 | 不切分，改用置換檢定 | 只能當探索性假說 |
+
+**驗證標準也在這一步鎖定**：預設是驗證集 lift > 1 且 BH q < 0.05。看過驗證結果才改設定的話，
+驗證資料就參與了選擇，不再是獨立的。
+
+## 步驟 3：設定門檻與演算法（確認 ②）
+
+| 參數 | 角色 | 建議 | 理由 |
+|---|---|---|---|
+| 指定後件 | 規則形式 | 有特定問題時指定 | 例如只看「政策A態度」當後件，規則少很多、也更聚焦 |
+| min_support | **唯一真正限制探勘的門檻** | max(10/N, 2 × 中位數 support²)，比例和筆數一起列 | 太高漏掉低頻但強的組合；太低規則爆量 |
+| min_confidence | 規則門檻 | 0.3 | 沒考慮後件本身多常見，不宜當主要篩選 |
+| min_lift | **事後篩選**，不是探勘門檻 | 1.2 | lift > 1 才代表比獨立時更常一起出現 |
+| 規則長度 | 前件 / 後件項目數 | 前件 ≤ 2、後件 1 | 好解讀，也較不容易是巧合 |
+| hconf | 去除 cross-support | 有高頻項目時 0.05–0.1 | 避免高頻項目（牛奶）和什麼都湊成規則 |
+| 演算法 | 計算方式 | auto（FP-growth） | 與 Apriori 結果**完全相同**，只差速度 |
+
+## 步驟 4：產生規則（確認 ② 之後自動執行）
+
+skill 會列出保留的規則，也列出**被排除的規則與原因**，讓使用者知道哪些組合為什麼不見了：
+
+| 排除原因 | 意思 |
+|---|---|
+| confidence 未達門檻 | 前件出現時，後件出現的比例太低 |
+| lift 不夠 | 沒有比獨立情況更常一起出現 |
+| cross-support | 高頻項目和低頻項目硬湊（h-confidence 太低） |
+| 冗餘 | 較短的前件已經有相同或更高的 confidence |
+| 定義性 | 欄位間有函數關係，必然成立（縣市=台南 → 區域=南部） |
+| 前件筆數不足 | 前件太少見，估計不穩定 |
+
+規則**太多**時（> 約 100 條），skill 會建議提高 lift、縮短規則、加 hconf 或指定後件；**沒有**規則時，
+會說明是門檻太高還是資料本來就沒有關聯。「沒有規則」本身也可以是結論。
+
+## 步驟 5：評估可靠性
+
+| 檢查 | 回答的問題 |
+|---|---|
+| 驗證集重現 + Fisher exact + BH-FDR | 規則在沒看過的資料裡還成立嗎？排除多重比較後仍顯著嗎？ |
+| 置換檢定 | 如果項目彼此完全無關，同樣門檻會找到幾條「巧合規則」？ |
+| 分層檢查 | 關聯是否在各分層消失或反轉（Simpson's paradox）？ |
+| null-invariant 指標 | lift 很高，是不是只因為項目很稀有？ |
+
+每條規則會得到一個分級：✅ 驗證集重現且顯著；⚠️ 方向一致但不顯著；❌ 未重現或方向反轉。
+
+## 步驟 6：實務解讀與分析報告（確認 ③）
+
+- 交易：「買了 A 的顧客中，有 X% 也買了 B，是一般顧客的 L 倍；每 100 筆交易約有 s 筆受影響。」
+- 問卷：「18–29 歲、住在南部的受訪者中，有 X% 支持政策 A，是全體受訪者的 L 倍。」並寫明分母是誰。
+- 加上行動建議與限制：共同出現不代表因果；問卷未加權時不能推論到母體；顯而易見的規則可靠但不新奇。
+
+最後，skill 會自動產生一份**分析報告**（`report.qmd` 與 `report.html`），記錄這次做的每一步、
+當時的輸出、可以摺疊的指令與 Python / R 程式碼，以及驗證是否仍然獨立。
+
+# 完整示範
+
+## 超市交易資料
+
+範例資料 `data/sample_baskets.csv` 有 1,200 筆模擬交易、27 種商品，平均每籃 3.5 件。資料裡刻意放了
+大小寫不一致、缺漏品名、退貨、重複列，以及幾組已知的商品關聯。
+
+<details class="code-fold">
+<summary>顯示程式碼：完整指令</summary>
+
+```bash
+python scripts/run_arules.py profile data/sample_baskets.csv
+python scripts/run_arules.py split data/sample_baskets.csv --method time --test-frac 0.3
+python scripts/run_arules.py mine arules_output/train.csv --min-support 0.02 --min-confidence 0.3 \
+    --min-lift 1.2 --hconf 0.05
+python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv
+python scripts/run_arules.py report --notes arules_output/interpretation.md
+```
+
+</details>
+
+**結果摘要**
+
+- 依時間切分：前 840 筆探勘、後 360 筆驗證。
+- 產生 280 條規則，保留 33 條；排除原因：confidence 不足 189、lift 不足 43、cross-support 10、冗餘 5。
+- 驗證集重現 28 / 33（85%）。
+
+| 規則 | support | confidence | 後件基準比例 | lift |
+|---|---|---|---|---|
+| {wine} → {cheese} | 0.032 | 0.844 | 0.055 | 15.4 |
+| {pasta} → {tomato sauce} | 0.075 | 0.612 | 0.075 | 8.2 |
+
+被 cross-support 排除的例子：`{butter, chips} → {milk}` 的 confidence 高達 0.905，但牛奶本來就出現在
+約 60% 的籃子裡，h-confidence 只有 0.035，這條規則只是「牛奶到處都有」。
+
+沒有重現的例子：`{cheese} → {bread}` 在探勘集 lift 1.36，到了驗證集 lift 只有 0.76（q = 0.82），
+是探勘集裡的偶然。這正是先切出驗證資料的價值。
+
+## 問卷資料
+
+範例資料 `data/sample_survey.csv` 有 1,200 位受訪者，附 codebook。資料裡刻意放了：
+98 / 99 特殊代碼、漏答、只有就業者回答的題目（跳題）、複選題、調查權重、自由文字，以及由縣市決定的
+區域欄位。
+
+<details class="code-fold">
+<summary>顯示程式碼：完整指令</summary>
+
+```bash
+python scripts/run_arules.py encode data/sample_survey.csv --codebook data/sample_codebook.csv \
+    --bins 年齡=18,30,45,65 --multi 關注議題 --exclude 縣市
+python scripts/run_arules.py split arules_output/items.csv --method random
+python scripts/run_arules.py mine arules_output/train.csv --min-count 20 --max-lhs 2 --max-rhs 1 \
+    --rhs 政策A態度 政策B態度 --hconf 0.1 --min-lift 1.2
+python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv --min-test-count 5
+python scripts/run_arules.py report --notes arules_output/interpretation.md --title "政策態度的關聯規則"
+```
+
+</details>
+
+**encode 的自動檢查**抓到了：
+
+- 工作滿意度的空白集中在「就業狀態=非就業」→ 跳題；
+- 縣市 → 區域有函數關係 → 「縣市=台南市 → 區域=南部」會被標成定義性規則；
+- 「使用網路=有」占 85% → 建議加 hconf；
+- 權重欄位 → 提醒結果是未加權的樣本描述。
+
+**結果摘要**：保留 45 條以政策態度為後件的規則，驗證集重現 10 條。
+
+| 規則 | 探勘集 confidence | 後件基準比例 | lift | 驗證集 q | 分級 |
+|---|---|---|---|---|---|
+| {區域=南部, 年齡=18–29} → {政策A態度=支持} | 0.83 | 0.36 | 2.32 | < 0.001 | ✅ |
+| {關注議題=交通} → {政策B態度=反對} | 0.66 | 0.43 | 1.56 | < 0.001 | ✅ |
+
+解讀：住在南部的 18–29 歲受訪者中，約 83% 支持政策 A，是全體受訪者的 2.3 倍。這是樣本中的
+共同出現，不代表年齡或居住地造成態度，而且沒有加權，不能推論到母體。
+
+# 常見陷阱
+
+| 陷阱 | 例子 | skill 怎麼防 |
+|---|---|---|
+| confidence 的陷阱 | 喝茶的人 75% 喝咖啡，但全體 80% 都喝咖啡 → lift 0.94，其實是負相關 | 規則表列出後件基準比例，主要用 lift 篩選 |
+| cross-support | 「什麼 → 牛奶」confidence 都很高 | h-confidence 篩選 |
+| 定義性規則 | 縣市 → 區域、年齡 → 年齡層 | 自動偵測函數關係並排除 |
+| 把空白當反對 | 沒回答被當成「不支持」 | 空白不產生項目；跳題用 `--where` |
+| 把共同出現當因果 | 「年輕導致支持」 | 解讀格式強制寫限制 |
+| 看過驗證結果再改設定 | 一直調門檻直到驗證集好看 | 驗證標準在確認 ② 鎖定；報告自動檢查回頭修改 |
+| 未加權當母體比例 | 「全國 36% 支持」 | 偵測權重欄位並提醒 |
+
+# 術語表 {#sec-glossary}
+
+以下用一個小例子貫穿：100 筆交易中，40 筆有 A，50 筆有 B，30 筆同時有 A 和 B。
+
+## 資料與項目
+
+**交易 / 觀測單位（transaction）**
+:   一個分析單位：一張訂單或一位受訪者。N 是觀測單位的總數。
+
+**項目（item）**
+:   交易中的一個元素：一種商品，或問卷的「題目=答案」。
+
+**項目集（itemset）**
+:   零個或多個項目的集合；有 k 個項目的稱為 k-itemset。
+
+**屬性-值項目（attribute-value item）**
+:   把問卷的每個「題目=答案」組合變成一個二元項目，例如 `性別=女`（Tan et al. 6.1）。
+
+**codebook（編碼表）**
+:   說明每個代碼代表什麼的表，例如 `98 = 不知道`。沒有它，數字的意義無法判斷。
+
+**跳題（skip pattern）**
+:   只有部分受訪者會被問到的題目。沒被問到的人留白，不能當成「否」。
+
+**離散化（discretization）**
+:   把連續數值分成區間，例如年齡 → 18–29、30–44。有自訂切點、等寬、等頻等方法（6.2.1）。
+
+**調查權重（survey weight）**
+:   讓樣本比例對應到母體的調整係數。本 skill 只提醒，不做加權。
+
+## 基本指標
+
+**支持度 support**
+:   同時含有 X 和 Y 的觀測單位比例。$s(X \cup Y) = \sigma(X \cup Y) / N$。
+    例：30 / 100 = 0.30。它代表規則的**影響範圍**。
+
+**信賴度 confidence**
+:   含 X 的單位中，也含 Y 的比例，估計 $P(Y \mid X)$。
+    例：A → B 的 confidence = 30 / 40 = 0.75。
+
+**後件基準比例（consequent support）**
+:   不看前件時，Y 本身出現的比例。例：50 / 100 = 0.50。confidence 要和它比才有意義。
+
+**提升度 lift**
+:   $\text{lift} = \dfrac{s(X \cup Y)}{s(X)\,s(Y)}$。等於 1 表示獨立，大於 1 表示比獨立時更常一起出現。
+    例：0.30 / (0.40 × 0.50) = 1.5。lift 是對稱的：A → B 與 B → A 相同。
+
+**槓桿 leverage（PS）**
+:   $s(X \cup Y) - s(X)\,s(Y)$，比獨立時多出的比例。例：0.30 − 0.20 = 0.10。
+
+**確信度 conviction**
+:   $\dfrac{1 - s(Y)}{1 - \text{confidence}}$，規則「出錯」比獨立時少幾倍。例：0.5 / 0.25 = 2。
+
+**φ 係數（phi）**
+:   兩個二元變數的 Pearson 相關，介於 −1 和 1。會受「都沒有」的交易數影響。
+
+## Null-invariant 指標
+
+**null-invariant（不受空交易影響）**
+:   加入大量「X、Y 都沒有」的交易時，指標不變。購物籃資料大多數交易都沒有某兩個商品，
+    所以這類指標比較穩定（5.7）。
+
+**cosine（IS）**
+:   $\dfrac{s(X \cup Y)}{\sqrt{s(X)\,s(Y)}}$。例：0.30 / √0.20 ≈ 0.67。
+
+**Kulczynski**
+:   兩個方向 confidence 的平均。例：(0.75 + 0.60) / 2 = 0.675。
+
+**all-confidence**
+:   兩個方向中較小的 confidence。例：min(0.75, 0.60) = 0.60。
+
+**h-confidence 與 cross-support**
+:   h-confidence = s(X) / X 中最高頻項目的 support，是 itemset 能產生的最低 confidence。
+    cross-support 樣式是極高頻項目和低頻項目硬湊出來的組合；設 h-confidence 門檻可以排除它（5.8）。
+
+## 探勘
+
+**頻繁項目集（frequent itemset）**
+:   support 不低於 min_support 的 itemset。
+
+**Apriori 原理**
+:   頻繁 itemset 的所有子集也都頻繁；反過來，不頻繁的 itemset，它的所有超集也不頻繁。
+    這讓演算法可以大量剪枝（5.2）。
+
+**Apriori 與 FP-growth**
+:   兩種找頻繁項目集的演算法。Apriori 逐層產生候選；FP-growth 先把資料壓成樹，不產生候選。
+    **結果完全相同**，只差速度。
+
+**closed / maximal itemset**
+:   closed：沒有任何超集的 support 和它一樣。maximal：沒有任何超集是頻繁的。
+    兩者都是頻繁項目集的精簡表示（5.4）。
+
+**冗餘規則（redundant rule）**
+:   {A, C} → B 的 confidence 沒有比 {A} → B 高，多加的 C 沒有提供資訊。
+
+**定義性規則（definitional rule）**
+:   由欄位定義必然成立的規則，例如縣市 → 區域。confidence 100% 也不是發現。
+
+## 驗證與檢定
+
+**驗證集（holdout）**
+:   探勘前先保留、探勘時完全不看的資料，用來檢查規則是否重現。
+
+**Fisher exact test**
+:   在 2×2 列聯表的邊際總數固定下，計算「共同出現次數這麼多」的機率（超幾何分布）。
+    單尾檢定只看正相關（10.4.1）。
+
+**p 值**
+:   如果 X 和 Y 真的無關，觀察到這麼極端結果的機率。不是「規則為真的機率」。
+
+**多重比較與 FDR**
+:   一次檢定很多條規則，總會有一些純屬巧合地顯著。FDR（false discovery rate）控制「顯著的規則中，
+    假發現的比例」。
+
+**q 值（Benjamini–Hochberg）**
+:   以 BH 方法校正後的 p 值；q < 0.05 表示在 FDR 5% 下顯著。
+
+**置換檢定（permutation test）**
+:   把每個項目欄位各自打亂，製造「項目彼此無關」的資料，再用同樣門檻探勘，看會找到幾條規則
+    （10.4.2）。
+
+**Simpson's paradox**
+:   合併資料中是正相關，分層後各層卻都是負相關（或反過來），通常是因為有隱藏變數（5.7.3）。
+
+**探索性 vs 驗證性**
+:   探索性結果只能當假說；驗證性結果在沒看過的資料上重現過。看過驗證結果再改設定，就只剩探索性。
+
+# 參考文獻
+
+Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.).
+Pearson. 第 5 章（Association Analysis: Basic Concepts and Algorithms）、6.1–6.2 節
+（Handling Categorical / Continuous Attributes）、10.4 節（Statistical Testing for Association Analysis）。

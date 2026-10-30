@@ -14,8 +14,10 @@ Mining* (2nd ed.). Pearson.
 5. 5.6 FP-growth（p.393–401）
 6. 5.7 關聯樣式的評估（p.401–418）
 7. 5.8 偏斜的 support 分布（p.418–424）
-8. 10.4 關聯分析的統計檢定（p.787–795）
-9. R（arules）對照程式碼
+8. 6.1 類別屬性（p.451–454）
+9. 6.2.1 連續屬性的離散化（p.454–458）
+10. 10.4 關聯分析的統計檢定（p.787–795）
+11. R（arules）對照程式碼
 
 ---
 
@@ -92,7 +94,33 @@ Mining* (2nd ed.). Pearson.
   h-confidence ≤ r(X)，因此設門檻 hc 會排除 r < hc 的 cross-support 樣式。它也是 anti-monotone，
   可以直接嵌入探勘。h-confidence ≥ hc 的 itemset 稱為 hyperclique。
 
-## 8. 10.4 關聯分析的統計檢定（p.787–795）
+## 8. 6.1 類別屬性（p.451–454）
+
+- 問卷常有對稱二元屬性（性別、是否上網）與名目屬性（教育程度、州別）。書中以網路使用者問卷為例。
+- 做法：每一個「屬性-值」組合轉成一個二元項目（例如 教育=研究所、教育=大學）；對稱二元屬性要轉成
+  **兩個**項目（隱私顧慮=是、隱私顧慮=否），因為兩種答案都有意義。之後就可以直接套用既有的探勘演算法。
+- 要注意的三件事：
+  1. **值太多的名目屬性**（例如州別）每個值都不常見，降低門檻又會讓樣式數暴增；比較實際的做法是把
+     相關的值併成少數類別（州 → 地區），或把少見的值併成「其他」。
+  2. **出現頻率很高的值**（例如 85% 的人家裡有電腦）會產生許多冗餘樣式，因為這種典型值很少帶來新資訊；
+     可以在探勘前移除，或用 5.8 的方法處理支持度範圍很大的資料。
+  3. 項目變多會增加計算時間；同一屬性的兩個值不可能同時出現（support = 0），因此不必產生含同一屬性
+     兩個值的候選 itemset。
+
+## 9. 6.2.1 連續屬性的離散化（p.454–458）
+
+- 含連續屬性的規則稱為 **quantitative association rules**。6.2 介紹三類方法：離散化、統計式、
+  非離散化；本 skill 只用最常見的**離散化**。
+- 離散化把相鄰的值分成區間（等寬、等頻、熵、分群皆可），每個區間再對應成一個非對稱二元項目。
+- 關鍵參數是區間數，通常由使用者決定。書中例子（250 位使用者、年齡與線上聊天）說明：
+  - **區間太寬**：規則的 confidence 被稀釋到門檻以下而消失；
+  - **區間太窄**：每個子規則的 support 不足而消失；
+  - 適中的寬度才能同時保留兩條規則。
+- 嘗試所有相鄰區間的組合可以找回規則，但計算量大、產生大量冗餘規則（較寬區間的規則包含較窄的）；
+  可以用最大支持度門檻限制過寬的區間。
+- 實務含意：列出各組人數，讓使用者確認切點；必要時比較兩種切法。
+
+## 10. 10.4 關聯分析的統計檢定（p.787–795）
 
 - 非監督問題沒有標準答案，所以需要統計檢定來區分真實樣式與偶然樣式。也可用 bootstrap 估計
   support 的不確定性。
@@ -113,7 +141,7 @@ Mining* (2nd ed.). Pearson.
 
 ---
 
-## 9. R（arules）對照程式碼
+## 11. R（arules）對照程式碼
 
 ```r
 # install.packages(c("arules", "arulesViz"))
@@ -150,6 +178,34 @@ sum(is.closed(itemsets)); sum(is.maximal(itemsets))
 # 步驟 5：Fisher exact test + BH（arules 內建）
 p <- interestMeasure(rules, "fishersExactTest", transactions = trans)   # 單尾，正相關
 q <- p.adjust(p, method = "BH")
+```
+
+### 問卷資料（6.1、6.2.1）
+
+```r
+library(arules)
+sv <- read.csv("data/sample_survey.csv", colClasses = "character")
+cb <- read.csv("data/sample_codebook.csv", colClasses = "character")
+# 代碼 → 標籤；98/99（missing 欄非空白）設為 NA，不產生項目
+for (v in unique(cb$column)) {
+  m <- cb[cb$column == v, ]
+  lab <- setNames(ifelse(m$missing == "", m$label, NA), m$code)
+  sv[[v]] <- unname(lab[sv[[v]]])
+}
+sv[sv == ""] <- NA
+sv$年齡 <- cut(as.numeric(sv$年齡), breaks = c(-Inf, 18, 30, 45, 65, Inf), right = FALSE,
+              labels = c("<18", "18–29", "30–44", "45–64", "≥65"))
+# 或用 discretizeDF(sv, methods = list(年齡 = list(method = "frequency", breaks = 4)))
+items <- sv[, c("年齡", "性別", "區域", "就業狀態", "政策A態度", "政策B態度")]
+items[] <- lapply(items, factor)
+trans <- as(items, "transactions")      # 自動產生「欄位=值」項目，NA 不產生項目
+itemLabels(trans)[1:6]
+
+# 指定後件：只找以政策A態度為後件的規則
+rules <- apriori(trans, parameter = list(supp = 20 / length(trans), conf = 0.3, minlen = 2, maxlen = 3),
+                 appearance = list(rhs = grep("^政策A態度=", itemLabels(trans), value = TRUE),
+                                   default = "lhs"))
+inspect(head(sort(subset(rules, lift > 1.2), by = "lift"), 10))
 ```
 
 Python 對應：`scripts/run_arules.py`（mlxtend 的 `fpgrowth` / `apriori` + scipy 的

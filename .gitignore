@@ -17,3 +17,7 @@ Thumbs.db
 # R
 .Rhistory
 .RData
+
+# Quarto / 本機預覽
+.quarto/
+*_files/

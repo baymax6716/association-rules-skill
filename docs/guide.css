@@ -1,0 +1,10 @@
+.code-toggle-bar { margin: .5rem 0 1rem; }
+.code-toggle-bar button {
+  padding: .35rem .9rem; border: 1px solid #888; border-radius: 6px;
+  background: transparent; color: inherit; cursor: pointer; font: inherit;
+}
+details.code-fold { margin: .4rem 0 .9rem; }
+details.code-fold > summary { cursor: pointer; color: #2a6db0; }
+dl dt { margin-top: .9rem; }
+dl dd { margin-left: 1.2rem; }
+table { display: block; overflow-x: auto; }

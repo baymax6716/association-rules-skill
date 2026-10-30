@@ -18,9 +18,18 @@
 |---|---|---|---|
 | 時間切分 | `split data.csv --method time --test-frac 0.3` | 模擬「用過去找規則、用未來檢查」 | 有季節性時，驗證期需涵蓋可比較的季節 |
 | 隨機切分 | `split data.csv --method random --seed 42` | 兩邊分布相近 | 不能保證未來仍成立 |
+| 指定日期 | `split data.csv --split-date 2026-08-10` | 對應業務事件（例如改版、促銷開始） | 兩邊筆數可能不平衡，要列出來 |
+| 依顧客 / 受訪者分組 | `split data.csv --method group --group-col customer_id` | 同一人只在其中一邊，避免個人習慣「洩漏」到驗證集 | 需要有顧客或受訪者編號 |
+| 問卷（資料導向切點） | `split survey.csv --format survey`，再 `encode --cuts-out` / `--cuts-in` | 切點只用探勘集決定 | 自訂的領域切點不受影響，可以先編碼再切分 |
 
 切分後**只在 train 上探勘**；test 只用來驗證，不能回頭調參數再驗證同一個 test，否則 test 就
 變成另一個 train。
+
+## 驗證標準要事先鎖定
+
+切分方式與判定標準（α、驗證集最低共同出現筆數 `--min-test-count`）在確認 ② 就決定，探勘後不改。
+看過驗證結果後才修改設定，驗證資料就參與了選擇。這時要明確告知使用者，結果只能算探索性；
+`report` 的「回頭修改紀錄」一節會自動檢查這件事。
 
 ## 2. Fisher exact test + BH-FDR（validate）
 
@@ -31,7 +40,7 @@
   用二項分布會錯，因為它不考慮有限母體。
 - 書中例子：tea/coffee，N=1000、tea=200、coffee=800、兩者=150，左尾 p ≈ 0.032。
 - 所有規則的 p 值一起用 Benjamini–Hochberg 校正成 q 值；q < 0.05 表示在 FDR 5% 下顯著。
-- 判定 ✅ 重現：test_lift > 1 且 q < α。
+- 判定 ✅ 重現：test_lift > 1 且 q < α（若設定 `--min-test-count`，還要驗證集共同出現筆數 ≥ 該值）。
 
 指令：`python scripts/run_arules.py validate test.csv --rules rules.csv --alpha 0.05`
 
@@ -54,6 +63,7 @@
 
 - `--by weekend / weekday / month / hour`：用時間戳記衍生分層；
 - `--by store`：用資料中的欄位分層（需要該欄位在每筆交易內為固定值）；
+- `--by 性別`：問卷用「題目=值」項目分層；含有該題目的規則會略過（分層變數不能同時出現在規則裡）；
 - 每層的前項至少 `--min-count` 筆交易（預設 10）才計算，避免小樣本雜訊；
 - `simpson_reversal = True`：所有分層方向都與合併資料相反 → 合併的關聯是隱藏變數造成的；
 - `inconsistent = True`：部分分層方向不同 → 規則只在特定情境成立，報告時要註明。

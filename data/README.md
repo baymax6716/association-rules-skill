@@ -7,8 +7,8 @@
 
 | 檔案 | 類型 | 大小 | 對應 skill 的流程 | 對應教科書 |
 |---|---|---|---|---|
-| `groceries.csv` | 購物清單（長格式） | 9,835 筆交易、169 種商品、43,367 列 | 購物清單整理 → 四個購物問題 | 第 5 章的購物籃交易（5.1 的雜貨店收銀資料情境） |
-| `income_esl.csv` | 問卷類別表（一列一人） | 8,993 位受訪者、14 個題目 | 類別問卷編碼 → 三個問卷問題 | 6.1–6.2 節的問卷資料（類別屬性、有序與連續屬性） |
+| `groceries.csv` | 購物清單（長格式） | 9,835 筆交易、169 種商品、43,367 列 | 購物資料前處理 → 自由探索／指定前件／指定後件 | 第 5 章的購物籃交易（5.1 的雜貨店收銀資料情境） |
+| `income_esl.csv` | 問卷類別表（一列一人） | 8,993 位受訪者、14 個題目 | 類別問卷前處理 → 自由探索／指定前件／指定後件 | 6.1–6.2 節的問卷資料（類別屬性、有序與連續屬性） |
 
 ## groceries.csv
 
@@ -19,7 +19,7 @@
 | `transaction_id` | 交易編號（T00001 ～ T09835，依原資料順序編號） |
 | `item` | 商品類別，例如 `whole milk`、`other vegetables`、`rolls/buns` |
 
-- 沒有時間戳記和數量欄位，所以驗證用隨機切分。
+- 沒有時間戳記和數量欄位；若要做選用的保留資料驗證，只能隨機切分（不能把資料列順序當成時間）。
 - 原始標籤中 `cream cheese `、`roll products ` 結尾有空白，可以看到「去除前後空白」這條固定規則的紀錄。
 - 有幾個商品出現在很大比例的交易裡（例如 whole milk），可以比較 confidence 和後件基準比例。
 
@@ -51,7 +51,7 @@ for mining association rules. In *From Data and Information Analysis to Knowledg
 
 - 答案已經是文字標籤，不需要 codebook；缺失是空白。
 - `number in household`、`number of children` 是數字，skill 會請你說明數字是代碼還是答案本身。
-- 有 8 個欄位有缺失，可以看到完整個案分析排除幾筆、剩下幾筆。
+- 有 8 個欄位有缺失，可以看到完整案例分析排除幾筆、剩下幾筆。
 - `dual incomes` 幾乎由 `marital status` 決定：divorced、single、widowed 的人一律是 `not married`。這類規則
   confidence 接近 1，但只是定義，解讀時要特別說明。
 

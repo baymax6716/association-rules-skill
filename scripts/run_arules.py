@@ -5,10 +5,11 @@
   inspect   讀取資料：筆數、欄位、少量範例；判斷資料類型（購物清單／問卷類別表／已完成的項目集合）
             並列出依據；檢查缺失、欄位值、可能的 ID／權重、不支援的數值欄位；提出前處理方案，
             輸出 inspect.json 與 config_template.json。
-  run       依 config 前處理。需要使用者確認的事項還沒確認時，列出事項後停止（結束代碼 2）；
-            資料不符合支援格式時，說明需要的調整後停止（結束代碼 1）。
-            通過後切出驗證資料、依分析問題的固定規則形式探勘、在驗證資料上檢驗，
-            輸出 results.json、results_full.csv 與 report_draft.md。
+  run       依 config 前處理。需要使用者確認的事項（含一筆觀測的定義、完整案例分析、分析目標、
+            分析參數）還沒確認時，列出事項與示範設定後停止（結束代碼 2）；資料不符合支援格式時，
+            說明需要的調整後停止（結束代碼 1）。通過後依分析目標（自由探索／指定前件／指定後件）
+            產生規則並依序篩選；使用者要求時才做保留資料驗證。輸出 results.json、results_full.csv、
+            settings_log.json 與 report_draft.md。
   finalize  確認報告沒有未填寫處，附上 config、前處理紀錄與完整程式碼，
             輸出 report.md、report.qmd、report.html。
 
@@ -18,7 +19,7 @@
   python scripts/run_arules.py finalize --config config.json --report arules_output/report.md
 
 定義依據：Tan, Steinbach, Karpatne & Kumar (2019), Introduction to Data Mining (2nd ed.)
-第 5、6 章與 10.4 節；固定規則與門檻見 references/decision-tree.md。
+第 5、6 章與 10.4 節；流程與規則見 docs/skill-guide.html 第 8 章與 references/decision-tree.md。
 """
 import argparse
 import difflib
@@ -43,7 +44,7 @@ try:
 except Exception:
     pass
 
-VERSION = "2.0"
+VERSION = "3.0"
 
 # ----------------------------------------------------------------------------- 固定常數（見 decision-tree.md）
 ID_UNIQUE = 0.95          # 不同值比例 ≥ 此值 → 可能是 ID
@@ -51,8 +52,7 @@ NUMERIC_SHARE = 0.8       # 非缺失值中可解析為數字的比例 ≥ 此�
 CODE_MAX_LEVELS = 10      # 數字欄位不同值 ≤ 此值 → 可能是選項代碼；否則視為數值
 HIGH_FREQ = 0.8           # 某答案占比 ≥ 此值 → 提醒（當後件時 lift 多半接近 1）
 SEPARATORS = [",", ";", "|", "、"]
-VALID_MIN_UNITS = 300     # 觀測單位少於此數 → 不切驗證資料
-TEST_FRAC = 0.3
+TEST_FRAC = 0.3           # 選用的保留資料驗證：預設保留比例
 SEED = 2026
 ALPHA = 0.05
 TOP = 20
@@ -63,28 +63,6 @@ HINT_ID = ({"id", "no", "編號"}, ["編號", "序號", "代號", "受訪者"])
 HINT_WEIGHT = ({"weight", "wt", "wgt", "weights"}, ["權重", "加權"])
 HINT_TIME = ({"time", "date", "datetime", "timestamp", "invoicedate"}, ["時間", "日期"])
 HINT_QTY = ({"qty", "quantity"}, ["數量"])
-
-SHOP_Q = ["bundle", "recommend", "placement", "explore"]
-SURVEY_Q = ["cooccur", "target", "given"]
-QLABEL = {
-    "bundle": "哪些商品適合組成套餐？",
-    "recommend": "買「{x}」的人，可以推薦什麼？",
-    "placement": "哪些商品可以考慮放在相近位置？",
-    "explore": "我不知道有什麼有趣的搭配，幫我看看",
-    "cooccur": "哪些回答常一起出現？",
-    "target": "哪些條件與「{x}」有關？",
-    "given": "已知「{x}」，還有哪些答案常見？",
-}
-QFORM = {
-    "bundle": "2–3 項商品的頻繁項目集；組合中每一項商品和其餘商品都要正相關（每個方向的 lift > 1）；依 support（共同出現筆數）排序",
-    "recommend": "前件 = {指定商品}、後件 = 1 項商品；lift > 1 且 confidence ≥ 門檻；依 lift 排序，同分再看 confidence",
-    "placement": "2 項商品的組合（雙向）；lift > 1；依 lift 排序，附 cosine、Kulczynski",
-    "explore": "前件 ≤ 2 項、後件 1 項的全部規則；lift > 1 且 confidence ≥ 門檻；移除冗餘規則；依 lift 排序",
-    "cooccur": "選定欄位間，前件 ≤ 2 個答案、後件 1 個答案的全部規則；lift > 1 且 confidence ≥ 門檻；移除冗餘與定義性規則；依 lift 排序",
-    "target": "後件 = 指定的「欄位=答案」、前件 ≤ 2 個其他欄位的答案；lift > 1；移除冗餘與定義性規則；依 lift 排序",
-    "given": "前件 = 指定的特徵、後件 = 1 個其他欄位的答案；依 confidence 排序，附基準比例與 lift（lift ≤ 1 另外標示）",
-}
-
 
 # ----------------------------------------------------------------------------- 共用工具
 
@@ -190,7 +168,7 @@ def survey_role(c, p, n):
     if p["numeric_share"] >= NUMERIC_SHARE:
         if p["unique"] <= CODE_MAX_LEVELS and not p["non_integer"]:
             return "code", f"內容是數字、只有 {p['unique']} 種值：可能是選項代碼或計數，需要說明或編碼表"
-        return "numeric", f"內容是數字、有 {p['unique']} 種值：連續或計數變數，本 skill 不自行切分"
+        return "numeric", f"內容是數字、有 {p['unique']} 種值：連續或計數變數，第一版不自動分箱"
     if p["avg_len"] > 20 and p["unique_ratio"] > 0.5:
         return "text", "像開放題文字（平均長度 {:.0f} 字、多數答案都不同）".format(p["avg_len"])
     return "category", f"文字類別，{p['unique']} 種答案"
@@ -233,11 +211,13 @@ def detect_type(df, prof, args):
         best = None
         for t in cand:
             for it in cols:
-                if it == t or prof[it]["numeric_share"] >= 0.5 or prof[it]["unique"] < 2:
+                if it == t or prof[it]["numeric_share"] >= 0.5 or prof[it]["unique"] < 2                         or prof[it]["unique_ratio"] >= ID_UNIQUE:
                     continue
-                g = df.groupby(df[t].str.strip())[it].nunique()
-                per = float(g.mean())
-                if per >= 1.5:
+                grp = df.groupby(df[t].str.strip())[it]
+                per = float(grp.nunique().mean())
+                rows_per = float(grp.size().mean())
+                # 長表的特徵：同一個 ID 底下的各列，項目幾乎都不同（一列一個項目）
+                if per >= 1.5 and per / rows_per >= 0.8:
                     score = (name_hint(t, HINT_ID) or "trans" in t.lower() or "order" in t.lower()) + per / 100
                     if best is None or score > best[0]:
                         best = (score, t, it, per)
@@ -281,9 +261,10 @@ def config_template(args, det, prof, df):
     cfg = {"data_path": args.data.replace("\\", "/"), "encoding": None, "out_dir": args.out.replace("\\", "/"),
            "data_type": None, "unit": None,
            "shopping": None, "survey": None,
-           "question": {"type": None, "item": None, "target": None, "given": None},
-           "params": {"min_count": None, "min_confidence": None, "min_lift": None},
-           "validation": {"enabled": True},
+           "question": {"goal": None, "items": [], "label": None},
+           "params": {"min_support": None, "min_confidence": None, "min_lift": None, "max_lhs": None,
+                      "min_lhs_count": None, "confirmed": False, "reason": None},
+           "validation": {"enabled": False, "test_frac": 0.3, "seed": 2026, "by_time": False},
            "report": {"title": "關聯規則分析報告", "background": None, "goal": None},
            "confirmations": []}
     t = det["type"]
@@ -302,7 +283,7 @@ def config_template(args, det, prof, df):
                          "columns": [c for c, r in roles.items() if r == "category"],
                          "exclude_cols": [{"name": c, "reason": det["role_reason"][c]} for c, r in roles.items()
                                           if r in ("id", "weight", "text")],
-                         "missing_values": [], "missing_codes": {}, "codebook": {}, "cuts": {},
+                         "dictionary_path": None, "missing_values": [], "missing_codes": {}, "codebook": {},
                          "categorical_as_is": [], "complete_case_confirmed": None}
     return cfg
 
@@ -368,21 +349,21 @@ def cmd_inspect(args):
             if r in ("id", "weight", "text"):
                 notes.append(f"`{c}`：{why[c]} → 建議**不當成項目**（不進入分析，記錄原因）")
             elif r == "code":
-                pending.append(f"`{c}`：{why[c]}。請使用者提供編碼表，或確認這些數字本身就是答案（例如人數）")
+                pending.append(f"`{c}`：{why[c]}。請使用者提供資料字典，或確認這些數字本身就是答案（例如人數）")
             elif r == "numeric":
-                pending.append(f"`{c}`：{why[c]}。需要使用者提供切點，否則排除")
+                pending.append(f"`{c}`：{why[c]}。第一版不自動分箱：請改用已分組的欄位，或不選這一欄")
             if r == "category" and prof[c]["top_share"] >= HIGH_FREQ:
                 notes.append(f"`{c}` 的「{prof[c]['top'][0][0]}」占 {prof[c]['top_share']:.0%}：當後件時 lift 多半接近 1")
         miss_cols = [c for c in cfg["survey"]["columns"] if prof[c]["missing"]]
         if cfg["survey"]["columns"]:
             sub = df[cfg["survey"]["columns"]].apply(lambda s: s.str.strip() == "")
             exc = int(sub.any(axis=1).sum())
-            notes.append(f"若分析全部 {len(cfg['survey']['columns'])} 個類別欄位，完整個案分析會排除 {exc:,} 列、"
+            notes.append(f"若分析全部 {len(cfg['survey']['columns'])} 個類別欄位，完整案例分析會排除 {exc:,} 列、"
                          f"剩 {n - exc:,} 列（缺失欄位：{', '.join(miss_cols) or '無'}）；實際數字依使用者選的欄位而定")
         plan = ["保留原類別，每個答案寫成「欄位=答案」項目（原欄位名稱與答案都不改）",
                 "使用者選擇要分析的欄位；ID、權重、開放文字不當成項目",
-                "在選定欄位上做完整個案分析：任一選定欄位缺失的列排除；執行前告知排除與剩下的筆數並確認",
-                "數字代碼需要編碼表或說明；數值欄位需要使用者提供切點，否則排除",
+                "在選定欄位上做完整案例分析：任一選定欄位缺失的列排除；執行前告知排除與剩下的筆數並確認",
+                "數字代碼依資料字典解讀；未分組的數值欄位第一版不支援（不自動分箱）",
                 "不合併答案、不刪除相同的列、不把缺失當成「否」"]
     elif det["type"] in ("shopping", "itemset") and det["format"] in ("long", "basket", "wide01"):
         s = dict(cfg["shopping"])
@@ -399,11 +380,12 @@ def cmd_inspect(args):
         if s.get("qty_col"):
             notes.append(f"數量欄 `{s['qty_col']}` 只用來檢查 ≤ 0 的列；關聯規則只看「有沒有買」")
         if s.get("time_col"):
-            notes.append(f"時間欄 `{s['time_col']}` 只用來把最後 30% 的訂單切成驗證資料")
-        plan = ["去除商品名稱前後空白（固定規則，記錄影響列數）",
+            notes.append(f"`{s['time_col']}` 看起來是時間：只有在使用者要做保留資料驗證、並確認它是可信的時間時才會使用")
+        plan = ["確認交易 ID 的意義（一張發票、一位顧客或一位顧客的一天）",
+                "去除商品名稱前後空白（固定規則，記錄影響列數）",
                 "同一張訂單中重複出現的商品記為一次（固定規則，記錄影響列數）",
                 "疑似同義的商品名稱、缺失的商品值、空的訂單、數量 ≤ 0：逐項請使用者確認",
-                "不合併商品類別、不刪除內容相同的訂單"]
+                "保留只有一種商品的交易與內容相同的交易；數量、金額不當成項目；不產生「未購買」項目"]
         if det["type"] == "itemset":
             pending.insert(0, "0/1 代表的是「有買／沒買」（購物）還是問卷的「是／否」？")
     elif det["type"] == "itemset":
@@ -578,6 +560,12 @@ def prep_shopping(df, s, preview=False):
         log_add(log, "檢查", "沒有任何商品的訂單", "未發現", "0 筆訂單")
     ids = [t for t in all_t if t in basket or v == "keep"]
     units = [basket.get(t, frozenset()) for t in ids]
+    log_add(log, "固定規則", "只有一種商品的有效交易保留", "它仍是一筆交易，計入分母",
+            f"{sum(len(u) == 1 for u in units):,} 筆交易")
+    same = int(pd.Series([tuple(sorted(u)) for u in units]).duplicated(keep=False).sum()) if units else 0
+    log_add(log, "固定規則", "不同交易即使內容相同也全部保留", "它們是不同的觀測", f"{same:,} 筆交易")
+    log_add(log, "固定規則", "數量、金額不當成項目；沒買的商品不產生「未購買」項目",
+            "項目是非對稱二元變數，只看有沒有出現（Tan et al. 5.1 節）", "—")
 
     # (9) 時間（只用來決定驗證資料的切法）
     times = None
@@ -611,8 +599,24 @@ def kv_to_wide(df, sv, problems, log):
     return w
 
 
+def load_dictionary(path):
+    """資料字典 CSV：欄位, 原始值, 標籤, 類別（答案／缺失／ID）。回傳 codebook 與缺失代碼。"""
+    d, _ = read_table(path)
+    need = {"欄位", "原始值", "標籤", "類別"}
+    if not need <= set(d.columns):
+        sys.exit(f"資料字典需要欄位 {sorted(need)}，目前是 {list(d.columns)}")
+    codebook, missing = {}, {}
+    for r in d.itertuples(index=False):
+        col, raw, lab, kind = (str(getattr(r, k)).strip() for k in ("欄位", "原始值", "標籤", "類別"))
+        if kind == "缺失":
+            missing.setdefault(col, []).append(raw)
+        elif kind == "答案":
+            codebook.setdefault(col, {})[raw] = lab
+    return codebook, missing
+
+
 def prep_survey(df, sv, preview=False):
-    """類別問卷編碼：保留原類別，項目為「欄位=答案」；在選定欄位上做完整個案分析。"""
+    """類別問卷編碼：每位受訪者一個 basket，項目為「欄位=類別」；在選定欄位上做完整案例分析。"""
     log, pending, problems = [], [], []
     if sv.get("format") == "long_kv":
         df = kv_to_wide(df, sv, problems, log)
@@ -621,8 +625,8 @@ def prep_survey(df, sv, preview=False):
         sv = dict(sv, id_col="id")
     n0 = len(df)
     cols = sv.get("columns") or []
-    excl = {e["name"]: e.get("reason", "") for e in sv.get("exclude_cols") or []}
     id_col = sv.get("id_col")
+    excl = {e["name"]: e.get("reason", "") for e in sv.get("exclude_cols") or [] if e["name"] != id_col}
     if not cols:
         problems.append("尚未選擇要分析的欄位（survey.columns）")
     for c in cols + list(excl) + ([id_col] if id_col else []):
@@ -633,23 +637,29 @@ def prep_survey(df, sv, preview=False):
     if id_col in cols or set(cols) & set(excl):
         problems.append("ID 或已排除的欄位不能同時列在分析欄位中")
     if id_col:
-        log_add(log, "欄位角色", f"`{id_col}` 當作受訪者編號，不當成項目", "編號沒有分析意義", f"{n0:,} 列")
+        log_add(log, "欄位角色", f"`{id_col}` 是 ID，不納入規則", "每人不同，沒有分析意義", "—")
         dup_id = int(df[id_col].duplicated().sum())
         if dup_id:
-            log_add(log, "提醒", f"`{id_col}` 有重複值，全部保留（不刪除）", "不因內容相同而刪除觀測", f"{dup_id:,} 列")
+            log_add(log, "提醒", f"`{id_col}` 有重複值，全部保留", "不因內容相同而刪除觀測", f"{dup_id:,} 列")
     for c, why in excl.items():
-        log_add(log, "欄位角色", f"`{c}` 不當成項目", why or "使用者決定", f"{n0:,} 列")
+        log_add(log, "欄位角色", f"`{c}` 不納入規則", why or "使用者決定", "—")
     others = [c for c in df.columns if c not in cols and c not in excl and c != id_col]
     if others:
-        log_add(log, "欄位角色", "未選入分析的欄位：" + "、".join(f"`{c}`" for c in others), "使用者只選擇部分欄位",
-                f"{len(others)} 欄")
+        log_add(log, "使用者選擇", "未選入分析的欄位：" + "、".join(f"`{c}`" for c in others),
+                "完整案例分析只看選定欄位，這些欄位的缺失不影響本次分析", "—")
 
-    data = pd.DataFrame(index=df.index)
+    codebook = {k: {str(a): str(b) for a, b in v.items()} for k, v in (sv.get("codebook") or {}).items()}
+    miss_codes = {k: list(v) for k, v in (sv.get("missing_codes") or {}).items()}
+    if sv.get("dictionary_path"):
+        cb, mc = load_dictionary(sv["dictionary_path"])
+        for k, v in cb.items():
+            codebook.setdefault(k, {}).update(v)
+        for k, v in mc.items():
+            miss_codes.setdefault(k, []).extend(v)
+        log_add(log, "使用者提供", f"資料字典 `{sv['dictionary_path']}`", "代碼的意義與缺失代碼依資料字典", "—")
     miss_global = set(sv.get("missing_values") or [])
-    miss_codes = sv.get("missing_codes") or {}
-    codebook = sv.get("codebook") or {}
-    cuts = sv.get("cuts") or {}
     as_is = set(sv.get("categorical_as_is") or [])
+    data = pd.DataFrame(index=df.index)
     for c in cols:
         raw = df[c].astype(str)
         v = raw.str.strip()
@@ -658,42 +668,30 @@ def prep_survey(df, sv, preview=False):
             log_add(log, "固定規則", f"`{c}`：去除答案前後空白", "避免同一答案因空白被當成不同答案", f"{ws:,} 列")
         codes = miss_global | set(miss_codes.get(c, []))
         m_blank = v == ""
-        m_code = v.isin(codes) & ~m_blank
-        if m_code.sum():
-            log_add(log, "使用者說明", f"`{c}`：{sorted(codes & set(v.unique()))} 當成缺失", "使用者說明這些值是拒答／不知道／不適用",
-                    f"{int(m_code.sum()):,} 列")
-        v = v.mask(m_blank | m_code, "")
+        if m_blank.sum():
+            log_add(log, "缺失", f"`{c}`：空白設為缺失", "未回答不是任何答案，也不是「否」", f"{int(m_blank.sum()):,} 列")
+        for code in sorted(codes & set(v.unique())):
+            k = int((v == code).sum())
+            lab = f"（{codebook.get(c, {}).get(code)}）" if codebook.get(c, {}).get(code) else ""
+            log_add(log, "依資料字典", f"`{c}`：{code}{lab} 設為缺失", "資料字典標示為未回答／不知道／不適用／拒答，不當成「否」", f"{k:,} 列")
+        v = v.mask(m_blank | v.isin(codes), "")
         filled = v[v != ""]
         numeric_like = len(filled) and is_num(filled).mean() >= NUMERIC_SHARE
-        if c in cuts:
-            spec = cuts[c]
-            x = pd.to_numeric(filled, errors="coerce")
-            if x.isna().any():
-                problems.append(f"`{c}` 有 {int(x.isna().sum())} 個值不是數字，無法套用使用者給的切點")
-                continue
-            br = spec["breaks"]
-            labels = spec.get("labels") or [f"[{br[i]},{br[i + 1]})" for i in range(len(br) - 1)]
-            b = pd.cut(x, bins=br, right=spec.get("right", False), labels=labels)
-            if b.isna().any():
-                problems.append(f"`{c}` 有 {int(b.isna().sum())} 個值落在切點範圍外：請使用者調整切點")
-                continue
-            v.loc[filled.index] = b.astype(str)
-            log_add(log, "使用者提供", f"`{c}`：依使用者給的切點 {br} 分組，標籤 {labels}", "使用者提供的切點",
-                    f"{len(filled):,} 列")
-        elif c in codebook:
-            mp = {str(k): str(val) for k, val in codebook[c].items()}
+        if c in codebook:
+            mp = codebook[c]
             unk = sorted(set(filled) - set(mp))
             if unk:
-                problems.append(f"`{c}` 有編碼表沒有的值 {unk[:10]}：請補齊編碼表或說明這些值")
+                problems.append(f"`{c}` 有資料字典沒有的值 {unk[:10]}：請補齊資料字典或說明這些值")
                 continue
+            changed = int((filled.map(mp) != filled).sum())
             v.loc[filled.index] = filled.map(mp)
-            log_add(log, "使用者提供", f"`{c}`：依編碼表把代碼換成標籤", "使用者提供的編碼表", f"{len(filled):,} 列")
+            log_add(log, "依資料字典", f"`{c}`：原始值換成標籤", "數字型態不代表連續變數，依資料字典解讀", f"{changed:,} 列")
         elif numeric_like and c not in as_is:
             nu = filled.nunique()
             if nu <= CODE_MAX_LEVELS:
-                problems.append(f"`{c}` 是數字（{nu} 種值）：請提供編碼表（codebook），或確認數字本身就是答案（categorical_as_is）")
+                problems.append(f"`{c}` 是數字（{nu} 種值），可能是類別代碼：請提供資料字典，或確認數字本身就是答案（categorical_as_is）")
             else:
-                problems.append(f"`{c}` 是數值變數（{nu} 種值）：本 skill 不自行切分；請提供切點（cuts）或不選這一欄")
+                problems.append(f"`{c}` 是數值變數（{nu} 種值）：第一版不自動分箱，請改用已分組的欄位，或不選這一欄")
             continue
         elif c in as_is and numeric_like:
             log_add(log, "使用者確認", f"`{c}`：數字本身就是答案，照原值當成類別", "使用者說明", f"{len(filled):,} 列")
@@ -701,7 +699,6 @@ def prep_survey(df, sv, preview=False):
     if problems:
         return dict(units=[], ids=[], times=None, log=log, pending=pending, problems=problems)
 
-    # 完整個案分析
     miss = data == ""
     per_col = {c: int(miss[c].sum()) for c in cols}
     drop = miss.any(axis=1)
@@ -710,18 +707,20 @@ def prep_survey(df, sv, preview=False):
     conf = sv.get("complete_case_confirmed") or {}
     if exc and (conf.get("excluded") != exc or conf.get("remaining") != rem):
         pending.append({"key": "complete_case", "count": exc,
-                        "question": f"完整個案分析：選定的 {len(cols)} 個欄位中任一個缺失的列會被排除，"
-                                    f"共排除 {exc:,} 列、剩下 {rem:,} 列（各欄缺失：{detail}）。"
-                                    "同意的話，把 complete_case_confirmed 設為 "
-                                    f'{{"excluded": {exc}, "remaining": {rem}}}',
+                        "question": f"完整案例分析：選定的 {len(cols)} 個欄位中任一個缺失的受訪者會被排除，"
+                                    f"共排除 {exc:,} 人、剩下 {rem:,} 人（各欄缺失：{detail}）。"
+                                    "若缺失不是隨機發生，結果會偏向有回答的人。同意的話，把 complete_case_confirmed 設為 "
+                                    f'{{"excluded": {exc}, "remaining": {rem}}}；不同意則第一版無法分析',
                         "options": ["confirm"]})
-    log_add(log, "完整個案分析", f"選定欄位任一缺失的列排除（各欄缺失：{detail or '無'}）",
-            "缺失、拒答、不適用不能當成任何答案，也不能當成「否」", f"排除 {exc:,} 列，剩 {rem:,} 列")
+    log_add(log, "完整案例分析", f"只看選定欄位，任一缺失者排除（各欄缺失：{detail or '無'}）",
+            "缺失、拒答、不適用不能當成任何答案", f"排除 {exc:,} 人，剩 {rem:,} 人")
     keep = data[~drop]
     units = [frozenset(f"{c}={r[c]}" for c in cols) for _, r in keep.iterrows()]
     ids = (df.loc[keep.index, id_col].astype(str).tolist() if id_col else [f"R{i + 1}" for i in keep.index])
     ident = int(keep.duplicated().sum())
-    log_add(log, "提醒", "答案完全相同的受訪者全部保留", "不因兩筆觀測內容相同而刪除其中一筆", f"{ident:,} 列與其他列相同")
+    log_add(log, "固定規則", "答案完全相同的受訪者全部保留", "不同的人是不同的觀測", f"{ident:,} 人與其他人相同")
+    log_add(log, "固定規則", "每人一個 basket，項目為「欄位=類別」；「否」也是項目；序位變數當類別",
+            "Tan et al. 6.1 節；不使用順序或距離資訊", f"{rem:,} 人")
     freq = {c: keep[c].value_counts().to_dict() for c in cols}
     return dict(units=units, ids=ids, times=None, log=log, pending=pending, problems=problems, freq=freq,
                 columns=cols, n_before=n0)
@@ -730,15 +729,11 @@ def prep_survey(df, sv, preview=False):
 # ----------------------------------------------------------------------------- 指標與探勘
 
 def measures(n, cA, cB, cAB):
-    """規則 A→B 的指標（定義見 Tan et al. 5.1、5.7 節）。"""
-    sA, sB, sAB = cA / n, cB / n, cAB / n
+    """規則 A→B 的 support、confidence、lift（Tan et al. 式 5.1、5.2、5.5）。"""
     conf = cAB / cA if cA else float("nan")
-    lift = sAB / (sA * sB) if sA * sB else float("nan")
-    return dict(count=int(cAB), support=sAB, confidence=conf, base=sB, lift=lift,
-                leverage=sAB - sA * sB,
-                cosine=sAB / math.sqrt(sA * sB) if sA * sB else float("nan"),
-                kulczynski=0.5 * (cAB / cA + cAB / cB) if cA and cB else float("nan"),
-                lhs_count=int(cA))
+    base = cB / n
+    return dict(lhs_count=int(cA), rhs_count=int(cB), count=int(cAB), support=cAB / n,
+                confidence=conf, base=base, lift=conf / base if base else float("nan"))
 
 
 class Binary:
@@ -753,16 +748,22 @@ class Binary:
             for it in u:
                 self.X[r, self.idx[it]] = True
         self.single = self.X.sum(axis=0)
+        self._cache = {}
 
     def count(self, s):
-        if any(i not in self.idx for i in s):
-            return 0
-        if not s:
-            return self.n
-        return int(self.X[:, [self.idx[i] for i in s]].all(axis=1).sum())
+        s = frozenset(s)
+        if s not in self._cache:
+            if any(i not in self.idx for i in s):
+                self._cache[s] = 0
+            elif not s:
+                self._cache[s] = self.n
+            else:
+                self._cache[s] = int(self.X[:, [self.idx[i] for i in s]].all(axis=1).sum())
+        return self._cache[s]
 
 
 def frequent(B, min_count, max_len):
+    """Apriori 原理下的頻繁項目集（以 mlxtend 的 FP-growth 計算，結果與 Apriori 相同）。"""
     from mlxtend.frequent_patterns import fpgrowth
     if B.n == 0 or not B.items:
         return {}
@@ -777,9 +778,9 @@ def attr(item):
 
 
 def functional_deps(units):
-    """欄位 X → 欄位 Y 的函數關係：每個 X 值只對應一個 Y 值（例如 縣市 → 區域），這類規則必然成立。"""
+    """欄位 X → 欄位 Y 的函數關係：每個 X 值只對應一個 Y 值（例如 縣市 → 區域），這類規則定義上必然成立。"""
     rows = [{attr(i): i for i in u} for u in units]
-    cols = sorted({k for r in rows for k in r})
+    cols = sorted({k for r in rows for k in r if k})
     deps = set()
     for x in cols:
         for y in cols:
@@ -797,168 +798,120 @@ def functional_deps(units):
     return deps
 
 
-def default_params(q, n):
-    """固定的預設門檻（decision-tree.md 第 4 節）。"""
-    if q in SHOP_Q:
-        mc, rule = max(10, math.ceil(0.005 * n)), "max(10, ⌈0.5% × N⌉)"
-    elif q == "cooccur":
-        mc, rule = max(10, math.ceil(0.05 * n)), "max(10, ⌈5% × N⌉)"
-    else:
-        mc, rule = max(10, math.ceil(0.01 * n)), "max(10, ⌈1% × N⌉)"
-    conf = {"recommend": 0.1, "explore": 0.1, "cooccur": 0.5}.get(q)
-    lift = None if q == "given" else 1.0
-    return {"min_count": mc, "min_count_rule": rule, "min_confidence": conf, "min_lift": lift}
+def min_count_of(minsup, n):
+    return max(1, math.ceil(minsup * n - 1e-9))
+
+
+def propose_params(n):
+    """示範設定（起點，不是通用標準）：最低支持度 1%，但至少 2 筆；confidence 0.3；lift > 1；前件 ≤ 2。"""
+    mc = max(2, math.ceil(0.01 * n))
+    s = 0.01 if mc == math.ceil(0.01 * n) else math.ceil(mc / n * 10000) / 10000
+    return {"min_support": s, "min_confidence": 0.3, "min_lift": 1.0, "max_lhs": 2,
+            "min_lhs_count": min_count_of(s, n)}
 
 
 def rule_text(A, B):
     return f"{fmt_set(A)} → {fmt_set(B)}"
 
 
-def mine(q, B, units, P, qa):
-    """依分析問題的固定規則形式產生結果。回傳 (rows, kind, filter_log)。"""
-    mc, mconf, mlift = P["min_count"], P["min_confidence"] or 0.0, P["min_lift"]
-    flog = []
-    rows = []
-
-    def keep_rule(m):
-        return m["count"] >= mc and (mlift is None or m["lift"] > mlift) and m["confidence"] >= mconf - 1e-12
-
-    if q in ("bundle", "placement"):
-        sup = frequent(B, mc, 3 if q == "bundle" else 2)
-        cand = [I for I in sup if len(I) >= 2]
-        flog.append(("至少共同出現 {} 筆的 {} 項組合".format(mc, "2–3" if q == "bundle" else "2"), len(cand)))
-        for I in cand:
-            if q == "bundle":
-                lifts = [measures(B.n, sup[I - {i}], sup[frozenset([i])], sup[I])["lift"] for i in I]
-                if min(lifts) <= 1:
-                    continue
-                mx = max(sup[frozenset([i])] for i in I)
-                rows.append(dict(result="{" + " + ".join(sorted(I)) + "}", items=sorted(I), size=len(I),
-                                 count=sup[I], support=sup[I] / B.n, min_lift=min(lifts),
-                                 all_confidence=sup[I] / mx))
-            else:
-                a, b = sorted(I)
-                m = measures(B.n, sup[frozenset([a])], sup[frozenset([b])], sup[I])
-                if m["lift"] <= 1:
-                    continue
-                rows.append(dict(result=f"{a} ↔ {b}", lhs=[a], rhs=[b], count=m["count"], support=m["support"],
-                                 lift=m["lift"], cosine=m["cosine"], kulczynski=m["kulczynski"],
-                                 conf_ab=m["confidence"], conf_ba=sup[I] / sup[frozenset([b])]))
-        flog.append(("其中正相關（{}）".format("每個方向 lift > 1" if q == "bundle" else "lift > 1"), len(rows)))
-        if q == "bundle":
-            rows.sort(key=lambda r: (-r["count"], -r["min_lift"], r["result"]))
-        else:
-            rows.sort(key=lambda r: (-r["lift"], -r["count"], r["result"]))
-        return rows, ("itemset" if q == "bundle" else "pair"), flog
-
-    if q in ("recommend", "given"):
-        A = frozenset(qa)
+def mine(goal, B, units, P, target, survey):
+    """依分析目標產生規則，依序篩選：最低筆數 → 最低前件筆數 → confidence → lift → 冗餘。回傳 (rows, steps)。"""
+    n = B.n
+    mc = min_count_of(P["min_support"], n)
+    max_lhs = int(P.get("max_lhs") or 2)
+    steps, rows = [], []
+    if goal == "lhs":
+        A = frozenset(target)
         cA = B.count(A)
         lhs_attrs = {attr(i) for i in A}
-        flog.append((f"前件 {fmt_set(A)} 出現筆數", cA))
         if cA:
             sel = B.X[:, [B.idx[i] for i in A]].all(axis=1)
             co = B.X[sel].sum(axis=0)
             for j, it in enumerate(B.items):
-                if it in A or (q == "given" and attr(it) in lhs_attrs):
+                if it in A or co[j] == 0 or (survey and attr(it) in lhs_attrs):
                     continue
-                m = measures(B.n, cA, int(B.single[j]), int(co[j]))
-                rows.append(dict(result=rule_text(A, [it]), lhs=sorted(A), rhs=[it], **m))
-        flog.append(("候選後件", len(rows)))
-        rows = [r for r in rows if keep_rule(r)]
-        flog.append((f"共同出現 ≥ {mc} 筆" + (f"、lift > {mlift}" if mlift is not None else "")
-                     + (f"、confidence ≥ {mconf}" if mconf else ""), len(rows)))
-        if q == "recommend":
-            rows.sort(key=lambda r: (-r["lift"], -r["confidence"], r["result"]))
-        else:
-            for r in rows:
-                r["note"] = "lift ≤ 1：比例不高於整體，不是這個特徵特有" if r["lift"] <= 1 else ""
-            rows.sort(key=lambda r: (-r["confidence"], -r["lift"], r["result"]))
-        return rows, "rule", flog
-
-    # explore / cooccur / target：前件 ≤ 2、後件 1
-    sup = frequent(B, mc, 3)
-    target = frozenset(qa) if q == "target" else None
-    allr = []
-    for I, cI in sup.items():
-        if len(I) < 2:
-            continue
-        for b in sorted(I):
-            A = I - {b}
-            if target is not None and b not in target:
+                rows.append(dict(result=rule_text(A, [it]), lhs=sorted(A), rhs=[it],
+                                 **measures(n, cA, int(B.single[j]), int(co[j]))))
+        steps.append((f"候選規則（前件 = {fmt_set(A)}、後件 1 項、至少 1 筆共同出現）", len(rows)))
+        rows = [r for r in rows if r["count"] >= mc]
+        steps.append((f"support ≥ {P['min_support']}（共同筆數 ≥ {mc}）", len(rows)))
+    else:
+        sup = frequent(B, mc, max_lhs + 1)
+        tgt = frozenset(target or [])
+        for I, cI in sup.items():
+            if len(I) < 2:
                 continue
-            m = measures(B.n, sup[A], sup[frozenset([b])], cI)
-            allr.append(dict(result=rule_text(A, [b]), lhs=sorted(A), rhs=[b], **m))
-    flog.append((f"共同出現 ≥ {mc} 筆、前件 ≤ 2 項、後件 1 項" + ("（後件為指定答案）" if target else ""), len(allr)))
-    rows = [r for r in allr if keep_rule(r)]
-    flog.append((f"lift > {mlift}" + (f"、confidence ≥ {mconf}" if mconf else ""), len(rows)))
-    # 冗餘：較短前件的規則 confidence 已相同或更高
-    red = []
+            for b in sorted(I):
+                A = I - {b}
+                if len(A) > max_lhs or (goal == "rhs" and b not in tgt):
+                    continue
+                rows.append(dict(result=rule_text(A, [b]), lhs=sorted(A), rhs=[b],
+                                 **measures(n, sup[A], sup[frozenset([b])], cI)))
+        form = f"後件 = {fmt_set(tgt)}、前件 ≤ {max_lhs} 項" if goal == "rhs" else f"前件 ≤ {max_lhs} 項、後件 1 項"
+        steps.append((f"support ≥ {P['min_support']}（共同筆數 ≥ {mc}）的候選規則（{form}）", len(rows)))
+    rows = [r for r in rows if r["lhs_count"] >= P["min_lhs_count"]]
+    steps.append((f"前件筆數 ≥ {P['min_lhs_count']}", len(rows)))
+    if P.get("min_confidence") is not None:
+        rows = [r for r in rows if r["confidence"] >= P["min_confidence"] - 1e-12]
+        steps.append((f"confidence ≥ {P['min_confidence']}", len(rows)))
+    if P.get("min_lift") is not None:
+        rows = [r for r in rows if r["lift"] > P["min_lift"]]
+        steps.append((f"lift > {P['min_lift']}", len(rows)))
+    # 冗餘：前件拿掉任一項後（同一後件）confidence 已相同或更高，多出的項目沒有提供資訊
+    keep = []
     for r in rows:
         A, b = frozenset(r["lhs"]), r["rhs"][0]
-        if len(A) == 2 and any(sup[frozenset([a, b])] / sup[frozenset([a])] >= r["confidence"] - 1e-12 for a in A):
-            red.append(r["result"])
-    rows = [r for r in rows if r["result"] not in set(red)]
-    flog.append(("移除冗餘規則（較短前件的 confidence 已相同或更高）", len(rows)))
-    if q in SURVEY_Q:
-        deps = functional_deps(units)
-        dfn = [r for r in rows if any((attr(x), attr(r["rhs"][0])) in deps for x in r["lhs"])]
-        if dfn:
-            rows = [r for r in rows if r not in dfn]
-        flog.append(("移除定義性規則（欄位間有函數關係，必然成立）" + (
-            "：" + "、".join(f"{x}→{y}" for x, y in sorted(deps)) if deps else "：無"), len(rows)))
+        red = len(A) >= 2 and goal != "lhs" and any(
+            B.count((A - {a}) | {b}) / B.count(A - {a}) >= r["confidence"] - 1e-12 for a in A)
+        if not red:
+            keep.append(r)
+    rows = keep
+    steps.append(("移除冗餘規則（較短前件的 confidence 已相同或更高）", len(rows)))
+    deps = functional_deps(units) if survey else set()
     for r in rows:
-        r["note"] = "confidence = 1：請確認是否定義上必然" if r["confidence"] >= 1 - 1e-12 else ""
+        r["note"] = ("欄位間有函數關係：定義上必然成立，不是新發現"
+                     if any((attr(x), attr(r["rhs"][0])) in deps for x in r["lhs"]) else "")
     rows.sort(key=lambda r: (-r["lift"], -r["count"], r["result"]))
-    return rows, "rule", flog
+    return rows, steps
 
 
-def split_units(units, times, seed):
+def split_units(units, times, vcfg):
+    """選用的保留資料驗證：預設隨機切分；只有使用者確認時間欄位時才依時間切分（不假設資料列順序代表時間）。"""
     n = len(units)
-    if n < VALID_MIN_UNITS:
-        return None, f"觀測單位 {n:,} < {VALID_MIN_UNITS}，切出 30% 後驗證資料太少：不做驗證，結果全部視為探索性"
-    k = int(round(n * TEST_FRAC))
-    if times is not None:
+    frac, seed = vcfg.get("test_frac", TEST_FRAC), vcfg.get("seed", SEED)
+    k = int(round(n * frac))
+    if k < 1 or n - k < 1:
+        return None, "資料太少，無法切出保留資料"
+    if vcfg.get("by_time") and times is not None:
         order = sorted(range(n), key=lambda i: (times[i], i))
-        return (sorted(order[:n - k]), sorted(order[n - k:])), f"依時間切分：最早的 70%（{n - k:,}）探勘、最晚的 30%（{k:,}）驗證"
+        return (sorted(order[:n - k]), sorted(order[n - k:])), \
+            f"依使用者確認的時間欄位切分：最早 {1 - frac:.0%}（{n - k:,}）探勘、最晚 {frac:.0%}（{k:,}）保留"
     rng = np.random.default_rng(seed)
     perm = rng.permutation(n)
     return (sorted(perm[:n - k].tolist()), sorted(perm[n - k:].tolist())), \
-        f"隨機切分（seed = {seed}）：70%（{n - k:,}）探勘、30%（{k:,}）驗證"
+        f"隨機切分（seed = {seed}）：{1 - frac:.0%}（{n - k:,}）探勘、{frac:.0%}（{k:,}）保留"
 
 
-def validate(rows, kind, T, alpha):
-    """在驗證資料上重算，單尾 Fisher exact test（H1：正相關）＋ Benjamini–Hochberg。"""
+def validate(rows, T, alpha):
+    """在保留資料上重算，單尾 Fisher's exact test（H1：正相關，Tan et al. 10.4.1）＋ Benjamini–Hochberg。"""
     from scipy.stats import false_discovery_control, fisher_exact
-
-    def test(A, Bs):
-        cA, cB, cAB = T.count(A), T.count(Bs), T.count(A | Bs)
-        if not (cA and cB):
-            return 1.0, float("nan"), cAB
-        p = fisher_exact([[cAB, cA - cAB], [cB - cAB, T.n - cA - cB + cAB]], alternative="greater")[1]
-        return p, measures(T.n, cA, cB, cAB)["lift"], cAB
-
     idx, ps = [], []
     for k, r in enumerate(rows):
-        if kind == "itemset":
-            I = frozenset(r["items"])
-            res = [test(I - {i}, frozenset([i])) for i in I]
-            p, lift, c = max(x[0] for x in res), min(x[1] for x in res), T.count(I)
+        A, Bs = frozenset(r["lhs"]), frozenset(r["rhs"])
+        cA, cB, cAB = T.count(A), T.count(Bs), T.count(A | Bs)
+        if cA and cB:
+            p = fisher_exact([[cAB, cA - cAB], [cB - cAB, T.n - cA - cB + cAB]], alternative="greater")[1]
+            lift = measures(T.n, cA, cB, cAB)["lift"]
         else:
-            if r.get("lift", 2) <= 1:
-                r.update(test_count=None, test_lift=None, q_value=None, replicated="不檢驗（lift ≤ 1）")
-                continue
-            p, lift, c = test(frozenset(r["lhs"]), frozenset(r["rhs"]))
-        r.update(test_count=c, test_lift=lift, p_value=p)
+            p, lift = 1.0, float("nan")
+        r.update(test_count=cAB, test_lift=lift, p_value=p)
         idx.append(k)
         ps.append(min(1.0, p))
     if ps:
-        qs = false_discovery_control(ps, method="bh")
-        for k, q in zip(idx, qs):
+        for k, q in zip(idx, false_discovery_control(ps, method="bh")):
             r = rows[k]
             r["q_value"] = float(q)
-            ok = (r["test_lift"] == r["test_lift"]) and r["test_lift"] > 1 and q < alpha
-            r["replicated"] = "是" if ok else "否"
+            r["replicated"] = "是" if (r["test_lift"] == r["test_lift"] and r["test_lift"] > 1 and q < alpha) else "否"
     return sum(1 for r in rows if r.get("replicated") == "是"), len(ps)
 
 
@@ -974,6 +927,9 @@ def prepare(cfg):
     t = cfg.get("data_type")
     if t == "shopping":
         prep = prep_shopping(df, cfg.get("shopping") or {})
+        if not cfg.get("unit"):
+            prep["pending"].insert(0, {"key": "unit", "count": 1, "options": ["文字說明"],
+                                       "question": "交易 ID 代表什麼（一張發票、一位顧客，或一位顧客的一天）？確認後寫入 unit"})
     elif t == "survey":
         prep = prep_survey(df, cfg.get("survey") or {})
     else:
@@ -982,45 +938,61 @@ def prepare(cfg):
     return prep
 
 
+GOAL_LABEL = {"free": "自由探索", "lhs": "指定前件", "rhs": "指定後件"}
+
+
 def check_question(cfg, B):
     q = cfg.get("question") or {}
-    t, problems = q.get("type"), []
-    allowed = SHOP_Q if cfg["data_type"] == "shopping" else SURVEY_Q
-    if t not in allowed:
-        return None, None, [f"question.type 必須是 {allowed} 之一（由使用者選擇）"]
-    arg = None
-    if t == "recommend":
-        arg = q.get("item")
-        arg = [arg] if isinstance(arg, str) else (arg or [])
-        if not arg:
-            problems.append("請使用者輸入商品名稱（question.item）")
-    elif t == "target":
-        arg = q.get("target")
-        arg = [arg] if isinstance(arg, str) else (arg or [])
-        if len(arg) != 1:
-            problems.append("question.target 需要一個「欄位=答案」")
-    elif t == "given":
-        arg = q.get("given")
-        arg = [arg] if isinstance(arg, str) else (arg or [])
-        if not arg:
-            problems.append("question.given 需要至少一個「欄位=答案」")
-    for x in arg or []:
+    goal = q.get("goal")
+    if goal not in GOAL_LABEL:
+        return None, None, ["請使用者選擇分析目標：question.goal = free（自由探索）、lhs（指定前件）或 rhs（指定後件）"]
+    items = q.get("items") or []
+    items = [items] if isinstance(items, str) else list(items)
+    problems = []
+    if goal == "lhs" and not items:
+        problems.append("指定前件需要至少一個項目（question.items）")
+    if goal == "rhs" and len(items) != 1:
+        problems.append("指定後件需要剛好一個項目（question.items）")
+    for x in items:
         if x not in B.idx:
             close = difflib.get_close_matches(x, B.items, n=5, cutoff=0.5) + \
                 [i for i in B.items if x.lower() in i.lower()][:5]
             problems.append(f"資料中沒有「{x}」這個項目" + (f"；相近的有：{sorted(set(close))[:8]}" if close else "")
                             + "。請使用者確認正確名稱（不自行替換）")
-    return t, arg, problems
+    return goal, items, problems
 
 
-def stop(code, title, items, out_dir, kind):
+def stop(code, title, items, out_dir, kind, extra=""):
     os.makedirs(out_dir, exist_ok=True)
     print(f"## {title}")
     for x in items:
         print(f"- {x['question'] if isinstance(x, dict) else x}")
+    if extra:
+        print("\n" + extra)
     with open(os.path.join(out_dir, "status.json"), "w", encoding="utf-8") as f:
         json.dump({"status": kind, "items": items}, f, ensure_ascii=False, indent=1)
     sys.exit(code)
+
+
+def param_reference(goal, B, units, P, target, survey):
+    """只改一個參數（最低支持度乘上 0.5、1、2、4 倍；或 confidence 門檻），列出保留規則數，協助使用者決定（不自動選擇）。"""
+    rows = []
+    for f in (0.5, 1, 2, 4):
+        s = round(P["min_support"] * f, 6)
+        q = dict(P, min_support=s)
+        r, _ = mine(goal, B, units, q, target, survey)
+        rows.append({"最低支持度": s, "對應最低筆數": min_count_of(s, B.n), "保留規則數": len(r)})
+    rows2 = []
+    for c in (0.1, 0.2, 0.3, 0.5):
+        r, _ = mine(goal, B, units, dict(P, min_confidence=c), target, survey)
+        rows2.append({"confidence 門檻": c, "保留規則數": len(r)})
+    return rows, rows2
+
+
+def settings_text(P, n):
+    return (f"最低支持度 {P['min_support']}（共同筆數 ≥ {min_count_of(P['min_support'], n)}）、"
+            f"confidence ≥ {P.get('min_confidence')}、lift > {P.get('min_lift')}、"
+            f"前件 ≤ {P.get('max_lhs', 2)} 項、後件 1 項、前件筆數 ≥ {P['min_lhs_count']}")
 
 
 def cmd_run(args):
@@ -1033,95 +1005,106 @@ def cmd_run(args):
         stop(2, "以下事項需要使用者確認後才能執行（一次問一項）", prep["pending"], out, "pending")
     units, times = prep["units"], prep["times"]
     if not units:
-        stop(1, "前處理後沒有任何觀測單位", ["請檢查資料或前處理設定"], out, "unsupported")
-
-    Ball = Binary(units)
-    q, qa, problems = check_question(cfg, Ball)
+        stop(1, "前處理後沒有任何觀測", ["請檢查資料或前處理設定"], out, "unsupported")
+    survey = cfg["data_type"] == "survey"
+    goal, target, problems = check_question(cfg, Binary(units))
     if problems:
-        stop(1, "分析問題的設定需要補充", problems, out, "question")
+        stop(2 if goal is None else 1, "分析目標需要確認", problems, out, "question")
 
     vcfg = cfg.get("validation") or {}
-    seed = vcfg.get("seed", SEED)
-    split, split_note = (None, "使用者選擇不做驗證") if vcfg.get("enabled") is False else split_units(units, times, seed)
-    mine_idx = split[0] if split else list(range(len(units)))
-    mine_units = [units[i] for i in mine_idx]
+    split, split_note = (None, "未做保留資料驗證（選用步驟）")
+    if vcfg.get("enabled"):
+        split, split_note = split_units(units, times, vcfg)
+    mine_units = [units[i] for i in split[0]] if split else units
     B = Binary(mine_units)
-    if qa:
-        miss = [x for x in qa if x not in B.idx]
-        if miss:
-            stop(1, "指定項目沒有出現在探勘資料中", [f"「{x}」只出現在驗證資料，或次數太少" for x in miss], out, "question")
+    miss = [x for x in target if x not in B.idx]
+    if miss:
+        stop(1, "指定的項目沒有出現在探勘資料中", [f"「{x}」只出現在保留資料中" for x in miss], out, "question")
 
-    P = default_params(q, B.n)
-    user = {k: v for k, v in (cfg.get("params") or {}).items() if v is not None}
-    for k, v in user.items():
-        P[k] = v
-    P["source"] = {k: ("使用者調整" if k in user else "預設規則") for k in ("min_count", "min_confidence", "min_lift")}
+    P = dict(cfg.get("params") or {})
+    if not P.get("confirmed"):
+        demo = propose_params(B.n)
+        demo.update({k: v for k, v in P.items() if v is not None and k in demo})
+        ref, ref2 = param_reference(goal, B, mine_units, demo, target, survey)
+        extra = ("### 示範設定（起點，不是通用標準）\n" + settings_text(demo, B.n) +
+                 f"\n- 分母 N = {B.n:,}；理由：最低支持度 1%（至少 2 筆）避免只出現一兩次的巧合組合；"
+                 "confidence 0.3 只排除很弱的規則，判斷強弱仍要對照後件比例與 lift；前件 ≤ 2 項較容易解讀；"
+                 "前件筆數不少於最低共同筆數，避免「1 筆中 1 筆」的 confidence。\n\n### 只改最低支持度時的規則數\n" +
+                 md_table(ref, list(ref[0])) + "\n\n### 只改 confidence 門檻時的規則數\n" +
+                 md_table(ref2, list(ref2[0])) +
+                 "\n\n使用者確認或修改後，把值寫入 params，並設定 \"confirmed\": true、\"reason\": 使用者的理由。")
+        stop(2, "需要使用者確認分析參數", [{"key": "params", "count": 1, "options": ["confirm"],
+                                         "question": "請確認或修改示範設定"}], out, "params", extra)
+    for k in ("min_support", "min_lhs_count"):
+        if P.get(k) is None:
+            stop(1, "參數不完整", [f"params.{k} 必須填寫"], out, "params")
+    P.setdefault("max_lhs", 2)
 
-    rows, kind, flog = mine(q, B, mine_units, P, qa)
+    rows, steps = mine(goal, B, mine_units, P, target, survey)
     n_rep = n_test = 0
     T = None
     if split:
         T = Binary([units[i] for i in split[1]])
-        n_rep, n_test = validate(rows, kind, T, vcfg.get("alpha", ALPHA))
+        n_rep, n_test = validate(rows, T, vcfg.get("alpha", ALPHA))
 
     os.makedirs(out, exist_ok=True)
+    # 設定紀錄：每次執行的設定與結果都保留
+    log_path = os.path.join(out, "settings_log.json")
+    hist = json.load(open(log_path, encoding="utf-8")) if os.path.exists(log_path) else []
+    entry = {"time": datetime.now().isoformat(timespec="seconds"), "goal": GOAL_LABEL[goal], "items": target,
+             "settings": settings_text(P, B.n), "n_rules": len(rows), "reason": P.get("reason") or "（未填）"}
+    if not hist or {k: hist[-1].get(k) for k in ("goal", "items", "settings")} != {k: entry[k] for k in ("goal", "items", "settings")}:
+        hist.append(entry)
+    with open(log_path, "w", encoding="utf-8") as f:
+        json.dump(hist, f, ensure_ascii=False, indent=1)
+
     pd.DataFrame([{k: (json.dumps(v, ensure_ascii=False) if isinstance(v, list) else v) for k, v in r.items()}
                   for r in rows]).to_csv(os.path.join(out, "results_full.csv"), index=False, encoding="utf-8-sig")
-    label = QLABEL[q].format(x="、".join(qa or []))
     res = {
-        "version": VERSION, "generated": datetime.now().isoformat(timespec="seconds"),
-        "config_path": args.config,
+        "version": VERSION, "generated": datetime.now().isoformat(timespec="seconds"), "config_path": args.config,
         "data": {"path": cfg["data_path"], "encoding": prep["encoding"], "rows": prep["rows"],
                  "columns": prep["columns"], "type": cfg["data_type"],
                  "format": (cfg.get("shopping") or cfg.get("survey") or {}).get("format"),
-                 "units": len(units), "items": len(Ball.items), "unit": cfg.get("unit")},
-        "preprocessing": prep["log"],
-        "survey_columns": prep.get("columns"), "survey_freq": prep.get("freq"),
-        "question": {"type": q, "label": label, "form": QFORM[q], "arg": qa},
-        "params": P,
+                 "units": len(units), "items": len(Binary(units).items), "unit": cfg.get("unit"),
+                 "n_before": prep.get("n_before")},
+        "preprocessing": prep["log"], "survey_columns": prep.get("columns"), "survey_freq": prep.get("freq"),
+        "question": {"goal": goal, "goal_label": GOAL_LABEL[goal], "items": target,
+                     "label": (cfg.get("question") or {}).get("label")},
+        "params": P, "settings": settings_text(P, B.n), "settings_log": hist,
         "split": {"note": split_note, "mine_units": B.n, "test_units": T.n if T else 0},
-        "filter_log": [{"step": s, "remaining": c} for s, c in flog],
-        "n_results": len(rows), "kind": kind,
-        "top": rows[:TOP],
-        "validation": {"enabled": bool(split), "tested": n_test, "replicated": n_rep,
-                       "alpha": vcfg.get("alpha", ALPHA)},
+        "filter_log": [{"step": s, "remaining": c} for s, c in steps],
+        "n_results": len(rows), "top": rows[:TOP],
+        "validation": {"enabled": bool(split), "tested": n_test, "replicated": n_rep, "alpha": vcfg.get("alpha", ALPHA)},
         "environment": env_versions(),
     }
     with open(os.path.join(out, "results.json"), "w", encoding="utf-8") as f:
         json.dump(res, f, ensure_ascii=False, indent=1, default=str)
-    draft = build_draft(cfg, res)
     with open(os.path.join(out, "report_draft.md"), "w", encoding="utf-8") as f:
-        f.write(draft)
+        f.write(build_draft(cfg, res))
     with open(os.path.join(out, "status.json"), "w", encoding="utf-8") as f:
         json.dump({"status": "done"}, f)
 
-    print(f"## 分析完成：{label}\n- 觀測單位 {len(units):,}；{split_note}")
-    print(f"- 門檻：最低共同出現筆數 {P['min_count']}（{P['source']['min_count']}："
-          f"{P['min_count_rule']}，N = {B.n:,}）；confidence "
-          + (f"≥ {P['min_confidence']}" if P['min_confidence'] is not None else "不設")
-          + "；lift " + (f"> {P['min_lift']}" if P['min_lift'] is not None else "不設"))
-    for s, c in flog:
+    print(f"## 分析完成：{GOAL_LABEL[goal]}" + (f"（{', '.join(target)}）" if target else ""))
+    print(f"- 分母 N = {B.n:,}；{split_note}\n- 設定：{settings_text(P, B.n)}")
+    for s, c in steps:
         print(f"- {s}：{c:,}")
-    print(f"- 結果 {len(rows):,} 筆" + (f"；驗證資料重現 {n_rep} / {n_test}" if split else ""))
-    print("\n" + result_table(rows[:TOP], kind, q, bool(split)))
-    print(f"\n輸出：{out}/results.json、{out}/results_full.csv、{out}/report_draft.md")
+    print(f"- 保留規則 {len(rows):,} 條" + (f"；保留資料重現 {n_rep} / {n_test}" if split else ""))
+    if not rows:
+        print("\n> 沒有規則。請向使用者說明原因並提出放寬方案；經同意才修改參數（設定紀錄會保留每一次）。")
+    print("\n" + result_table(rows[:TOP], bool(split)))
+    print(f"\n輸出：{out}/results.json、{out}/results_full.csv、{out}/settings_log.json、{out}/report_draft.md")
 
 
 # ----------------------------------------------------------------------------- 報告
 
-def result_table(rows, kind, q, val):
-    if kind == "itemset":
-        cols, hd = ["result", "count", "support", "min_lift", "all_confidence"], ["組合", "共同出現筆數", "support", "最低 lift", "all-confidence"]
-    elif kind == "pair":
-        cols, hd = ["result", "count", "support", "lift", "cosine", "kulczynski"], ["商品組合", "共同出現筆數", "support", "lift", "cosine", "Kulczynski"]
-    else:
-        cols = ["result", "lhs_count", "count", "support", "confidence", "base", "lift"]
-        hd = ["規則", "前件筆數", "共同出現筆數", "support", "confidence", "後件基準比例", "lift"]
+def result_table(rows, val):
+    cols = ["result", "lhs_count", "count", "support", "confidence", "base", "lift"]
+    hd = ["規則", "前件筆數", "共同筆數", "support", "confidence", "後件比例", "lift"]
     if val:
-        cols, hd = cols + ["test_lift", "q_value", "replicated"], hd + ["驗證 lift", "q 值", "重現"]
+        cols, hd = cols + ["test_lift", "q_value", "replicated"], hd + ["保留資料 lift", "q 值", "重現"]
     if any(r.get("note") for r in rows):
         cols, hd = cols + ["note"], hd + ["備註"]
-    return md_table([dict(r, **{"rank": i}) for i, r in enumerate(rows, 1)], ["rank"] + cols, ["#"] + hd)
+    return md_table([dict(r, rank=i) for i, r in enumerate(rows, 1)], ["rank"] + cols, ["#"] + hd)
 
 
 def env_versions():
@@ -1141,72 +1124,77 @@ def todo(what):
 def build_draft(cfg, r):
     d, q, P = r["data"], r["question"], r["params"]
     rep = cfg.get("report") or {}
-    typ = {"shopping": "購物清單", "survey": "問卷類別表"}[d["type"]]
+    typ = {"shopping": "購物資料", "survey": "類別問卷"}[d["type"]]
+    unit = d.get("unit") or ("一筆交易" if d["type"] == "shopping" else "一位受訪者")
+    N = r["split"]["mine_units"]
     L = [f"# {rep.get('title') or '關聯規則分析報告'}\n"]
     L.append("## 1. 分析目的與資料\n")
     L.append(f"- 背景：{rep.get('background') or todo('使用者提供的背景；未提供寫「未提供」')}")
-    L.append(f"- 分析問題：**{q['label']}**")
-    L.append(f"- 觀測單位：{d.get('unit') or ('一筆訂單' if d['type'] == 'shopping' else '一位受訪者')}")
-    L.append(f"- 資料檔：`{d['path']}`（{d['rows']:,} 列、{len(d['columns'])} 個欄位；判定為{typ}，格式 `{d['format']}`，經使用者確認）\n")
+    L.append(f"- 分析問題：{q.get('label') or todo('用使用者的話寫出分析問題')}")
+    L.append(f"- 分析目標：**{q['goal_label']}**" + (f"（{', '.join(q['items'])}）" if q["items"] else ""))
+    L.append(f"- 資料：`{d['path']}`，{d['rows']:,} 列、{len(d['columns'])} 個欄位；{typ}（格式 `{d['format']}`，經使用者確認）")
+    L.append(f"- 一筆觀測：{unit}")
+    L.append(f"- **support 的分母 N = {N:,}**" + ("（保留資料驗證時為探勘資料的筆數）" if r["validation"]["enabled"] else "") + "\n")
+    L.append("> 關聯規則描述的是共同出現，不代表因果（Tan et al., 2019, 5.1 節）。\n")
 
     L.append("## 2. 前處理\n")
-    L.append("每一項排除與轉換都列出原因與影響筆數。固定規則每次都會執行；標示「使用者」的項目是經使用者確認的決定。\n")
-    L.append(md_table(r["preprocessing"], ["step", "action", "reason", "affected"], ["類別", "處理", "原因", "影響"]))
-    L.append(f"\n前處理後共有 **{d['units']:,}** 個觀測單位、**{d['items']:,}** 種項目。\n")
+    L.append("每一項處理都列出原因與影響筆數；「使用者」開頭的項目是經使用者確認的決定。\n")
+    L.append(md_table(r["preprocessing"], ["step", "action", "reason", "affected"], ["類別", "處理或檢查", "原因", "影響"]))
+    L.append(f"\n分析前後筆數：原始資料 {d['rows']:,} 列 → {d['units']:,} 個觀測（{unit}）、{d['items']:,} 種項目。\n")
     if r.get("survey_freq"):
-        L.append("各分析欄位的答案分布（完整個案分析之後）：\n")
-        fr = [{"欄位": c, "答案（人數）": "、".join(f"{k}（{v:,}）" for k, v in sorted(f.items(), key=lambda x: -x[1]))}
+        L.append("編碼對照（各分析欄位的類別與人數，完整案例分析之後）：\n")
+        fr = [{"欄位": c, "類別（人數）": "、".join(f"{c}={k}（{v:,}）" for k, v in sorted(f.items(), key=lambda x: -x[1]))}
               for c, f in r["survey_freq"].items()]
-        L.append(md_table(fr, ["欄位", "答案（人數）"]) + "\n")
-    fn = prep_shopping if d["type"] == "shopping" else prep_survey
-    src = pyinspect.getsource(fn) + ("\n\n" + pyinspect.getsource(kv_to_wide) if d["type"] == "survey" else "")
-    L.append(details("顯示程式碼：本次使用的前處理程式", "python", src))
-    L.append(todo("一到三句：前處理對資料的影響（例如排除比例是否偏高、可能造成的偏誤）") + "\n")
+        L.append(md_table(fr, ["欄位", "類別（人數）"]) + "\n")
+    fn = [prep_shopping] if d["type"] == "shopping" else [prep_survey, kv_to_wide, load_dictionary]
+    L.append(details("顯示程式碼：本次使用的前處理程式", "python", "\n\n".join(pyinspect.getsource(f) for f in fn)))
+    L.append(todo("一到三句：前處理對資料的影響，例如排除比例與可能的偏誤") + "\n")
 
     L.append("## 3. 分析設定\n")
-    L.append(f"- 規則形式（依分析問題固定）：{q['form']}")
-    L.append(f"- 最低共同出現筆數：**{P['min_count']}**（{P['source']['min_count']}；預設規則為 {P['min_count_rule']}，"
-             f"N = {r['split']['mine_units']:,}），相當於 support ≥ {P['min_count'] / max(1, r['split']['mine_units']):.4f}")
-    L.append(f"- confidence 門檻：{P['min_confidence'] if P['min_confidence'] is not None else '不設'}（{P['source']['min_confidence']}）")
-    L.append(f"- lift 門檻：{'> ' + str(P['min_lift']) if P['min_lift'] is not None else '不設，lift ≤ 1 另外標示'}（{P['source']['min_lift']}）")
-    L.append(f"- 驗證安排：{r['split']['note']}\n")
+    L.append(f"- 本次設定：{r['settings']}（分母 N = {N:,}）")
+    L.append(f"- 設定理由：{P.get('reason') or todo('使用者確認設定的理由')}")
+    L.append(f"- 保留資料驗證：{r['split']['note']}")
+    L.append("- 這些門檻是本次分析的選擇，不是通用標準。\n")
+    L.append("設定紀錄（每一次執行的設定與保留規則數）：\n")
+    L.append(md_table(r["settings_log"], ["time", "goal", "settings", "n_rules", "reason"],
+                      ["時間", "目標", "設定", "保留規則數", "理由"]) + "\n")
     L.append("篩選過程：\n")
-    L.append(md_table(r["filter_log"], ["step", "remaining"], ["步驟", "剩下"]) + "\n")
-    L.append(details("顯示程式碼：本次使用的探勘程式", "python", pyinspect.getsource(default_params) + "\n\n" + pyinspect.getsource(mine)))
+    L.append(md_table(r["filter_log"], ["step", "remaining"], ["篩選步驟", "剩下規則數"]) + "\n")
+    L.append(details("顯示程式碼：本次使用的規則產生與篩選程式", "python",
+                     pyinspect.getsource(mine) + "\n\n" + pyinspect.getsource(measures)))
 
-    L.append("## 4. 結果\n")
-    L.append(f"共 {r['n_results']:,} 筆結果，下表列出前 {min(TOP, r['n_results'])} 筆（完整結果在 `results_full.csv`）。\n")
-    L.append(result_table(r["top"], r["kind"], q["type"], r["validation"]["enabled"]) + "\n")
-    L.append("指標說明：support = 共同出現筆數 / N；confidence = 前件出現時後件也出現的比例；"
-             "後件基準比例 = 全部資料中後件出現的比例；lift = confidence / 後件基準比例（1 表示沒有關聯）。\n")
+    L.append("## 4. 結果與解讀\n")
+    L.append(f"共保留 {r['n_results']:,} 條規則，下表依 lift 排序列出前 {min(TOP, r['n_results'])} 條（完整結果在 `results_full.csv`）。\n")
+    L.append(result_table(r["top"], r["validation"]["enabled"]) + "\n")
+    L.append("support = 共同筆數 / N；confidence = 共同筆數 / 前件筆數；後件比例 = 後件筆數 / N；"
+             "lift = confidence / 後件比例（1 表示與獨立情況相同）。lift > 1 不等於統計顯著。\n")
     if r["n_results"] == 0:
-        L.append("> 沒有結果通過篩選。依固定規則，可以請使用者決定是否把最低共同出現筆數降到 10 筆後重跑一次。\n")
-    L.append(todo("用諮詢者看得懂的話解讀前幾筆結果，回答分析問題；數字一律取自上表") + "\n")
+        L.append("> 本次設定下沒有規則。若之後經使用者同意調整設定，設定紀錄會保留每一次的結果。\n")
+    L.append(todo("解讀主要規則：每條說明分母、共同筆數、confidence 與後件比例的對照、lift；不寫因果、不寫顯著") + "\n")
 
-    L.append("## 5. 可靠性檢查\n")
+    L.append("## 5. 規則穩定性\n")
     v = r["validation"]
     if v["enabled"]:
-        L.append(f"在探勘時沒有用到的驗證資料（{r['split']['test_units']:,} 個觀測單位）上，對每一筆結果做單尾 Fisher exact test"
-                 f"（H0：前件與後件獨立；H1：正相關），{v['tested']} 個檢定以 Benjamini–Hochberg 控制 FDR = {v['alpha']}。"
-                 f"「重現」= 驗證資料 lift > 1 且 q < {v['alpha']}。\n")
-        L.append(f"- 重現：**{v['replicated']} / {v['tested']}**\n")
+        L.append(f"{r['split']['note']}。在保留資料（{r['split']['test_units']:,} 筆）上，對每條規則做單尾 Fisher's exact test"
+                 f"（H0：前件與後件獨立；H1：正相關；Tan et al., 2019, 10.4.1 節），{v['tested']} 個檢定以 Benjamini–Hochberg "
+                 f"控制 FDR = {v['alpha']}。「重現」= 保留資料 lift > 1 且 q < {v['alpha']}。重現：**{v['replicated']} / {v['tested']}**。\n")
+        L.append(todo("說明哪些規則重現、哪些沒有") + "\n")
     else:
-        L.append(f"- {r['split']['note']}\n")
-    L.append(todo("說明哪些結果重現、哪些沒有，以及這代表什麼") + "\n")
+        L.append("本次沒有做保留資料驗證（選用步驟），結果是對這份資料的描述，屬探索性；lift > 1 不代表統計顯著。\n")
 
     L.append("## 6. 結論與建議\n")
-    L.append(todo("回答分析問題，提出可以採取的行動；未重現的結果不作為主要依據") + "\n")
+    L.append(todo("回答分析問題；行動建議寫成「可以考慮」，必要時建議以實驗確認") + "\n")
     L.append("## 7. 限制\n")
-    L.append("- 關聯規則描述的是「一起出現」，不代表因果。")
-    L.append("- 結果依賴本次的門檻與前處理；改變門檻會改變規則數量與排序。")
+    L.append("- 關聯不代表因果；可能有未納入分析的隱藏變數（Tan et al., 2019, 5.7.3 節 Simpson's paradox）。")
+    L.append("- 結果依賴門檻與前處理；改變設定會改變規則數量與排序。")
     if d["type"] == "survey":
-        L.append("- 完整個案分析排除了有缺失的受訪者；若缺失不是隨機發生，結果可能偏誤。本 skill 未使用調查權重，結果描述的是樣本。")
+        L.append("- 完整案例分析排除了選定欄位有缺失的受訪者；若缺失不是隨機發生，結果可能偏誤。")
+        L.append("- 未使用調查權重，結果是未加權的樣本描述，不代表整體人口。")
     L.append(todo("本次資料特有的限制") + "\n")
     L.append("## 附錄 A：指標定義\n")
-    L.append("| 指標 | 公式 |\n|---|---|\n| support | s(A∪B) = 共同出現筆數 / N |\n| confidence | s(A∪B) / s(A) |\n"
-             "| lift | s(A∪B) / (s(A) s(B)) |\n| cosine | s(A∪B) / √(s(A) s(B)) |\n| Kulczynski | ½ [P(B\\|A) + P(A\\|B)] |\n"
-             "| all-confidence | s(I) / max 單項 support |\n")
-    L.append("定義依據：Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.). Pearson. 第 5、6 章與 10.4 節。\n")
+    L.append("| 指標 | 公式 |\n|---|---|\n| support | σ(X∪Y) / N（式 5.1） |\n| confidence | σ(X∪Y) / σ(X)（式 5.2） |\n"
+             "| 後件比例 | σ(Y) / N |\n| lift（interest factor） | N σ(X∪Y) / (σ(X) σ(Y))（式 5.5） |\n")
+    L.append("Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.). Pearson.\n")
     return "\n".join(L)
 
 

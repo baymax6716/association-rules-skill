@@ -12,6 +12,7 @@
   3. 交叉核對：手算（逐筆計數）、mlxtend、R arules（若有安裝 R）三者結果是否一致
   4. 門檻敏感度：Groceries 練習資料在不同最低支持度下的項目集與規則數（說明門檻沒有通用標準）
   5. Apriori 逐層示範：購物小案例的候選產生、剪枝、計數，以及規則產生時的 confidence 剪枝
+  6. FP-growth 示範：排序、FP-tree、前綴路徑、條件樹遞迴；並在 Groceries 上比較兩種演算法
 """
 import inspect
 import json
@@ -471,8 +472,117 @@ def apriori_demo(baskets):
     top = max((s for s in freq if len(s) == 3), key=lambda s: (freq[s], sorted(s)))
     write("rule_pruning.md", md_table(pd.DataFrame(rule_pruning(baskets, top, 0.6),
                                                    columns=["前件", "後件", "confidence", "結果（門檻 0.6）"])))
+    RESULTS["_apriori_freq"] = freq
     RESULTS["apriori"] = {"min_count": min_count, "counted": counted, "pruned": pruned, "brute": brute,
                           "frequent": len(freq), "max_size": max(len(s) for s in freq), "demo_itemset": sorted(top)}
+
+
+# ----------------------------------------------------------------------------- 6. FP-growth 示範
+
+def fp_order(baskets, min_count):
+    """第一次掃描：計算每個項目的出現筆數，去掉不頻繁項目，其餘依出現筆數由多到少排序（同數依名稱）。"""
+    cnt = {}
+    for b in baskets.values():
+        for i in b:
+            cnt[i] = cnt.get(i, 0) + 1
+    order = sorted((i for i in cnt if cnt[i] >= min_count), key=lambda i: (-cnt[i], i))
+    return order, cnt
+
+
+def fp_tree(paths, order):
+    """第二次掃描：把每筆排序後的交易放進前綴樹；共用前綴的交易共用節點，節點上記錄經過的交易數。"""
+    root = {"item": None, "count": 0, "children": {}}
+    rank = {i: k for k, i in enumerate(order)}
+    for items, c in paths:
+        node = root
+        for i in sorted((x for x in items if x in rank), key=rank.get):
+            node = node["children"].setdefault(i, {"item": i, "count": 0, "children": {}})
+            node["count"] += c
+    return root
+
+
+def prefix_paths(root, item):
+    """找出某項目在樹中的每個節點，往上收集它的前綴路徑；路徑次數取該節點的次數。"""
+    out = []
+
+    def walk(node, path):
+        for ch in node["children"].values():
+            if ch["item"] == item:
+                out.append((tuple(path), ch["count"]))
+            walk(ch, path + [ch["item"]])
+    walk(root, [])
+    return out
+
+
+def fp_growth(paths, min_count, suffix=()):
+    """由出現次數最少的項目開始，對每個項目建立條件 FP-tree（只看包含它的交易）並遞迴，找出所有頻繁項目集。"""
+    cnt = {}
+    for items, c in paths:
+        for i in items:
+            cnt[i] = cnt.get(i, 0) + c
+    result = {}
+    for item in sorted((i for i in cnt if cnt[i] >= min_count), key=lambda i: (cnt[i], i)):
+        itemset = frozenset((item,) + suffix)
+        result[itemset] = cnt[item]
+        order = sorted(cnt, key=lambda i: (-cnt[i], i))
+        cond = prefix_paths(fp_tree(paths, order), item)
+        result.update(fp_growth(cond, min_count, (item,) + suffix))
+    return result
+
+
+def tree_text(node, depth=0):
+    lines = []
+    for ch in sorted(node["children"].values(), key=lambda x: (-x["count"], x["item"])):
+        lines.append("    " * depth + f"└─ {ch['item']} : {ch['count']}")
+        lines += tree_text(ch, depth + 1)
+    return lines
+
+
+def fpgrowth_demo(baskets, apriori_freq):
+    min_count = 2
+    order, cnt = fp_order(baskets, min_count)
+    rank = {i: k for k, i in enumerate(order)}
+    write("fp_order.md", md_table(pd.DataFrame(
+        [(t, set_text(b), " → ".join(sorted((i for i in b if i in rank), key=rank.get))) for t, b in baskets.items()],
+        columns=["交易編號", "原始 basket", "依出現筆數排序後放入樹的順序"])))
+    write("fp_item_counts.md", "、".join(f"{i}（{cnt[i]}）" for i in order))
+    paths = [(tuple(b), 1) for b in baskets.values()]
+    root = fp_tree(paths, order)
+    n_nodes = len(tree_text(root))
+    write("fp_tree.md", "```text\nnull（根節點）\n" + "\n".join(tree_text(root)) + "\n```")
+    suffix = "雞蛋"
+    pp = prefix_paths(root, suffix)
+    write("fp_prefix_paths.md", md_table(pd.DataFrame(
+        [(" → ".join(p) if p else "（直接接在根節點）", c) for p, c in pp], columns=[f"以「{suffix}」結尾的前綴路徑", "次數"])))
+    found = fp_growth(paths, min_count)
+    ending = sorted(((set_text(s), c) for s, c in found.items() if suffix in s), key=lambda x: (len(x[0]), x[0]))
+    write("fp_suffix_result.md", md_table(pd.DataFrame(ending, columns=[f"以「{suffix}」結尾的頻繁項目集", "出現筆數"])))
+    same = found == apriori_freq
+    RESULTS["fpgrowth"] = {"order": order, "nodes": n_nodes, "rows": sum(len(b) for b in baskets.values()),
+                           "frequent": len(found), "same_as_apriori": same, "suffix_found": len(ending)}
+    assert same, "FP-growth 與 Apriori 找到的頻繁項目集應該完全相同"
+
+
+def algorithm_compare():
+    """Groceries 上比較 mlxtend 的 apriori 與 fpgrowth：結果是否相同，以及計算時間（時間會因電腦而異）。"""
+    import time
+    from mlxtend.frequent_patterns import apriori, fpgrowth
+    g = pd.read_csv(os.path.join(REPO, "data", "groceries.csv"), dtype=str, keep_default_na=False)
+    baskets, _ = prep_shopping_long(g, "transaction_id", "item")
+    X = binary_matrix(baskets).set_index("編號").astype(bool)
+    rows, sets = [], {}
+    for s in (0.01, 0.005):
+        for name, f in (("Apriori", apriori), ("FP-growth", fpgrowth)):
+            t0 = time.perf_counter()
+            fi = f(X, min_support=s, use_colnames=True, max_len=3)
+            dt = time.perf_counter() - t0
+            sets[(s, name)] = {frozenset(x): round(v, 12) for x, v in zip(fi["itemsets"], fi["support"])}
+            rows.append([s, math.ceil(s * len(X) - 1e-9), name, len(fi), f"{dt:.2f} 秒"])
+    df = pd.DataFrame(rows, columns=["最低支持度", "對應最低筆數", "演算法", "頻繁項目集數", "計算時間（會因電腦而異）"])
+    same = all(sets[(s, "Apriori")] == sets[(s, "FP-growth")] for s in (0.01, 0.005))
+    write("algorithm_compare.md", md_table(df))
+    RESULTS["algorithm_compare"] = {"same": same, "table": df.to_dict("records")}
+    assert same, "兩種演算法找到的頻繁項目集與 support 應該完全相同"
 
 
 # ----------------------------------------------------------------------------- 程式碼片段（指南中顯示的程式就是實際執行的程式）
@@ -482,6 +592,7 @@ def code_fragments():
     write("code_survey.md", code_block(decode_survey, complete_case, encode_items))
     write("code_rules.md", code_block(count, enumerate_rules, apply_filters))
     write("code_apriori.md", code_block(apriori_levels, rule_pruning))
+    write("code_fpgrowth.md", code_block(fp_order, fp_tree, prefix_paths, fp_growth))
 
 
 def check_prose():
@@ -498,6 +609,9 @@ def check_prose():
         "Groceries N = 9,835、169 種": g["N"] == 9835 and g["items"] == 169,
         "Apriori 示範：計數 16、剪掉 5、暴力列舉 25、頻繁 11": (RESULTS["apriori"]["counted"], RESULTS["apriori"]["pruned"],
                                                 RESULTS["apriori"]["brute"], RESULTS["apriori"]["frequent"]) == (16, 5, 25, 11),
+        "FP-tree 11 個節點（原始 19 列）、頻繁項目集 11 個、與 Apriori 相同": (RESULTS["fpgrowth"]["nodes"], RESULTS["fpgrowth"]["rows"],
+            RESULTS["fpgrowth"]["frequent"], RESULTS["fpgrowth"]["same_as_apriori"]) == (11, 19, 11, True),
+        "Groceries 兩種演算法結果相同": RESULTS["algorithm_compare"]["same"],
         "Groceries 規則數 3 → 442": [r["規則數（confidence ≥ 0.3、lift > 1）"] for r in g["sensitivity"]][::3] == [442, 3],
     }
     bad = [k for k, ok in checks.items() if not ok]
@@ -512,6 +626,8 @@ def main():
     crosscheck({"購物小案例": shop, "問卷小案例": survey})
     sensitivity()
     apriori_demo(shop[0])
+    fpgrowth_demo(shop[0], RESULTS.pop("_apriori_freq"))
+    algorithm_compare()
     code_fragments()
     check_prose()
     env = {"python": sys.version.split()[0]}

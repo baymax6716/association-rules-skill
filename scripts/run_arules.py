@@ -262,7 +262,7 @@ def config_template(args, det, prof, df):
            "data_type": None, "unit": None,
            "shopping": None, "survey": None,
            "question": {"goal": None, "items": [], "label": None},
-           "params": {"min_support": None, "min_confidence": None, "min_lift": None, "max_lhs": None,
+           "params": {"algorithm": None, "min_support": None, "min_confidence": None, "min_lift": None, "max_lhs": None,
                       "min_lhs_count": None, "confirmed": False, "reason": None},
            "validation": {"enabled": False, "test_frac": 0.3, "seed": 2026, "by_time": False},
            "report": {"title": "關聯規則分析報告", "background": None, "goal": None},
@@ -762,13 +762,17 @@ class Binary:
         return self._cache[s]
 
 
-def frequent(B, min_count, max_len):
-    """Apriori 原理下的頻繁項目集（以 mlxtend 的 FP-growth 計算，結果與 Apriori 相同）。"""
-    from mlxtend.frequent_patterns import fpgrowth
+ALGORITHMS = {"apriori": "Apriori", "fpgrowth": "FP-growth"}
+
+
+def frequent(B, min_count, max_len, algorithm="fpgrowth"):
+    """頻繁項目集：使用者選擇 Apriori（逐層產生候選並剪枝）或 FP-growth（FP-tree 分治），兩者結果相同，只差速度。"""
+    from mlxtend.frequent_patterns import apriori, fpgrowth
     if B.n == 0 or not B.items:
         return {}
     df = pd.DataFrame(B.X, columns=B.items)
-    fi = fpgrowth(df, min_support=min_count / B.n, use_colnames=True, max_len=max_len)
+    algo = {"apriori": apriori, "fpgrowth": fpgrowth}[algorithm]
+    fi = algo(df, min_support=min_count / B.n, use_colnames=True, max_len=max_len)
     sup = {frozenset(s): int(round(v * B.n)) for s, v in zip(fi["itemsets"], fi["support"])}
     return {k: c for k, c in sup.items() if c >= min_count}
 
@@ -806,7 +810,7 @@ def propose_params(n):
     """示範設定（起點，不是通用標準）：最低支持度 1%，但至少 2 筆；confidence 0.3；lift > 1；前件 ≤ 2。"""
     mc = max(2, math.ceil(0.01 * n))
     s = 0.01 if mc == math.ceil(0.01 * n) else math.ceil(mc / n * 10000) / 10000
-    return {"min_support": s, "min_confidence": 0.3, "min_lift": 1.0, "max_lhs": 2,
+    return {"algorithm": "fpgrowth", "min_support": s, "min_confidence": 0.3, "min_lift": 1.0, "max_lhs": 2,
             "min_lhs_count": min_count_of(s, n)}
 
 
@@ -836,7 +840,7 @@ def mine(goal, B, units, P, target, survey):
         rows = [r for r in rows if r["count"] >= mc]
         steps.append((f"support ≥ {P['min_support']}（共同筆數 ≥ {mc}）", len(rows)))
     else:
-        sup = frequent(B, mc, max_lhs + 1)
+        sup = frequent(B, mc, max_lhs + 1, P.get("algorithm") or "fpgrowth")
         tgt = frozenset(target or [])
         for I, cI in sup.items():
             if len(I) < 2:
@@ -990,7 +994,7 @@ def param_reference(goal, B, units, P, target, survey):
 
 
 def settings_text(P, n):
-    return (f"最低支持度 {P['min_support']}（共同筆數 ≥ {min_count_of(P['min_support'], n)}）、"
+    return (f"演算法 {ALGORITHMS.get(P.get('algorithm') or 'fpgrowth')}、最低支持度 {P['min_support']}（共同筆數 ≥ {min_count_of(P['min_support'], n)}）、"
             f"confidence ≥ {P.get('min_confidence')}、lift > {P.get('min_lift')}、"
             f"前件 ≤ {P.get('max_lhs', 2)} 項、後件 1 項、前件筆數 ≥ {P['min_lhs_count']}")
 
@@ -1028,8 +1032,12 @@ def cmd_run(args):
         ref, ref2 = param_reference(goal, B, mine_units, demo, target, survey)
         extra = ("### 示範設定（起點，不是通用標準）\n" + settings_text(demo, B.n) +
                  f"\n- 分母 N = {B.n:,}；理由：最低支持度 1%（至少 2 筆）避免只出現一兩次的巧合組合；"
-                 "confidence 0.3 只排除很弱的規則，判斷強弱仍要對照後件比例與 lift；前件 ≤ 2 項較容易解讀；"
-                 "前件筆數不少於最低共同筆數，避免「1 筆中 1 筆」的 confidence。\n\n### 只改最低支持度時的規則數\n" +
+                 f"confidence {demo['min_confidence']} 只排除較弱的規則，判斷強弱仍要對照後件比例與 lift；前件 ≤ 2 項較容易解讀；"
+                 "前件筆數不少於最低共同筆數，避免「1 筆中 1 筆」的 confidence。\n"
+                 "- 演算法：Apriori（逐層產生候選、用 Apriori 原理剪枝）與 FP-growth（先壓成 FP-tree 再分治）"
+                 "找到的頻繁項目集完全相同，只差速度；FP-growth 通常較快，資料小時差異不大。請使用者選擇 apriori 或 fpgrowth。"
+                 + ("指定前件時程式直接計數包含前件的交易，演算法選項不影響結果。" if goal == "lhs" else "") +
+                 "\n\n### 只改最低支持度時的規則數\n" +
                  md_table(ref, list(ref[0])) + "\n\n### 只改 confidence 門檻時的規則數\n" +
                  md_table(ref2, list(ref2[0])) +
                  "\n\n使用者確認或修改後，把值寫入 params，並設定 \"confirmed\": true、\"reason\": 使用者的理由。")
@@ -1039,6 +1047,9 @@ def cmd_run(args):
         if P.get(k) is None:
             stop(1, "參數不完整", [f"params.{k} 必須填寫"], out, "params")
     P.setdefault("max_lhs", 2)
+    P["algorithm"] = P.get("algorithm") or "fpgrowth"
+    if P["algorithm"] not in ALGORITHMS:
+        stop(1, "參數不正確", [f"params.algorithm 只能是 {list(ALGORITHMS)}"], out, "params")
 
     rows, steps = mine(goal, B, mine_units, P, target, survey)
     n_rep = n_test = 0

@@ -2,7 +2,7 @@
 name: association-rules-skill
 description: >
   以繁體中文、依固定流程做關聯規則分析（association rules、market basket analysis、frequent itemset、
-  Apriori，屬於 unsupervised learning）。支援兩種資料：(1) 購物資料（交易明細長表、一列一筆的購物清單、
+  Apriori、FP-growth，屬於 unsupervised learning）。支援兩種資料：(1) 購物資料（交易明細長表、一列一筆的購物清單、
   0/1 矩陣），項目是商品；(2) 類別型問卷（一列一位受訪者），項目是「欄位=類別」。分析目標有三種：
   自由探索、指定前件（例如「買牛奶的人還買什麼」）、指定後件（例如「哪些特徵與網購=是一起出現」）。
   前處理只做已定義、可重現的機械性操作，涉及資料意義的事一次一項詢問使用者；門檻由使用者確認並保留
@@ -124,11 +124,11 @@ python scripts/run_arules.py inspect --data <資料檔> --out arules_output [--t
 
 `run` 第一次走到這裡會停下，列出三樣東西：
 
-- 示範設定與理由：最低支持度與對應筆數、confidence、lift、前件長度、最低前件筆數。
+- 示範設定與理由：演算法、最低支持度與對應筆數、confidence、lift、前件長度、最低前件筆數。
 - 只改最低支持度時的規則數表。
 - 只改 confidence 時的規則數表。
 
-把這些給使用者看，強調**示範設定不是通用標準**。使用者確認或修改後，把值寫入 `params`，並設：
+把這些給使用者看，強調**示範設定不是通用標準**。演算法請使用者選 Apriori 或 FP-growth（`params.algorithm` = `apriori`／`fpgrowth`），並說明兩者找到的頻繁項目集完全相同、只差速度（指定前件時不影響結果）。使用者確認或修改後，把值寫入 `params`，並設：
 - `"confirmed": true`
 - `"reason"`：使用者的理由
 
@@ -178,6 +178,6 @@ python scripts/run_arules.py finalize --config config.json --report arules_outpu
 | `survey.categorical_as_is` | 使用者確認「數字本身就是答案」的欄位 |
 | `survey.complete_case_confirmed` | 使用者同意的完整案例分析人數 `{"excluded": n, "remaining": m}` |
 | `question` | `goal`（`free`／`lhs`／`rhs`）、`items`、`label`（使用者的原始問題） |
-| `params` | `min_support`、`min_confidence`、`min_lift`、`max_lhs`、`min_lhs_count`、`confirmed`、`reason` |
+| `params` | `algorithm`（`apriori`／`fpgrowth`）、`min_support`、`min_confidence`、`min_lift`、`max_lhs`、`min_lhs_count`、`confirmed`、`reason` |
 | `validation` | 選用：`enabled`（預設 false）、`test_frac`（0.3）、`seed`（2026）、`by_time`（需使用者確認時間欄位） |
 | `report` | `title`、`background` |

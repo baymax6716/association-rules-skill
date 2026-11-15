@@ -544,7 +544,7 @@ def prep_shopping(df, s, preview=False):
     real = d[~d["empty_cell"] & (d["item"] != "")]
     dup = int(real.duplicated(["tid", "item"]).sum())
     log_add(log, "固定規則", "同一張訂單中重複出現的商品記為一次",
-            "關聯規則只看一張訂單「有沒有」這項商品（Tan et al. 5.1）；不同訂單即使內容相同也全部保留", f"{dup:,} 列")
+            "關聯規則只看一張訂單「有沒有」這項商品；不同訂單即使內容相同也全部保留", f"{dup:,} 列")
 
     # (8) 空的訂單（需確認）
     all_t = list(dict.fromkeys(d["tid"]))
@@ -565,7 +565,7 @@ def prep_shopping(df, s, preview=False):
     same = int(pd.Series([tuple(sorted(u)) for u in units]).duplicated(keep=False).sum()) if units else 0
     log_add(log, "固定規則", "不同交易即使內容相同也全部保留", "它們是不同的觀測", f"{same:,} 筆交易")
     log_add(log, "固定規則", "數量、金額不當成項目；沒買的商品不產生「未購買」項目",
-            "項目是非對稱二元變數，只看有沒有出現（Tan et al. 5.1 節）", "—")
+            "項目是非對稱二元變數，只看有沒有出現", "—")
 
     # (9) 時間（只用來決定驗證資料的切法）
     times = None
@@ -720,7 +720,7 @@ def prep_survey(df, sv, preview=False):
     ident = int(keep.duplicated().sum())
     log_add(log, "固定規則", "答案完全相同的受訪者全部保留", "不同的人是不同的觀測", f"{ident:,} 人與其他人相同")
     log_add(log, "固定規則", "每人一個 basket，項目為「欄位=類別」；「否」也是項目；序位變數當類別",
-            "Tan et al. 6.1 節；不使用順序或距離資訊", f"{rem:,} 人")
+            "每個「欄位=類別」組合成為一個項目；不使用順序或距離資訊", f"{rem:,} 人")
     freq = {c: keep[c].value_counts().to_dict() for c in cols}
     return dict(units=units, ids=ids, times=None, log=log, pending=pending, problems=problems, freq=freq,
                 columns=cols, n_before=n0)
@@ -729,7 +729,7 @@ def prep_survey(df, sv, preview=False):
 # ----------------------------------------------------------------------------- 指標與探勘
 
 def measures(n, cA, cB, cAB):
-    """規則 A→B 的 support、confidence、lift（Tan et al. 式 5.1、5.2、5.5）。"""
+    """規則 A→B 的 support、confidence、後件比例與 lift。"""
     conf = cAB / cA if cA else float("nan")
     base = cB / n
     return dict(lhs_count=int(cA), rhs_count=int(cB), count=int(cAB), support=cAB / n,
@@ -897,7 +897,7 @@ def split_units(units, times, vcfg):
 
 
 def validate(rows, T, alpha):
-    """在保留資料上重算，單尾 Fisher's exact test（H1：正相關，Tan et al. 10.4.1）＋ Benjamini–Hochberg。"""
+    """在保留資料上重算，單尾 Fisher's exact test（H1：正相關）＋ Benjamini–Hochberg。"""
     from scipy.stats import false_discovery_control, fisher_exact
     idx, ps = [], []
     for k, r in enumerate(rows):
@@ -1146,7 +1146,7 @@ def build_draft(cfg, r):
     L.append(f"- 資料：`{d['path']}`，{d['rows']:,} 列、{len(d['columns'])} 個欄位；{typ}（格式 `{d['format']}`，經使用者確認）")
     L.append(f"- 一筆觀測：{unit}")
     L.append(f"- **support 的分母 N = {N:,}**" + ("（保留資料驗證時為探勘資料的筆數）" if r["validation"]["enabled"] else "") + "\n")
-    L.append("> 關聯規則描述的是共同出現，不代表因果（Tan et al., 2019, 5.1 節）。\n")
+    L.append("> 關聯規則描述的是共同出現，不代表因果。\n")
 
     L.append("## 2. 前處理\n")
     L.append("每一項處理都列出原因與影響筆數；「使用者」開頭的項目是經使用者確認的決定。\n")
@@ -1187,7 +1187,7 @@ def build_draft(cfg, r):
     v = r["validation"]
     if v["enabled"]:
         L.append(f"{r['split']['note']}。在保留資料（{r['split']['test_units']:,} 筆）上，對每條規則做單尾 Fisher's exact test"
-                 f"（H0：前件與後件獨立；H1：正相關；Tan et al., 2019, 10.4.1 節），{v['tested']} 個檢定以 Benjamini–Hochberg "
+                 f"（H0：前件與後件獨立；H1：正相關），{v['tested']} 個檢定以 Benjamini–Hochberg "
                  f"控制 FDR = {v['alpha']}。「重現」= 保留資料 lift > 1 且 q < {v['alpha']}。重現：**{v['replicated']} / {v['tested']}**。\n")
         L.append(todo("說明哪些規則重現、哪些沒有") + "\n")
     else:
@@ -1196,16 +1196,19 @@ def build_draft(cfg, r):
     L.append("## 6. 結論與建議\n")
     L.append(todo("回答分析問題；行動建議寫成「可以考慮」，必要時建議以實驗確認") + "\n")
     L.append("## 7. 限制\n")
-    L.append("- 關聯不代表因果；可能有未納入分析的隱藏變數（Tan et al., 2019, 5.7.3 節 Simpson's paradox）。")
+    L.append("- 關聯不代表因果；可能有未納入分析的隱藏變數（Simpson's paradox）。")
     L.append("- 結果依賴門檻與前處理；改變設定會改變規則數量與排序。")
     if d["type"] == "survey":
         L.append("- 完整案例分析排除了選定欄位有缺失的受訪者；若缺失不是隨機發生，結果可能偏誤。")
         L.append("- 未使用調查權重，結果是未加權的樣本描述，不代表整體人口。")
     L.append(todo("本次資料特有的限制") + "\n")
-    L.append("## 附錄 A：指標定義\n")
-    L.append("| 指標 | 公式 |\n|---|---|\n| support | σ(X∪Y) / N（式 5.1） |\n| confidence | σ(X∪Y) / σ(X)（式 5.2） |\n"
-             "| 後件比例 | σ(Y) / N |\n| lift（interest factor） | N σ(X∪Y) / (σ(X) σ(Y))（式 5.5） |\n")
-    L.append("Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.). Pearson.\n")
+    L.append("## 附錄 A：指標定義與出處\n")
+    L.append("σ(X) 是包含 X 全部項目的交易數；σ(X∪Y) 是同時包含前件與後件全部項目的交易數。\n")
+    L.append("| 指標 | 公式 |\n|---|---|\n| support | σ(X∪Y) / N |\n| confidence | σ(X∪Y) / σ(X) |\n"
+             "| 後件比例 | σ(Y) / N |\n| lift | N σ(X∪Y) / (σ(X) σ(Y)) |\n")
+    L.append("出處：Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.). Pearson. "
+             "support 與 confidence 見 5.1 節；lift（interest factor）見 5.7.1 節；Apriori 見 5.2 節；FP-growth 見 5.6 節；"
+             "類別屬性轉成項目見 6.1 節；Fisher's exact test 見 10.4.1 節。\n")
     return "\n".join(L)
 
 

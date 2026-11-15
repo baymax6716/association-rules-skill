@@ -96,7 +96,11 @@ flowchart TD
 
 程式同時列出「只改最低支持度」與「只改 confidence」時的規則數，協助使用者決定，不自動選擇。
 
-## 5. 篩選順序（固定）
+## 5. 頻繁項目集與篩選順序（固定）
+
+頻繁項目集依 `params.algorithm` 計算：`apriori`（逐層產生候選、用 Apriori 原理剪枝）或 `fpgrowth`（FP-tree 分治）。
+兩者結果相同，只差速度；指定前件時直接計數包含前件的交易，不需要找全部頻繁項目集。
+
 
 1. 共同筆數 ≥ ⌈minsup × N⌉
 2. 前件筆數 ≥ `min_lhs_count`
@@ -117,6 +121,12 @@ flowchart TD
 - 預設不做。使用者要求時設 `validation.enabled: true`。
 - 預設隨機切分：保留 30%，seed 2026。只有使用者確認時間欄位可信時，才設 `by_time: true` 依時間切分。
   **不假設資料列順序代表時間。**
-- 在保留資料上，每條規則做單尾 Fisher's exact test（Tan et al. 10.4.1 節），並做 Benjamini–Hochberg 校正。
+- 在保留資料上，每條規則做單尾 Fisher's exact test（正相關方向），並做 Benjamini–Hochberg 校正。
   「重現」的定義是保留資料 lift > 1 且 q < 0.05。
 - 沒做時，報告註明結果是描述性、探索性的。
+
+## 8. 出處
+
+流程與規則以分析指南第 8 章為準。相關概念見 Tan, Steinbach, Karpatne & Kumar (2019)：
+Apriori 原理與演算法在 5.2 節；規則產生與 confidence 剪枝在 5.3 節；FP-growth 在 5.6 節；
+類別屬性轉成項目在 6.1 節；Fisher's exact test 在 10.4.1 節。章節對照表見指南第 9 章最後。

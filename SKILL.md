@@ -1,148 +1,169 @@
 ---
 name: association-rules-skill
 description: >
-  關聯規則 / 購物籃分析（association rules, market basket analysis, frequent itemset mining）的
-  統計顧問，屬於 unsupervised learning。支援兩種資料：(1) 超市、零售、電商的交易資料（交易編號、
-  購買品項、時間戳記、數量），回答「哪些商品常被一起買」，用於交叉銷售、陳列、組合促銷、推薦；
-  (2) 問卷 / 民意調查 / survey 資料（一列一位受訪者），把答案轉成「題目=答案」項目，找出
-  「哪些特徵與哪些態度常一起出現」，含類別屬性、連續變數離散化（quantitative association rules）、
-  codebook、拒答 / 不知道、跳題、複選題、調查權重。使用者提到 Apriori、FP-growth、frequent itemset、
-  support、confidence、lift、leverage、conviction、min_support 怎麼設、規則太多 / 找不到規則、
-  mlxtend、arules、啤酒與尿布，或只說「幫我看這份購物明細 / 問卷有什麼組合或關聯」時，都使用本 skill。
-  互動精簡為三次確認（資料設定 → 探勘與驗證設定 → 結果檢視），驗證標準在探勘前鎖定，
-  最後輸出含程式碼（可摺疊）的 QMD / HTML 分析報告。
+  以繁體中文、依固定流程做關聯規則分析（association rules、market basket analysis、frequent itemset，
+  屬於 unsupervised learning）。支援兩種資料：(1) 購物清單（訂單編號＋商品、一列一籃、0/1 矩陣），
+  回答「哪些商品適合組成套餐」「買 XX 的人可以推薦什麼」「哪些商品可以放在相近位置」或自由探索；
+  (2) 類別問卷（一列一位受訪者），以「欄位=答案」項目回答「哪些回答常一起出現」「哪些條件與某個
+  答案有關」「已知某種特徵，還有哪些答案常見」。資料檢查、前處理（購物清單整理、類別問卷編碼）、
+  門檻、規則形式與驗證都依固定規則執行，每項排除與轉換都記錄原因與影響筆數，最後輸出 HTML、
+  Markdown、Quarto 報告並附完整程式碼。使用者提到 Apriori、FP-growth、support、confidence、lift、
+  購物籃、商品組合、交叉銷售、推薦、陳列、問卷答案的關聯，或只說「幫我看這份購物明細／問卷
+  有什麼關聯」時，都使用本 skill。
 ---
 
-# 關聯規則統計顧問（Association Rules）
+# 關聯規則分析
 
-本 skill 協助使用者在**交易資料**或**問卷資料**上做關聯規則分析，並把結果講成可以驗證、可以行動的
-結論。理論依據為 Tan, Steinbach, Karpatne & Kumar (2019), *Introduction to Data Mining* (2nd ed.)：
-第 5 章（基本概念與演算法）、6.1–6.2 節（類別與連續屬性）、10.4 節（統計檢定）。
+## 任務與交付
 
-**範圍**：交易資料與問卷資料的關聯規則。項目粒度只做「使用者提供對照表」的單層換算（品項 → 類別、
-縣市 → 區域）。不處理序列樣式（先 A 後 B）、多層概念階層探勘、負向樣式、調查權重的加權推論；
-使用者問到時，說明超出範圍並簡短指出方向。
+依使用者選的分析問題，完成資料檢查、前處理、探勘、驗證與解讀，交付：
 
-## 互動原則（最高優先）
+- `report.html`（主要報告；程式碼預設摺疊，單一檔案即可開啟）
+- `report.md`、`report.qmd`（內容相同）
 
-關聯規則一定會「找到東西」，即使資料純屬隨機；所以使用者要清楚知道每個重要決定。但也不能把所有技術
-問題都丟給使用者。因此整個分析**只有三次確認**，確認之間自動執行：
+報告最後附**完整程式碼**、`config.json` 與前處理紀錄（由 `finalize` 自動附上）。
 
-| 確認 | 涵蓋步驟 | 核心選項（一定要問） | 進階選項（給預設值，收成一行） |
-|---|---|---|---|
-| **① 資料設定** | 1 | 分析單位；納入欄位；分組與缺失處理 | 分析範圍；項目粒度；次序答案是否合併 |
-| **② 探勘設定** | 2、3 | 自由探索或指定後件；最低支持度（比例 + 筆數）；是否保留驗證資料 | 允許的前件；min confidence；min lift；最低前件筆數；規則長度；演算法；切分方式與比例；驗證標準；置換檢定、分層檢查 |
-| **③ 結果檢視** | 4、5、6 | 怎麼使用結果：改排序、看個別規則，或回到 ① ② 調整 | 排序依據與顯示條數；輸出深度（簡要 / 完整） |
+**所有數字都必須由 `scripts/run_arules.py` 產生。** 不得自己寫臨時程式計算報告中的數字，也不得改動程式算出的數字。
+使用者的需求超出程式能力時，先說明限制，不自行變通。
 
-規則：
+## 參考資料
 
-1. **每次確認的呈現方式**：先給建議與理由，核心選項逐項列出，進階選項收成一行「其餘採預設：…
-   （要改再說）」。完整選項表與訊息範本見 `references/options.md`。
-2. **自動完成、不要問的事**：讀取格式、欄位對應、編碼判斷、缺失比例、清理、依已確認的鍵彙整、
-   各組人數、無意義規則檢查。這些做完後放進確認 ① 的摘要讓使用者看。
-3. **意義不清楚時一定要問**：數字是代碼還是數值、空白代表漏答還是不適用、同一 ID 多列代表多波次訪問
-   還是多筆訂單。問卷沒有 codebook 時，先要一份，或者把推測列成表請使用者確認。
-4. **驗證在探勘前鎖定**：切分方式和驗證標準（α、驗證集最低筆數）在確認 ② 就定好。如果使用者在 ③ 看過
-   驗證結果後又回頭改設定，要明確告知：這份驗證資料已經參與選擇，結果只能算**探索性**，並建議用新資料
-   或新的保留期間確認。
-5. 使用者說「直接跑」或已經自己指定參數時，照做，但在結果中標出被省略的部分（例如「未保留驗證資料」）。
-6. 畫圖前先問（`profile --plot`）。
+| 檔案 | 何時讀 |
+|:--|:--|
+| [references/decision-tree.md](references/decision-tree.md) | 流程圖、資料類型判斷規則、前處理固定規則、各問題的規則形式與預設門檻 |
+| [references/report-spec.md](references/report-spec.md) | 撰寫報告前：章節、解讀寫法、不能寫的話 |
+| [references/measures.md](references/measures.md) | 解讀指標時（support、confidence、lift、cosine、Kulczynski） |
+| [references/textbook-notes.md](references/textbook-notes.md) | 使用者問到教科書定義或 R arules 寫法時 |
+
+`docs/` 是給人看的導覽，分析時不需要讀。`data/` 是給使用者自己練習的資料，不要主動拿來分析。
+
+## 互動原則
+
+- 使用繁體中文。
+- **每次只問一個問題**，收到回答才問下一個。使用者已經說過的資訊直接沿用，不再問。
+  例如使用者說「這是 Groceries，每筆是一張訂單」，就把資料類型當作購物清單、觀測單位當作一張訂單。
+- 需要使用者選擇時，有選項式提問工具就用選單，沒有就用編號清單。建議的選項放第一個並標「（建議）」，附一句理由。
+- 可以自動**提出判斷**，但**不能只根據欄位名稱就認定資料的意義**。例如數字 1、2、3 可能是問卷選項代碼，
+  要有使用者說明或編碼表才能確定。
+- 不做以下的事（程式也不會做）：
+  - 自行建立連續變數切點
+  - 自行合併問卷答案或商品類別
+  - 因兩筆觀測內容相同而刪除其中一筆
+  - 把缺失、拒答或不適用當成「否」
+  - 把 ID、調查權重當成項目
+  - 改掉問卷的原欄位名稱或答案
+- 資料不符合支援格式時，說明需要怎麼調整，不自行猜測完成。
 
 ## 工作流程
 
-決策節點、Mermaid 流程圖與每步輸出見 `references/decision-tree.md`。每次執行腳本都會寫入
-`arules_output/run_log.json`，最後的報告依此產生。
+指令都在 skill 資料夾執行。`config.json` 由你依使用者的回答建立、更新，每個確認都記在 `confirmations`
+（例如 `{"item": "缺失商品值", "answer": "排除"}`）。
 
-### 確認 ①：資料設定（步驟 1）
+### 步驟 1：讀取與檢查
 
-先判斷資料類型，再走對應分支：
+```bash
+python scripts/run_arules.py inspect --data <資料檔> --out arules_output [--type shopping|survey] [--unit 一張訂單]
+```
 
-**交易資料**（一列一品項、一列一籃，或 0/1 矩陣）
-- 執行 `python scripts/run_arules.py profile <data>`。可加 `--where store=A`、`--date-from/--date-to`
-  限定範圍，`--item-map map.csv` 把品項換成商品類別。
-- 摘要內容：清理紀錄（缺漏、品名正規化、退貨或數量 ≤ 0、重複品項）、交易數、商品數、籃子大小分布、
-  商品頻率、support 分位數。
-- 說明數量只用於清理，分析時每個品項只看「有 / 無購買」（Tan et al. 5.1）。
+使用者已經說明資料類型或觀測單位時，用 `--type`、`--unit` 帶入。
 
-**問卷資料**（一列一位受訪者）：依 `references/survey-data.md` 的五個子步驟
-1. 觀測單位：一位受訪者，或一次訪問；ID 重複時要問。
-2. 欄位角色：識別、名目、二元、次序、連續、複選、自由文字、設計資訊（權重）。
-3. 缺失、跳題、分組：特殊代碼（98 不知道、99 拒答）照 codebook 轉換；空白不能當成「反對」；跳題用
-   `--where` 限定適用人群；連續變數優先用有實際意義的切點。
-4. 建立「題目=答案」項目，並自動檢查無意義規則的來源（函數關係、ID、高頻值、低頻類別）。
-5. 輸出資料設定摘要。
+向使用者報告：
 
-- 執行 `python scripts/run_arules.py encode <survey> --codebook <cb> --bins 年齡=18,30,45,65 ...`，
-  再對輸出的 `items.csv` 執行 `profile`。
-- 摘要內容：分析單位與分母、納入與排除欄位、缺失與特殊答案、切點與各組人數、合併前後對照、自動檢查。
-- 呈現摘要後問核心選項，等使用者確認或修改。修改後重跑 encode，直到使用者同意。
+1. 資料筆數、欄位，以及少量範例（前 5 列）。
+2. 資料類型判斷（購物清單、問卷類別表，或已完成的項目集合），以及判斷依據。
+3. 缺失、各欄位的值、可能的 ID 或權重、不支援的數值欄位。
+4. 前處理方案。
 
-### 確認 ②：探勘與驗證設定（步驟 2、3）
+然後把 `arules_output/config_template.json` 另存為 `config.json`。
 
-一次呈現兩件事，等使用者確認：
+### 步驟 2：確認資料類型與前處理（一次一項）
 
-**驗證安排**（探勘前決定，事後不改）
-- 有時間戳記：依時間切分（前 70% 探勘、後 30% 驗證），或用 `--split-date` 指定日期。
-- 同一顧客或受訪者有多筆時：用 `--method group --group-col <ID>`，避免同一人同時出現在兩邊。
-- 問卷沒有時間：隨機切分。若切點是資料導向的（`quantile:` / `width:`），要在編碼**前**切分：
-  `split <survey> --format survey`，探勘集用 `encode --cuts-out`，驗證集用 `encode --cuts-in`。
-- 觀測單位少於約 300：不切分，改用置換檢定，結論只能當探索性。
-- 驗證標準：預設 BH q < 0.05、驗證集 lift > 1；樣本小時加 `--min-test-count`。
+1. **資料類型**（使用者已說明就跳過）。如果是 0/1 矩陣，問清楚 0/1 代表「有買／沒買」還是問卷的「是／否」。
+   填入 `data_type`，值是 `shopping` 或 `survey`。
+2. 依類型確認前處理，規則見 decision-tree.md 第 3 節：
+   - **購物清單整理**
+     - 固定規則不必詢問：去除商品名稱前後空白；同一張訂單重複出現的商品記一次。
+     - 只有以下情況逐項詢問，答案寫入 `shopping.decisions`：
+       - 疑似同義的商品名稱：確認為同一商品的寫入 `item_aliases`。
+       - 商品值缺失。
+       - 空的訂單。
+       - 數量 ≤ 0。
+   - **類別問卷編碼**
+     - 請使用者選要分析的欄位（`survey.columns`），可多選，預設勾選 inspect 判斷為類別的欄位。
+     - 數字代碼欄位：請使用者提供編碼表（填 `codebook`），或確認數字本身就是答案（填 `categorical_as_is`）。
+     - 數值欄位：請使用者提供切點（填 `cuts`），否則不選這一欄。
+     - 使用者說明哪些值代表拒答、不知道或不適用，填 `missing_values` 或 `missing_codes`，這些值會當成缺失。
+3. 執行 `run`（見步驟 5 的指令）。程式在前處理後會停下：
+   - **結束代碼 2**：還有事項需要確認。逐項問使用者，寫入 config 後重跑。
+     問卷的完整個案分析一定會在這裡停下，列出排除幾筆、剩下幾筆。使用者同意後，
+     把列出的數字寫入 `complete_case_confirmed`。
+   - **結束代碼 1**：資料或設定不符合支援格式。把程式列出的調整方式告訴使用者，不自行修改資料。
 
-**探勘參數**（依 profile 的建議表）
-- 核心：自由探索還是指定後件（`--rhs 政策A態度`、`--rhs beer`）；最低支持度同時寫比例與筆數
-  （`--min-support` 或 `--min-count`）；是否保留驗證資料。
-- 要讓使用者理解的重點：
-  - `min_support` 是唯一真正限制探勘的門檻：太高會漏掉低頻但強的組合；太低則規則爆量，且出現
-    cross-support 規則（Tan et al. 5.8）。
-  - confidence 要和**後件的基準比例**（consequent_support）比較才有意義（tea→coffee，5.7.1），
-    所以主要篩選交給 lift；lift 是產生規則後的篩選指標，不是探勘門檻。
-  - 規則長度預設前件 ≤ 2、後件 1（`--max-lhs 2 --max-rhs 1`），方便解讀。
-  - Apriori 與 FP-growth 結果完全相同，只差速度；預設 `--algo auto`。
-  - 有高頻項目（牛奶 60%、使用網路 85%）時加 `--hconf`。
-  - 問卷可用 `--lhs-cols` 限定前件，例如只用人口特徵解釋政策態度。
+### 步驟 3：選擇分析問題（選單）
 
-### 確認 ③：結果檢視（步驟 4、5、6，自動連續執行）
+- **購物清單**（`question.type`）：
+  1. 哪些商品適合組成套餐？（`bundle`）
+  2. 買 XX 的人，可以推薦什麼？（`recommend`）：請使用者輸入 XX，填入 `question.item`，名稱要和資料完全相同。
+  3. 哪些商品可以考慮放在相近位置？（`placement`）
+  4. 我不知道有什麼有趣的搭配，幫我看看（`explore`）
+- **問卷**：核心問題是「哪些特徵或回答，經常出現在同一位受訪者身上？」。看過使用者的資料後，再請使用者選：
+  1. 哪些回答常一起出現？（`cooccur`）
+  2. 哪些條件與某個特定答案有關？（`target`）：從資料中的「欄位=答案」列出選項，請使用者選一個，填入 `question.target`。
+  3. 已知某種特徵，還有哪些答案常見？（`given`）：請使用者選特徵，可以多個，填入 `question.given`。
 
-確認 ② 之後依序執行，不再中途停下：
+使用者在對話一開始就已經說出問題時，直接對應，不再問。
 
-1. **探勘**：`mine <train> ...`。輸出 frequent itemsets 數（含 closed / maximal）、保留規則表、
-   **被排除規則與原因**（confidence、lift、cross-support、冗餘、定義性、前件筆數不足）。
-   - 太多（> 約 100 條）：先告訴使用者，提出收斂方式（提高 min_lift、縮短規則、加 hconf、指定後件）。
-   - 沒有：說明原因（籃子太小、門檻太高），提出放寬方式；資料本來就沒有關聯時，「沒有規則」本身就是結論。
-   - 問卷中「縣市=台南市 → 區域=南部」這類規則會自動標成**定義性**排除：它必然成立，不是發現。
-2. **可靠性**（依確認 ② 鎖定的標準）：`validate <test> --rules rules.csv --alpha 0.05`；使用者有選才跑
-   `permtest`、`stratify`。細節見 `references/validation.md`。分級：✅ 驗證集重現且 q < α；
-   ⚠️ 方向一致但不顯著；❌ 未重現或方向反轉。
-3. **實務解讀**：寫成 `arules_output/interpretation.md`，內容是白話規則、行動建議與限制（格式見下）。
-4. **分析報告**（固定的最後一步）：
-   `python scripts/run_arules.py report --notes arules_output/interpretation.md --title "<標題>"`
-   會產生 `report.qmd` 與 `report.html`，內容包括每一步做了什麼、當時的輸出、可摺疊的指令與
-   Python / R 程式碼，以及是否曾回頭修改。有 Quarto（含 RStudio 內建版）就用它轉檔，沒有就用腳本
-   內建轉檔。舊版報告會加上時間戳保留。
-5. 呈現：結論摘要、規則表（依使用者選的排序）、可靠性分級、報告檔案位置；然後問使用者要改排序、看
-   個別規則，還是回到 ① ② 調整。
+### 步驟 4：確認門檻
 
-**解讀格式**：
-- 交易：「買了 A 的顧客中，有 X% 也買了 B，是一般顧客的 L 倍；每 100 筆交易約有 s 筆受影響。」
-- 問卷：「18–29 歲、住在南部的受訪者中，有 X% 支持政策 A，是全體受訪者的 L 倍。」要寫明分母是誰
-  （全部受訪者，或 `--where` 限定的人群）。
-- 一定要講清楚：**規則代表共同出現，不代表因果**（Tan et al. 5.1）。交易規則要用實驗（例如促銷 A/B
-  測試）確認效果；問卷規則不能說成「年齡造成態度」。問卷未加權時，比例只描述樣本，不能推論到母體。
-- 明顯的規則（例如 pasta→tomato sauce）可靠但不新奇；意外且可靠的規則才是重點，是否有用交給使用者
-  判斷（5.7）。
+依 decision-tree.md 第 4 節的固定公式算出預設值，用一張表給使用者看：最低共同出現筆數、confidence、lift，
+以及驗證方式。使用者可以全部接受，或修改其中幾項。只有修改的項目才寫入 `params`，沒寫的就用預設規則。
 
-## 計算規則
+### 步驟 5：執行
 
-- 所有數字都用 `scripts/run_arules.py` 或 Python 套件（mlxtend、scipy、pandas）計算，**不要心算**。
-- 腳本需要 `pip install mlxtend scipy pandas numpy matplotlib`；報告轉檔可選用 Quarto。
-- 使用者用 R 時，`references/textbook-notes.md` 附有 arules 對照程式碼（含問卷的 `as(df, "transactions")`）。
-- 指標定義與解讀界線見 `references/measures.md`。報告 lift 時，同時給 support（影響範圍）與
-  confidence（條件機率）和後件的基準比例。
-- 給讀者的完整導覽（流程、決策、術語表）在 `docs/skill-guide.html`，使用者想了解整體方法時可以推薦。
+```bash
+python scripts/run_arules.py run --config config.json
+```
 
-## 溝通風格
+程式依分析問題的固定規則形式探勘，並在驗證資料上檢驗。輸出：`results.json`、`results_full.csv`、`report_draft.md`。
 
-- 用使用者的語言回答（預設繁體中文，統計名詞保留英文）。先講結論，再講細節。
-- 解釋指標時，用 2×2 列聯表或「每 100 筆交易 / 每 100 位受訪者」的說法，不要只丟公式。
-- 提供可以直接執行的指令，讓使用者能自己重現；完整程式碼都在分析報告裡。
+- 沒有結果時，依固定規則只提一個選項：把最低共同出現筆數降到 10 再跑一次，由使用者決定。
+- 推薦的商品或指定的答案在資料中找不到時，程式會列出相近名稱，請使用者確認正確名稱，不自行替換。
+- 程式報錯時如實告知，不更改資料來繞過。
+
+### 步驟 6：撰寫解讀並完成報告
+
+1. 讀 `references/report-spec.md`。
+2. 把 `report_draft.md` 另存為 `arules_output/report.md`，把每一處 `【待填：…】` 換成內容。數字一律取自草稿的表格或 `results.json`。
+3. 執行：
+
+```bash
+python scripts/run_arules.py finalize --config config.json --report arules_output/report.md
+```
+
+程式會檢查沒有未填寫處，附上重現方式、config 與完整程式碼，輸出 `report.md`、`report.qmd`、`report.html`。
+結束代碼 0 才算完成。最後把 `report.html` 的路徑告訴使用者，並用一段話摘要結論。
+
+## config.json 欄位
+
+| 欄位 | 說明 |
+|:--|:--|
+| `data_path`、`encoding`、`out_dir` | 資料路徑、CSV 編碼（null 表示自動）、輸出資料夾 |
+| `data_type` | `shopping` 或 `survey`（經使用者確認） |
+| `unit` | 觀測單位，例如「一張訂單」「一位受訪者」 |
+| `shopping.format` | `long`（一列一個商品）、`basket`（一列一筆、商品以 `sep` 分隔）、`wide01`（0/1 矩陣） |
+| `shopping.tid_col`、`item_col`、`item_cols`、`sep`、`time_col`、`qty_col` | 欄位角色；`time_col` 只用來依時間切驗證資料，`qty_col` 只用來檢查數量 ≤ 0 |
+| `shopping.decisions` | `missing_item: "exclude"`、`empty_baskets: "exclude"/"keep"`、`nonpositive_qty: "exclude"/"keep"`、`synonyms: "reviewed"` |
+| `shopping.item_aliases` | 使用者確認為同一商品的名稱對照 `{"原名": "統一名稱"}` |
+| `survey.format` | `wide`（一列一位受訪者）或 `long_kv`（一列一個「欄位=答案」） |
+| `survey.id_col`、`exclude_cols` | 受訪者編號；不當成項目的欄位與原因 `[{"name", "reason"}]` |
+| `survey.columns` | 使用者選的分析欄位 |
+| `survey.missing_values`、`missing_codes` | 使用者說明代表缺失的值（全部欄位共用；或 `{"欄位": ["99"]}`） |
+| `survey.codebook` | 使用者提供的編碼表 `{"欄位": {"1": "男", "2": "女"}}` |
+| `survey.categorical_as_is` | 使用者確認「數字本身就是答案」的欄位 |
+| `survey.cuts` | 使用者提供的切點 `{"欄位": {"breaks": [0, 18, 65, 200], "labels": [...], "right": false}}` |
+| `survey.complete_case_confirmed` | 使用者同意的完整個案分析筆數 `{"excluded": n, "remaining": m}` |
+| `question` | `type`；`item`（recommend）、`target`（target）、`given`（given） |
+| `params` | 使用者修改過的門檻：`min_count`、`min_confidence`、`min_lift`；沒寫的用預設規則 |
+| `validation` | `enabled`（預設 true）、`seed`（預設 2026）、`alpha`（預設 0.05） |
+| `report` | `title`、`background`、`goal` |
+| `confirmations` | 使用者確認紀錄 |

@@ -46,7 +46,7 @@
 - confidence = 50%，用 70% 門檻會被刪掉；
 - 但 lift = 0.5/0.12 ≈ 4.17，φ ≈ 0.585，是強烈正相關。
 
-這兩個數字都可以用 `scripts/run_arules.py` 的 `measures()` 重現。
+
 
 ## Cross-support 樣式（5.8）
 
@@ -54,13 +54,12 @@
 例如 {wine} → {cheese, milk}。這類規則 confidence 可能很高，卻只是因為牛奶本來就到處都有。
 - support ratio r(X) = min s(i) / max s(i)；r 很小就是 cross-support；
 - h-confidence ≤ r(X)，所以設 h-confidence 門檻 hc 會自動排除 r < hc 的樣式；
-- 實務：profile 顯示「最大 / 中位數 support > 5」時，mine 加上 `--hconf 0.05`（或更高）。
+- 本 skill 的「套餐」問題要求組合中每一項和其餘項目都正相關（每個方向 lift > 1），報告另附 all-confidence，可用來辨認這類樣式。
 
 ## Simpson's paradox（5.7.3）
 
 合併資料中 A、B 正相關，分層後各層卻都是負相關（或反過來）。原因是有隱藏變數同時影響兩者，
-例如門市、顧客族群、時段。超市資料應依門市分層（Tan et al. 建議）。用 `stratify --by <欄位>`
-檢查；方向反轉的規則不可直接用於決策。
+例如門市、顧客族群、時段。本 skill 不做分層檢查；資料來自多個門市或族群時，要在報告的限制中說明。
 
 ## 主觀有趣性（5.7）
 

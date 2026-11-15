@@ -1,371 +1,748 @@
 ---
-title: "association-rules-skill 導覽"
-subtitle: "關聯規則分析的流程、決策與術語"
+title: "關聯規則分析指南"
+subtitle: "購物資料與類別問卷：前處理、規則產生、解讀與 Skill 操作規格"
 lang: zh-TW
 language:
-  toc-title-document: "目錄"
-  title-block-published: "日期"
-  title-block-author-single: "作者"
-  code-tools-source-code: "原始碼"
-  code-tools-view-source: "檢視 QMD 原始碼"
-  copy-button-tooltip: "複製"
-  copy-button-tooltip-success: "已複製"
-  section-title-footnotes: "註腳"
   callout-note-title: "說明"
   callout-tip-title: "提示"
   callout-warning-title: "注意"
+  callout-important-title: "重要"
 date: "2026-11-15"
 format:
   html:
+    theme: cosmo
     toc: true
+    toc-title: "目錄"
+    toc-location: left
     toc-depth: 3
+    toc-expand: true
     number-sections: true
+    number-depth: 3
+    section-divs: true
     embed-resources: true
-    code-tools: false
     smooth-scroll: true
+    tbl-cap-location: top
+    html-math-method: mathjax
     css: guide.css
 ---
 
-<div class="code-toggle-bar"><button type="button" onclick="(function(){var d=[].slice.call(document.querySelectorAll('details.code-fold'));var o=!d.every(function(x){return x.open});d.forEach(function(x){x.open=o})})()">全部顯示 / 隱藏程式碼</button></div>
-
-這份文件說明 **association-rules-skill** 如何引導一次關聯規則分析：每一步要做什麼決定、
-有哪些選項、skill 會建議什麼、為什麼，以及每個專業術語的意思。理論依據是
-Tan, Steinbach, Karpatne & Kumar (2019), *Introduction to Data Mining* (2nd ed.)
-的第 5 章、6.1–6.2 節與 10.4 節。
-
 ::: {.callout-note}
-## 這份文件適合誰
+## 這份指南怎麼讀
 
-- 想知道這個 skill 會怎麼和你互動的使用者
-- 想了解關聯規則分析流程與判斷依據的同學和老師
-- 讀分析報告時遇到看不懂的術語，可以直接跳到[術語表](#sec-glossary)
+- **讀者**：具備基本統計知識、但未必熟悉關聯規則的人。本指南假設你**已經決定要做關聯規則分析**，不討論其他機器學習方法。
+- **用途**：一方面給人閱讀；另一方面，第 8 章的流程圖與操作規格是後續實作 Skill 的依據。
+- **兩種標籤**：[已執行]{.badge-run} 表示表格或數字由 `docs/examples/build_guide_examples.py` 實際計算產生（第 9 章另以 mlxtend 與 R arules 交叉核對）；[示意]{.badge-demo} 表示只是說明用的格式或設定，沒有對應的計算結果。
+- **教科書**：以 Tan, Steinbach, Karpatne & Kumar (2019) 第 5、6 章為主要參考。引用處只標章節、表號或例號；手邊的電子版沒有印刷頁碼，所以本指南不列頁碼。
 :::
 
-# 關聯規則是什麼
+# 分析目的與適用問題
 
-關聯規則（association rule）是一種**非監督式學習**（unsupervised learning）方法：資料沒有「正確答案」
-欄位，目標是找出哪些項目**常常一起出現**。寫成
+::: {.test-name}
+找出「經常一起出現」的項目，而不是預測或解釋因果
+:::
 
-$$
-X \rightarrow Y
-$$
+關聯分析（association analysis）從大量交易中找出經常一起出現的項目集合（frequent itemsets），並以關聯規則（association rule）$X \rightarrow Y$ 表示兩組項目之間的關係（Tan et al., 2019, 第 5 章開頭、Table 5.1）。它不需要「正確答案」欄位，屬於非監督式學習。
 
-意思是「出現 X 的觀測單位中，Y 也常出現」。X 稱為前件（antecedent），Y 稱為後件（consequent），
-兩者沒有共同的項目。
+第一版支援兩種資料：
 
-## 適用的資料
+| | A. Groceries 類型：購物資料 | B. Income 類型：類別型問卷 |
+|:--|:--|:--|
+| 一筆觀測（basket） | 一筆交易（例如一張發票） | 一位受訪者 |
+| 項目（item） | 交易中出現的商品，例如 `牛奶` | 「欄位=類別」，例如 `網購=否` |
+| 練習資料 | `data/groceries.csv`（arules 的 Groceries） | `data/income_esl.csv`（arules 的 IncomeESL） |
+| 教科書依據 | 5.1 節的購物籃交易 | 6.1 節：把類別屬性的每個「屬性-值」轉成一個項目 |
 
-| | 交易資料 | 問卷資料 |
-|---|---|---|
-| 一個觀測單位 | 一張訂單（一個購物籃） | 一位受訪者 |
-| 項目 | 買了的商品，例如 `beer` | 「題目=答案」，例如 `政策A態度=支持` |
-| 典型問題 | 哪些商品常一起買？ | 哪些特徵與哪些態度常一起出現？ |
-| 典型用途 | 陳列、組合促銷、推薦 | 描述族群樣貌、提出研究假說 |
+## 可以問的問題
 
-問卷的關鍵轉換是：**basket 不一定是購物籃，也可以是一位受訪者的特徵集合**。項目一定要保留
-「欄位=值」，否則「支持」分不出是支持哪一項政策（Tan et al. 6.1）。
+**購物資料**
 
-## 它能說什麼、不能說什麼
+| 問題 | 分析目標（第 5 章） | 規則形式 |
+|:--|:--|:--|
+| 哪些商品經常一起被買，適合組成套餐或一起陳列？ | 自由探索 | 任意前件 → 任意後件 |
+| 買了牛奶的人，還常買什麼？ | 指定前件 | {牛奶} → ? |
+| 買咖啡的交易，通常同時買了哪些商品？ | 指定後件 | ? → {咖啡} |
+
+**類別問卷**
+
+| 問題 | 分析目標 | 規則形式 |
+|:--|:--|:--|
+| 哪些回答經常出現在同一位受訪者身上？ | 自由探索 | 任意「欄位=類別」之間 |
+| 不網購的受訪者，還有哪些常見的回答？ | 指定前件 | {網購=否} → ? |
+| 哪些特徵與「網購=是」一起出現？ | 指定後件 | ? → {網購=是} |
+
+## 關聯不代表因果
 
 ::: {.callout-warning}
 ## 共同出現 ≠ 因果
 
-規則只說明「一起出現的頻率比獨立時高」。「買 A 導致買 B」需要實驗（例如促銷 A/B 測試）才能確認；
-「年輕人因為年輕所以支持政策 A」也不能從規則推出。
+教科書明確提醒：關聯規則的推論**不一定代表因果**，只表示前件與後件之間有較強的共同出現關係；因果需要知道哪些變數代表原因與結果，通常還涉及時間先後（Tan et al., 2019, 5.1 節）。5.7.3 節的 Simpson's paradox 例子（Table 5.17、5.18）也顯示，合併資料中的關聯，在依隱藏變數分層後可能消失或反轉。
+
+所以，「18-29 歲 → 網購=是」只能說「在這份樣本中，18-29 歲的受訪者都有網購」，不能說「年輕使人網購」。
 :::
 
-另一個重點是：**關聯規則一定會找到東西**。即使資料完全隨機，在上千個組合裡總會有一些看起來很強。
-所以這個 skill 把**驗證**做成固定步驟。
+# 基本觀念與公式
 
-# 整體流程
+::: {.test-name}
+transaction、item、itemset，以及 support、confidence、lift
+:::
 
-skill 依固定的 6 個步驟進行。所有數字都由同一支程式 `scripts/run_arules.py` 依 `config.json` 算出，
-AI 只負責和使用者溝通、記錄確認、撰寫解讀。同一份資料和同一份設定，每次結果都相同。
+## 名詞
 
-```{mermaid}
-flowchart TD
-    A[1 讀取與檢查<br/>inspect] --> B[2 確認資料類型與前處理<br/>一次一項]
-    B --> C[3 選擇分析問題]
-    C --> D[4 確認門檻<br/>預設規則表]
-    D --> E[5 執行<br/>run：切分、探勘、驗證]
-    E --> F[6 解讀與報告<br/>finalize]
-```
+| 名詞 | 定義（Tan et al., 2019, 5.1 節） | 購物例子 | 問卷例子 |
+|:--|:--|:--|:--|
+| transaction（交易、basket） | 一筆觀測，包含一組項目 | 一張發票 | 一位受訪者 |
+| item（項目） | 一個二元變數：出現為 1，沒出現為 0 | `牛奶` | `網購=否` |
+| itemset（項目集） | 零個或多個項目的集合；有 $k$ 個項目的稱為 $k$-itemset | {吐司, 牛奶} | {年齡層=50 歲以上, 網購=否} |
+| support count $\sigma(X)$ | 包含 $X$ 的交易數 | 含 {吐司, 牛奶} 的交易數 | 同時符合兩個回答的人數 |
+| antecedent（前件） | 規則 $X \rightarrow Y$ 的 $X$ | {雞蛋} | {網購=否} |
+| consequent（後件） | 規則 $X \rightarrow Y$ 的 $Y$；$X$ 與 $Y$ 不可有共同項目 | {吐司} | {運動頻率=幾乎不運動} |
 
-互動原則：
+教科書指出，購物籃中的項目是**非對稱二元變數**：「出現」比「沒出現」重要；而且 0/1 表示法忽略了數量與價格（5.1 節）。這就是第 4 章「數量與金額不當成項目」「不產生『未購買』項目」的理由。
 
-- **每次只問一個問題**；使用者已經說過的（例如「這是 Groceries，每筆是一張訂單」）直接沿用。
-- skill 可以自動**提出判斷**，但不能只看欄位名稱就決定資料的意義。數字 1、2、3 可能是問卷選項代碼，
-  要有使用者說明或編碼表。
-- 程式在前處理後會停下來：還有事項要確認時結束代碼是 2，資料格式不支援時是 1。這保證該問的一定會問。
+## 三個指標
 
-# 逐步說明
+設 $N$ 為交易數（**support 的分母**），規則 $X \rightarrow Y$：
 
-## 步驟 1：讀取與檢查
+$$
+\text{support}(X \rightarrow Y) = \frac{\sigma(X \cup Y)}{N}, \qquad
+\text{confidence}(X \rightarrow Y) = \frac{\sigma(X \cup Y)}{\sigma(X)}
+$$
 
-skill 先列出資料筆數、欄位與前 5 列，再提出資料類型的判斷與依據：
+$$
+\text{lift}(X \rightarrow Y) = \frac{\text{confidence}(X \rightarrow Y)}{\sigma(Y)/N} = \frac{N\,\sigma(X \cup Y)}{\sigma(X)\,\sigma(Y)}
+$$
 
-| 判斷 | 結構特徵 |
-|---|---|
-| 購物清單（長格式） | 某一欄的值會重複（訂單編號），每個值對應好幾個不同的商品 |
-| 購物清單（購物籃格式） | 一列一筆，商品以逗號等符號寫在同一格 |
-| 已完成的項目集合 | 0/1 矩陣，或一列一個「欄位=答案」 |
-| 問卷類別表 | 一列一位受訪者、一欄一題 |
+前兩個公式是 Tan et al. (2019) 式 5.1、5.2；lift 即 5.7.1 節的 interest factor（式 5.5）：等於 1 表示 $X$、$Y$ 統計獨立，大於 1 表示正相關，小於 1 表示負相關（式 5.6）。本指南把 $\sigma(Y)/N$ 稱為**後件比例**：不看前件時，後件本來出現的比例。
 
-同時檢查缺失、每一欄的值、可能的 ID 與權重、不支援的數值欄位，並提出前處理方案。
+**實際計算** [已執行]{.badge-run}：第 7 章購物小案例共 $N = 8$ 筆交易，其中 3 筆有雞蛋、5 筆有吐司，3 筆兩者都有。
 
-## 步驟 2：前處理
+| 指標 | 計算 | 結果 | 白話 |
+|:--|:--|:--|:--|
+| support | 3 / 8 | 0.375 | 8 筆交易中有 3 筆同時有雞蛋和吐司 |
+| confidence | 3 / 3 | 1 | 有雞蛋的 3 筆都有吐司 |
+| 後件比例 | 5 / 8 | 0.625 | 不看前件時，有吐司的交易比例 |
+| lift | 1 / 0.625 | 1.6 | 有雞蛋時出現吐司的比例，是整體的 1.6 倍 |
 
-前處理只有兩種固定流程。
+## 容易誤解之處
 
-### 購物清單整理
+**高 confidence 可能只是後件本來就常見。** 教科書 Example 5.3（Table 5.7）：1,000 人中 200 人喝茶、800 人喝咖啡、150 人兩者都喝。{茶} → {咖啡} 的 confidence 是 75%，看起來很高；但所有人中喝咖啡的比例是 80%，知道一個人喝茶，反而讓他喝咖啡的機率從 80% 降到 75%，lift = 0.15 / (0.2 × 0.8) = 0.9375 < 1。
 
-| 項目 | 處理 |
-|---|---|
-| 商品名稱前後空白 | 固定去除（記錄影響列數） |
-| 同一張訂單重複的商品 | 固定記為一次（記錄影響列數） |
-| 疑似同義的名稱（只差大小寫、全形半形、空白） | **問使用者**，確認是同一商品才合併 |
-| 商品值缺失 | **問使用者**（建議排除該列，不能當成沒買） |
-| 空的訂單 | **問使用者**（排除，或保留在總訂單數） |
-| 數量 ≤ 0 | **問使用者**（排除或保留） |
+同樣的情形出現在第 7 章購物小案例 [已執行]{.badge-run}：{吐司} → {牛奶} 的 confidence = 4 / 5 = 0.8，但 8 筆中有 6 筆買牛奶（後件比例 0.75），lift 只有 1.0667。牛奶幾乎每筆都有，「買吐司的人常買牛奶」大部分只是因為牛奶本來就常見。**因此，報告 confidence 時一定要同時列出後件比例。**
 
-### 類別問卷編碼
+**lift > 1 不等於統計顯著，也不等於因果。** lift 只是樣本中的比例比較。第 7 章 {雞蛋} → {吐司} 的 lift = 1.6，但只建立在 3 筆交易上，換一批資料可能就不成立。是否顯著要另做檢定（第 9 章），是否有因果則需要實驗設計。
 
-- 每個答案保留成「原欄位名稱=原答案」，例如 `education=graduate study`。
-- 使用者選擇要分析的欄位。ID、權重、開放文字不當成項目，並記錄原因。
-- 缺失的處理只有一種：在選定欄位上做**完整個案分析**。執行前先告訴使用者會排除幾筆、剩下幾筆，同意後才繼續。
-- 數字代碼要有編碼表，或由使用者確認數字本身就是答案。數值欄位只用使用者提供的切點。
+**lift 是對稱的。** $\text{lift}(X \rightarrow Y) = \text{lift}(Y \rightarrow X)$，但 confidence 不對稱。所以規則表常會成對出現 lift 相同、confidence 不同的兩條規則（例如第 7 章的 {網購=否} → {運動頻率=幾乎不運動} 與反方向）。
 
-### skill 不會做的事
+# 資料輸入與適用性檢查
 
-- 自行建立連續變數切點
-- 自行合併問卷答案或商品類別
-- 因兩筆觀測內容相同而刪除其中一筆
-- 把缺失、拒答或不適用當成「否」
-- 把 ID、調查權重當成項目
-- 改掉問卷的原欄位名稱或答案
+::: {.test-name}
+先確認「一筆是什麼」，再談項目
+:::
 
-所有排除與轉換都會寫進報告，附上原因、影響筆數與前處理程式碼。
+## 三種原始格式
 
-## 步驟 3：選擇分析問題
+以下是第 7 章使用的範例資料（`docs/examples/data/`），以原始樣貌呈現；「␣」標示原始資料中多打的空白。
 
-| 資料 | 問題 | 規則形式 | 排序 |
-|---|---|---|---|
-| 購物 | 哪些商品適合組成套餐？ | 2–3 項組合，每一項都和其他項正相關 | 共同出現筆數 |
-| 購物 | 買 XX 的人，可以推薦什麼？ | {XX} → 1 項商品 | lift，再看 confidence |
-| 購物 | 哪些商品可以考慮放在相近位置？ | 2 項組合 | lift，附 cosine、Kulczynski |
-| 購物 | 我不知道有什麼有趣的搭配，幫我看看 | 前件 ≤ 2、後件 1 | lift |
-| 問卷 | 哪些回答常一起出現？ | 選定欄位間，前件 ≤ 2、後件 1 | lift |
-| 問卷 | 哪些條件與某個特定答案有關？ | 後件 = 指定答案 | lift |
-| 問卷 | 已知某種特徵，還有哪些答案常見？ | 前件 = 指定特徵 | confidence，附基準比例 |
+**(1) 交易明細長表**：一列一個（交易, 商品），可能附數量與金額。
 
-問卷的核心問題是「哪些特徵或回答，經常出現在同一位受訪者身上？」，skill 看過資料後才請使用者選擇。
+{{< include examples/output/shop_raw_long.md >}}
 
-## 步驟 4：確認門檻
+**(2) 購物清單**：一列一筆交易，商品寫在同一格，以逗號分隔。
 
-門檻由固定公式算出，使用者可以全部接受或修改其中幾項（N 是探勘資料的觀測單位數）：
+{{< include examples/output/shop_raw_basket.md >}}
 
-| 問題 | 最低共同出現筆數 | confidence | lift |
-|---|---|---|---|
-| 購物四個問題 | max(10, ⌈0.5% N⌉) | 推薦、幫我看看 ≥ 0.1 | > 1 |
-| 哪些回答常一起出現 | max(10, ⌈5% N⌉) | ≥ 0.5 | > 1 |
-| 與特定答案有關、已知特徵 | max(10, ⌈1% N⌉) | 不設 | 與特定答案有關 > 1 |
+**(3) 類別問卷寬表**：一列一位受訪者，一欄一題；部分題目以數字代碼記錄，需要搭配資料字典。
 
-## 步驟 5：執行與驗證
+{{< include examples/output/survey_raw.md >}}
 
-規則是從資料中「挑」出來的，用同一份資料評估一定過度樂觀，所以驗證是**固定步驟**：
+## 如何辨識格式
 
-| 資料情況 | 切分 |
-|---|---|
-| 每筆訂單都有時間 | 最早 70% 探勘、最晚 30% 驗證 |
-| 其他 | 隨機 70 / 30（seed = 2026） |
-| 觀測單位少於 300 | 不切分，結果視為探索性 |
+辨識看的是**資料結構**，欄位名稱只能當輔助線索；判斷結果是「提議」，涉及資料意義的部分要由使用者確認。
 
-在驗證資料上，每筆結果做單尾 Fisher exact test，再用 Benjamini–Hochberg 校正多重比較。
-驗證資料 lift > 1 且 q < 0.05 就標為「重現」。
+| 結構特徵 | 可能的格式 | 一筆觀測 | 需要確認的事 |
+|:--|:--|:--|:--|
+| 某一欄的值重複出現，每個值對應多個不同的商品 | 交易明細長表 | 該欄的一個值 | 這個 ID 代表一張發票、一位顧客，還是一位顧客的一天 |
+| 某一欄大多含有分隔符號，一格寫了多個值 | 購物清單 | 一列 | 分隔符號；空白格代表什麼 |
+| 多個欄位只有 0/1 | 已編碼的交易矩陣，或是非題問卷 | 一列 | 0/1 的意義（有買／沒買，或 否／是），需要資料字典 |
+| 一列一人、多欄是文字或代碼 | 類別問卷寬表 | 一列 | 哪些欄位是 ID、權重、開放題；數字是代碼還是數值 |
 
-## 步驟 6：解讀與報告
+## 分析前必須知道的資訊
 
-程式先產生數字都填好的報告草稿，只有解讀留白（`【待填】`）。AI 依報告規格填寫白話解讀後，
-`finalize` 輸出 `report.html`、`report.md`、`report.qmd`，最後附上重現方式、`config.json` 與完整程式碼（預設摺疊）。
+| 資訊 | 為什麼需要 | 沒有時怎麼辦 |
+|:--|:--|:--|
+| 一筆觀測的定義（交易 ID 或受訪者 ID 的意義） | 決定 support 的分母 $N$ | 詢問使用者 |
+| 項目欄位與（購物清單的）分隔符號 | 決定項目是什麼 | 依結構提出判斷，請使用者確認 |
+| 資料字典：代碼的意義、哪些代碼代表未回答／不知道／不適用／拒答 | 數字可能是類別代碼；缺失不可當成答案 | 詢問使用者；無法取得時，該欄不納入 |
+| 要分析的欄位（問卷） | 完整案例分析只看選定欄位 | 詢問使用者 |
+| 分析目標：自由探索、指定前件或指定後件 | 決定規則形式 | 詢問使用者 |
+| 是否有可信的時間欄位 | 只有在要做保留資料驗證且依時間切分時才需要 | 不假設資料列順序代表時間 |
 
-# 自己試試看
+## 不支援的資料
 
-`data/` 裡有兩個公開的練習資料集，都來自 R 套件 arules。這份導覽**不提供**它們的分析結果，
-請把資料交給 skill 自己做一次。來源、欄位說明與授權見 `data/README.md`。
+遇到下列情況時，說明需要的調整並停止，不自行猜測完成：
 
-| 檔案 | 類型 | 規模 | 可以練習什麼 |
-|---|---|---|---|
-| `groceries.csv` | 購物清單（長格式） | 9,835 筆雜貨店交易、169 種商品 | 四個購物問題；商品名稱前後空白的固定規則 |
-| `income_esl.csv` | 問卷類別表 | 8,993 位受訪者、14 個人口特徵 | 選擇分析欄位、數字欄位的說明、完整個案分析、三個問卷問題 |
+- 無法判斷一筆觀測的定義，或交易 ID 有缺失。
+- 原始數值變數（例如原始年齡、原始所得金額）：第一版不自動分箱。已經分組的年齡層、所得區間可以當類別使用。
+- 複選題寫在同一格、同一人同一題有多個答案。
+- 代碼意義不明，且使用者無法提供資料字典。
+- 需要加權推論到母體的問題（第一版只做未加權的樣本描述）。
 
-```text
-/association-rules-skill 幫我分析 data/groceries.csv，每筆是一張訂單
-/association-rules-skill 幫我分析 data/income_esl.csv，看看哪些條件和高收入有關
-```
+# 兩種資料各自的前處理流程
+
+::: {.test-name}
+原始資料 → 轉換規則 → basket → 編碼結果
+:::
+
+## 購物資料
+
+### 轉換規則
+
+| 規則 | 類型 | 理由 |
+|:--|:--|:--|
+| 以交易 ID 分組前，先確認 ID 的意義 | 詢問 | 決定一筆觀測與分母 |
+| 去除商品名稱前後空白 | 自動 | 機械性操作；避免同一商品因多打空白變成兩個項目 |
+| 同一筆交易中的同一商品只算一次 | 自動 | 項目是「有沒有出現」的二元變數（5.1 節） |
+| 不同交易即使內容相同，也全部保留 | 自動 | 它們是不同的觀測，刪除會改變 support |
+| 只有一種商品的有效交易保留 | 自動 | 它仍是一筆交易，會計入分母 |
+| 數量與金額不當成項目 | 自動 | 0/1 表示法只看出現與否（5.1 節） |
+| 沒買某商品，不產生「未購買該商品」項目 | 自動 | 項目是非對稱二元變數，沒出現不是一個項目 |
+| 商品名稱空白、疑似同義名稱、數量 ≤ 0 | 詢問 | 涉及資料意義，不能自行決定 |
+
+### 逐步展示 [已執行]{.badge-run}
+
+**步驟 1：原始資料**：上一章的交易明細長表或購物清單。兩者整理後的 basket 完全相同（程式中有檢查）。
+
+**步驟 2：套用轉換規則，記錄每一步的筆數。**
+
+{{< include examples/output/shop_log.md >}}
+
+`T02` 的「吐司␣」去除空白後與其他「吐司」相同；`T08` 的兩列牛奶合併為一次；`T05` 只有咖啡，保留；`T02` 與 `T07` 內容相同，兩筆都保留。
+
+**步驟 3：basket**（support 的分母 $N = 8$ 筆交易）。
+
+{{< include examples/output/shop_baskets.md >}}
+
+**步驟 4：編碼結果**（0/1 矩陣；0 只代表「沒有出現」，不是一個項目）。
+
+{{< include examples/output/shop_binary.md >}}
 
 <details class="code-fold">
-<summary>顯示程式碼：指令形式</summary>
+<summary>顯示程式碼：購物資料前處理（即產生上表的程式）</summary>
 
-```bash
-python scripts/run_arules.py inspect --data data/groceries.csv --out arules_output
-python scripts/run_arules.py run --config config.json
-python scripts/run_arules.py finalize --config config.json --report arules_output/report.md
-```
+{{< include examples/output/code_shopping.md >}}
 
 </details>
 
-做的時候可以留意：
+## 類別問卷
 
-- 「買 whole milk 的人可以推薦什麼」的結果中，confidence 和後件基準比例差多少？
-- 問卷的 `number in household`、`number of children` 是數字，skill 會怎麼問你？
-- 完整個案分析排除了多少人？會不會造成偏誤？
-- 規則能不能解讀成「教育程度造成高收入」？為什麼不能？
+### 轉換規則
 
-# 常見陷阱
+| 規則 | 類型 | 理由 |
+|:--|:--|:--|
+| 每位受訪者形成一個 basket | 自動 | 一筆觀測是一個人 |
+| 項目寫成「欄位=類別」，例如 `網購=否` | 自動 | 6.1 節：每個屬性-值組合成為一個項目；只寫「否」會分不出是哪一題 |
+| 「否」是有效答案，會成為項目 | 自動 | 6.1 節：對稱二元屬性要轉成兩個項目（例如 `網購=是`、`網購=否`） |
+| 0/1 依資料字典解讀，不把 0 當成「沒有項目」 | 依字典 | 問卷的 0 通常是「否」這個答案 |
+| 數字型態不代表連續變數，可能是類別代碼 | 依字典或詢問 | 例如運動頻率 1、2、3 |
+| 序位變數當類別處理 | 自動 | 不宣稱使用了順序或距離資訊 |
+| 不同受訪者答案相同，不刪除 | 自動 | 不同的人是不同的觀測 |
+| ID 不納入規則 | 自動（列出） | 每人不同，沒有分析意義 |
+| 不擅自合併類別 | 詢問 | 6.1 節雖建議把少見的值合併，但是否合併屬於使用者的決定 |
+| 未回答、不知道、不適用、拒答依資料字典區分 | 依字典 | 不自動當成「否」，也不當成一般答案 |
+| 完整案例分析只看選定的分析欄位 | 詢問 | 執行前說明排除筆數與可能影響 |
+| 未加權的樣本描述 | 自動 | 不宣稱代表整體人口 |
 
-| 陷阱 | 例子 | skill 怎麼防 |
-|---|---|---|
-| confidence 的陷阱 | 喝茶的人 75% 喝咖啡，但全體 80% 都喝咖啡 → lift 0.94，其實是負相關 | 結果表都列出後件基準比例，lift 必須 > 1 |
-| 定義性規則 | 縣市 → 區域 | 自動偵測欄位間的函數關係並排除 |
-| 把空白當成「否」 | 沒回答被當成「不支持」 | 缺失一律走完整個案分析，不產生項目 |
-| 自作主張的前處理 | 自動合併答案、自動切分年齡 | 只用使用者提供的編碼表與切點 |
-| 把共同出現當因果 | 「年輕導致支持」 | 報告規格禁止因果用語 |
-| 看結果調門檻 | 一直調門檻直到結果好看 | 門檻用固定公式；改過的會標示「使用者調整」 |
-| 未加權當母體比例 | 「全國 36% 支持」 | 權重欄不當項目，報告註明結果描述的是樣本 |
+### 逐步展示 [已執行]{.badge-run}
 
-# 術語表 {#sec-glossary}
+**步驟 1：原始資料與資料字典。**
 
-以下用一個小例子貫穿：100 筆交易中，40 筆有 A，50 筆有 B，30 筆同時有 A 和 B。
+{{< include examples/output/survey_dictionary.md >}}
 
-## 資料與項目
+**步驟 2：依資料字典解碼。** `網購` 的 1/0 換成「是／否」；`運動頻率` 的 8（不知道）、9（拒答）與 `居住地` 的空白設為缺失。
 
-**交易 / 觀測單位（transaction）**
-:   一個分析單位：一張訂單或一位受訪者。N 是觀測單位的總數。
+{{< include examples/output/survey_decoded.md >}}
 
-**項目（item）**
-:   交易中的一個元素：一種商品，或問卷的「題目=答案」。
+**步驟 3：選擇分析欄位、完整案例分析，並記錄每一步的筆數。** 本例使用者選擇 `年齡層`、`網購`、`運動頻率`。`R06` 的居住地缺失，但居住地不在分析欄位中，所以 `R06` 保留；`R08`、`R11` 的運動頻率缺失，排除。`R07` 與 `R12` 答案完全相同，兩人都保留。
 
-**項目集（itemset）**
-:   零個或多個項目的集合；有 k 個項目的稱為 k-itemset。
+{{< include examples/output/survey_log.md >}}
 
-**屬性-值項目（attribute-value item）**
-:   把問卷的每個「題目=答案」組合變成一個二元項目，例如 `性別=女`（Tan et al. 6.1）。
+**步驟 4：basket（「欄位=類別」）**，support 的分母是完整案例分析後的 $N = 10$ 人，不是原始的 12 人。
 
-**codebook（編碼表）**
-:   說明每個代碼代表什麼的表，例如 `98 = 不知道`。沒有它，數字的意義無法判斷。
+{{< include examples/output/survey_baskets.md >}}
 
-**跳題（skip pattern）**
-:   只有部分受訪者會被問到的題目。沒被問到的人留白，不能當成「否」。
+**步驟 5：編碼結果。** `網購=否` 是一個獨立的項目，不是「沒有 `網購=是`」。
 
-**完整個案分析（complete-case analysis）**
-:   只保留在選定欄位上都有答案的觀測單位，有任何缺失的就排除。做法簡單、容易說明，
-    但缺失不是隨機發生時，結果可能偏誤。
+{{< include examples/output/survey_binary.md >}}
 
-**離散化（discretization）**
-:   把連續數值分成區間，例如年齡 → 18–29、30–44（6.2.1）。本 skill 只使用使用者提供的切點。
+::: {.callout-important}
+## 完整案例分析的可能影響
 
-**調查權重（survey weight）**
-:   讓樣本比例對應到母體的調整係數。本 skill 不當成項目，也不做加權。
+本例排除了 2 位運動頻率回答「不知道」或「拒答」的受訪者，分母從 12 人變成 10 人。如果不回答運動頻率的人有某種共同特徵（例如較少運動），排除他們會讓規則偏向回答者的樣貌。報告中要寫明排除人數與這個限制。
+:::
 
-## 基本指標
+<details class="code-fold">
+<summary>顯示程式碼：問卷前處理（即產生上表的程式）</summary>
 
-**支持度 support**
-:   同時含有 X 和 Y 的觀測單位比例。$s(X \cup Y) = \sigma(X \cup Y) / N$。
-    例：30 / 100 = 0.30。它代表規則的**影響範圍**。
+{{< include examples/output/code_survey.md >}}
 
-**信賴度 confidence**
-:   含 X 的單位中，也含 Y 的比例，估計 $P(Y \mid X)$。
-    例：A → B 的 confidence = 30 / 40 = 0.75。
+</details>
 
-**後件基準比例（consequent support）**
-:   不看前件時，Y 本身出現的比例。例：50 / 100 = 0.50。confidence 要和它比才有意義。
+# 分析目標與參數設定
 
-**提升度 lift**
-:   $\text{lift} = \dfrac{s(X \cup Y)}{s(X)\,s(Y)}$。等於 1 表示獨立，大於 1 表示比獨立時更常一起出現。
-    例：0.30 / (0.40 × 0.50) = 1.5。lift 是對稱的：A → B 與 B → A 相同。
+::: {.test-name}
+門檻是使用者的決定，不是通用標準
+:::
 
-**槓桿 leverage（PS）**
-:   $s(X \cup Y) - s(X)\,s(Y)$，比獨立時多出的比例。例：0.30 − 0.20 = 0.10。
+## 三種分析目標
 
-**確信度 conviction**
-:   $\dfrac{1 - s(Y)}{1 - \text{confidence}}$，規則「出錯」比獨立時少幾倍。例：0.5 / 0.25 = 2。
+| 目標 | 何時使用 | 規則形式 | 例子 |
+|:--|:--|:--|:--|
+| 自由探索 | 還沒有特定問題，想看資料中有哪些組合 | 前件與後件不限（受規則長度限制） | 哪些回答經常一起出現？ |
+| 指定前件 | 已知某個項目，想知道還常伴隨什麼 | 前件 = 指定的項目集 | 買牛奶的人還買什麼？ |
+| 指定後件 | 關心某個結果，想知道哪些項目和它一起出現 | 後件 = 指定的項目 | 哪些特徵與「網購=是」一起出現？ |
 
-**φ 係數（phi）**
-:   兩個二元變數的 Pearson 相關，介於 −1 和 1。會受「都沒有」的交易數影響。
+## 參數
 
-## Null-invariant 指標
+| 參數 | 作用 | 調高時 | 調低時 | 注意 |
+|:--|:--|:--|:--|:--|
+| 最低支持度 minsup | 只保留共同出現夠多次的組合 | 規則變少，低頻但有意義的組合會被排除（5.7.1 節） | 規則變多，巧合規則增加 | **一定同時寫出對應的最低筆數** $\lceil \text{minsup} \times N \rceil$ |
+| 最低信賴度 minconf | 只保留「前件出現時後件也常出現」的規則 | 規則變少 | 規則變多 | 不考慮後件本來多常見（茶與咖啡的例子） |
+| lift 篩選 | 只保留比獨立情況更常一起出現的規則 | 規則變少 | 規則變多 | 常用 lift > 1；不代表顯著 |
+| 規則長度 | 前件最多幾項、後件幾項 | 規則變多、較難解讀 | 規則較少、較好解讀 | 本指南示範：前件 ≤ 2、後件 1 |
+| 最低前件出現筆數 | 前件本身至少要出現幾次 | confidence 較穩定 | 會出現「1 筆中 1 筆」的 100% | 這是實務上的補充設定，不是教科書定義的指標 |
 
-**null-invariant（不受空交易影響）**
-:   加入大量「X、Y 都沒有」的交易時，指標不變。購物籃資料大多數交易都沒有某兩個商品，
-    所以這類指標比較穩定（5.7）。
+## 示範設定 [示意]{.badge-demo}
 
-**cosine（IS）**
-:   $\dfrac{s(X \cup Y)}{\sqrt{s(X)\,s(Y)}}$。例：0.30 / √0.20 ≈ 0.67。
+下面的值**只是示範**，用來說明如何寫設定與理由；不是通用標準，換一份資料就要重新決定。
 
-**Kulczynski**
-:   兩個方向 confidence 的平均。例：(0.75 + 0.60) / 2 = 0.675。
+```yaml
+# 第 7 章購物小案例（N = 8）
+目標: 自由探索
+最低支持度: 0.25        # = 至少 2 筆交易；只有 8 筆，1 筆的組合太容易是巧合
+最低信賴度: 0.6
+lift: "> 1"
+規則長度: 前件 ≤ 2 項、後件 1 項
+最低前件筆數: 3          # 避免「1 筆中 1 筆」的 confidence = 1
 
-**all-confidence**
-:   兩個方向中較小的 confidence。例：min(0.75, 0.60) = 0.60。
+# 第 7 章問卷小案例（N = 10）
+最低支持度: 0.2         # = 至少 2 人；其餘同上
+```
 
-**h-confidence 與 cross-support**
-:   h-confidence = s(X) / X 中最高頻項目的 support，是 itemset 能產生的最低 confidence。
-    cross-support 樣式是極高頻項目和低頻項目硬湊出來的組合；設 h-confidence 門檻可以排除它（5.8）。
+| 設定 | 推薦理由 | 限制 |
+|:--|:--|:--|
+| 最低支持度換算成「至少 2 筆」 | 讓每條規則至少有兩筆觀測支持 | 小樣本下 2 筆仍然很少，結果只能當示範 |
+| confidence ≥ 0.6 | 讓規則有一定的可靠度 | 需搭配後件比例與 lift 一起看 |
+| lift > 1 | 排除沒有正相關的規則 | lift 稍大於 1 的規則（如 1.0667）意義有限 |
+| 前件 ≤ 2、後件 1 | 容易解讀 | 會漏掉更長的組合 |
+| 前件筆數 ≥ 3 | 避免極少數觀測造成的極端 confidence | 門檻本身也是主觀選擇 |
 
-## 探勘
+## 門檻沒有通用標準 [已執行]{.badge-run}
 
-**頻繁項目集（frequent itemset）**
-:   support 不低於 min_support 的 itemset。
+以 Groceries 練習資料（$N$ = 9,835 筆交易、169 種商品）為例，只改變最低支持度（其他條件：前件 + 後件 ≤ 3 項、後件 1 項、confidence ≥ 0.3、lift > 1）：
 
-**Apriori 原理**
-:   頻繁 itemset 的所有子集也都頻繁；反過來，不頻繁的 itemset，它的所有超集也不頻繁。
-    這讓演算法可以大量剪枝（5.2）。
+{{< include examples/output/groceries_sensitivity.md >}}
 
-**Apriori 與 FP-growth**
-:   兩種找頻繁項目集的演算法。Apriori 逐層產生候選；FP-growth 先把資料壓成樹，不產生候選。
-    **結果完全相同**，只差速度。
+最低支持度從 0.05 降到 0.005，規則數從 3 條變成 442 條。沒有哪一個值是「正確」的：要依分析目的、可以閱讀的規則數、每條規則至少要幾筆支持來決定，並在報告中寫出理由。Groceries 中最常見的商品如下；whole milk 出現在約四分之一的交易中，以它為後件的規則 confidence 容易偏高：
 
-**closed / maximal itemset**
-:   closed：沒有任何超集的 support 和它一樣。maximal：沒有任何超集是頻繁的。
-    兩者都是頻繁項目集的精簡表示（5.4）。
+{{< include examples/output/groceries_top_items.md >}}
 
-**冗餘規則（redundant rule）**
-:   {A, C} → B 的 confidence 沒有比 {A} → B 高，多加的 C 沒有提供資訊。
+Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products ` 結尾有空白）：
 
-**定義性規則（definitional rule）**
-:   由欄位定義必然成立的規則，例如縣市 → 區域。confidence 100% 也不是發現。
+{{< include examples/output/groceries_log.md >}}
 
-## 驗證與檢定
+# 規則產生、篩選與解讀
 
-**驗證集（holdout）**
-:   探勘前先保留、探勘時完全不看的資料，用來檢查規則是否重現。
+::: {.test-name}
+先找頻繁項目集，再產生規則，依序篩選並記錄每一步
+:::
 
-**Fisher exact test**
-:   在 2×2 列聯表的邊際總數固定下，計算「共同出現次數這麼多」的機率（超幾何分布）。
-    單尾檢定只看正相關（10.4.1）。
+## 產生規則
 
-**p 值**
-:   如果 X 和 Y 真的無關，觀察到這麼極端結果的機率。不是「規則為真的機率」。
+教科書把關聯規則探勘的問題定義為：找出所有 support ≥ minsup 且 confidence ≥ minconf 的規則（5.1 節 Definition 5.1）；並指出同一個項目集產生的規則 support 相同，因此可以先找頻繁項目集，再從中產生規則。Apriori 原理（5.2.1 節 Theorem 5.1）說：**如果一個項目集是頻繁的，它的所有子集也都是頻繁的**；反過來，不頻繁項目集的所有超集也不頻繁，因此可以大量剪掉候選。
 
-**多重比較與 FDR**
-:   一次檢定很多條規則，總會有一些純屬巧合地顯著。FDR（false discovery rate）控制「顯著的規則中，
-    假發現的比例」。
+本指南的範例程式為了讓讀者能逐筆核對，直接列出所有前件 ≤ 2 項、後件 1 項的候選規則並逐筆計數；第 9 章再以 Apriori（mlxtend 與 R arules）核對結果相同。
 
-**q 值（Benjamini–Hochberg）**
-:   以 BH 方法校正後的 p 值；q < 0.05 表示在 FDR 5% 下顯著。
+<details class="code-fold">
+<summary>顯示程式碼：規則計數與篩選</summary>
 
-**置換檢定（permutation test）**
-:   把每個項目欄位各自打亂，製造「項目彼此無關」的資料，再用同樣門檻探勘，看會找到幾條規則
-    （10.4.2）。
+{{< include examples/output/code_rules.md >}}
 
-**Simpson's paradox**
-:   合併資料中是正相關，分層後各層卻都是負相關（或反過來），通常是因為有隱藏變數（5.7.3）。
+</details>
 
-**探索性 vs 驗證性**
-:   探索性結果只能當假說；驗證性結果在沒看過的資料上重現過。看過驗證結果再改設定，就只剩探索性。
+## 篩選要依序、要記錄
 
-# 參考文獻
+篩選順序固定：最低筆數 → 最低前件筆數 → confidence → lift → 冗餘規則。每一步都記下剩下幾條，讓讀者知道規則是怎麼被排除的。以第 7 章購物小案例為例 [已執行]{.badge-run}：
 
-Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.).
-Pearson. 第 5 章（Association Analysis: Basic Concepts and Algorithms）、6.1–6.2 節
-（Handling Categorical / Continuous Attributes）、10.4 節（Statistical Testing for Association Analysis）。
+{{< include examples/output/shop_filter_steps.md >}}
+
+## 常見情況與處理
+
+| 情況 | 可能原因 | 處理方式 |
+|:--|:--|:--|
+| 沒有規則 | 門檻高於資料能支持的程度；交易多半很小 | 說明原因（例如共同出現最多的組合有幾筆），提出放寬方案，**經使用者同意**後重跑，保留兩次設定 |
+| 規則過多 | 門檻太低；有出現比例很高的項目 | 說明原因，提出收斂方案：提高最低支持度或 lift、縮短規則、改成指定前件或後件 |
+| 稀少項目 | 項目出現次數少，confidence 和 lift 容易極端 | 用最低筆數與最低前件筆數排除；需要時請使用者決定是否合併（6.1 節的建議），不自行合併 |
+| 出現比例很高的項目 | 例如 whole milk，或問卷中九成的人回答同一個答案 | 以它為後件的規則 confidence 偏高、lift 接近 1；6.1 節指出這類典型值很少帶來新資訊 |
+| 冗餘規則 | {A, C} → B 的 confidence 沒有比 {A} → B 高 | 移除，並記錄移除幾條 |
+| 方向相反的成對規則 | lift 對稱，A → B 與 B → A 一起出現 | 兩條都保留，解讀時以 confidence 說明方向上的差異 |
+| 定義上必然成立的規則 | 例如「縣市 → 區域」 | 指出它不是新發現 |
+
+::: {.callout-warning}
+## 不得為了產生漂亮結果而偷偷調整門檻
+
+調整門檻本身不是錯，但必須：(1) 說明原因；(2) 經使用者同意；(3) 保留每一次的設定與結果。
+:::
+
+**設定紀錄示範** [已執行]{.badge-run}：第一次設定沒有規則，說明原因後經使用者同意放寬。
+
+{{< include examples/output/shop_settings_log.md >}}
+
+## 解讀
+
+每條規則至少要說清楚四件事：分母是什麼、共同出現幾筆、confidence 與後件比例的對照、lift。例如：
+
+> 在 10 位完整回答的受訪者中，不網購的 4 人裡有 3 人幾乎不運動（confidence 0.75），而全部 10 人中只有 3 人幾乎不運動（0.3），lift = 2.5。
+
+不能寫的話：「不網購導致不運動」（因果）、「lift 2.5，證明關聯顯著」（未檢定）、「75% 的民眾……」（未加權、樣本只有 10 人）。
+
+# 完整示範
+
+::: {.test-name}
+兩個可以手算的小案例：輸入、判斷、操作、輸出
+:::
+
+以下所有表格都由 `docs/examples/build_guide_examples.py` 計算 [已執行]{.badge-run}。
+
+## 購物資料
+
+**輸入**：第 3 章的交易明細長表（20 列）。
+
+**判斷**：
+
+- `交易編號` 重複出現，每個值對應多種商品 → 交易明細長表；使用者確認一個交易編號是一張發票。
+- `數量`、`金額` 不當成項目。
+- 分析目標：自由探索。
+
+**操作**：第 4 章的購物前處理，得到 $N = 8$ 筆交易、5 種商品。各商品出現次數：
+
+{{< include examples/output/shop_item_freq.md >}}
+
+**設定**：第 5 章的示範設定（最低支持度 0.25 = 至少 2 筆、confidence ≥ 0.6、lift > 1、前件 ≤ 2 項、前件筆數 ≥ 3）。
+
+**輸出**：保留的規則。
+
+{{< include examples/output/shop_rules_kept.md >}}
+
+幾條代表性規則被保留或排除的原因：
+
+{{< include examples/output/shop_rules_examples.md >}}
+
+### 完整計算一條規則：{雞蛋} → {吐司}
+
+2×2 列聯表（格式同 Tan et al., 2019, Table 5.6）：
+
+{{< include examples/output/shop_contingency.md >}}
+
+$$
+\text{support} = \frac{3}{8} = 0.375,\quad
+\text{confidence} = \frac{3}{3} = 1,\quad
+\text{後件比例} = \frac{5}{8} = 0.625,\quad
+\text{lift} = \frac{1}{0.625} = 1.6
+$$
+
+| | 結論 |
+|:--|:--|
+| ✅ 合適 | 在這 8 筆交易中，買雞蛋的 3 筆都有買吐司；整體只有 62.5% 的交易有吐司，lift 為 1.6。樣本很小，只能當作可以進一步觀察的線索。 |
+| ❌ 不合適 | 「買雞蛋的顧客 100% 會買吐司」：只有 3 筆，不能推論到所有顧客。 |
+| ❌ 不合適 | 「把雞蛋和吐司放在一起會提高吐司銷量」：這是因果宣稱，需要實驗驗證。 |
+
+對照 {吐司} → {牛奶}：confidence 0.8 看起來比較高，但後件比例是 0.75，lift 只有 1.0667，幾乎沒有提供「買吐司」以外的資訊。
+
+## 類別問卷
+
+**輸入**：第 3 章的問卷寬表（12 人）與資料字典。
+
+**判斷**：
+
+- 一列一位受訪者 → 類別問卷寬表；`受訪者編號` 每人不同，是 ID。
+- `網購`、`運動頻率` 是數字代碼，依資料字典解讀；`年齡層` 已分組，當類別使用。
+- 使用者選擇分析 `年齡層`、`網購`、`運動頻率`，同意完整案例分析。
+
+**操作**：第 4 章的問卷前處理，分析人數 $N = 10$（排除 R08、R11）。
+
+**設定**：最低支持度 0.2（至少 2 人）、confidence ≥ 0.6、lift > 1、前件 ≤ 2 項、前件筆數 ≥ 3。
+
+{{< include examples/output/survey_filter_steps.md >}}
+
+**輸出 1：自由探索**
+
+{{< include examples/output/survey_rules_free.md >}}
+
+**輸出 2：指定後件 {網購=是}**
+
+{{< include examples/output/survey_rules_rhs.md >}}
+
+**輸出 3：指定前件 {網購=否}**
+
+{{< include examples/output/survey_rules_lhs.md >}}
+
+### 完整計算一條規則：{網購=否} → {運動頻率=幾乎不運動}
+
+{{< include examples/output/survey_contingency.md >}}
+
+$$
+\text{support} = \frac{3}{10} = 0.3,\quad
+\text{confidence} = \frac{3}{4} = 0.75,\quad
+\text{後件比例} = \frac{3}{10} = 0.3,\quad
+\text{lift} = \frac{0.75}{0.3} = 2.5
+$$
+
+| | 結論 |
+|:--|:--|
+| ✅ 合適 | 在 10 位完整回答三題的受訪者中，不網購的 4 人有 3 人幾乎不運動；全部受訪者中幾乎不運動的比例是 30%，lift 為 2.5。此結果是未加權的樣本描述，且排除了 2 位未回答運動頻率的人。 |
+| ❌ 不合適 | 「不網購的人有 75% 幾乎不運動」：沒有說明分母與樣本限制，讀起來像母體比例。 |
+| ❌ 不合適 | 「不網購導致不運動」或「兩者顯著相關」：前者是因果宣稱，後者沒有做檢定。 |
+| ❌ 不合適 | 把 R08、R11 的「不知道／拒答」當成「幾乎不運動」再計算：缺失不是答案。 |
+
+另外，自由探索結果中 `年齡層=50 歲以上`、`網購=否`、`運動頻率=幾乎不運動` 兩兩成對出現在多條規則裡：這三個回答集中在同一小群受訪者（R04、R05、R09 等），解讀時應合併說明，不要當成好幾個獨立的發現。
+
+# 決策流程圖與操作規格
+
+::: {.test-name}
+後續實作 Skill 的依據
+:::
+
+## 圖例
+
+```{mermaid}
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "primaryTextColor": "#24303A"}}}%%
+flowchart LR
+ L1[自動處理] ~~~ L2{判斷} ~~~ L3[詢問使用者] ~~~ L4([輸入或輸出]) ~~~ L5[停止並說明]
+ class L1 proc
+ class L2 dec
+ class L3 user
+ class L4 out
+ class L5 stop
+ classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
+ classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
+ classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
+ classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
+ classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+```
+
+灰色為可以自動執行的機械性操作；藍色菱形為判斷；橘色為需要詢問使用者的步驟（只有在現有設定不足以決定時才問，使用者已指定的不再問）；綠色為輸入或輸出；紅色為停止並說明需要的調整。
+
+## A. 整體分析流程
+
+```{mermaid}
+%%| fig-cap: "圖 A：整體分析流程"
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#24303A"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
+flowchart TD
+ A([取得資料與使用者說明]) --> B[讀取：筆數、欄位、前 5 列]
+ B --> C{結構屬於支援的格式?}
+ C -- 否 --> X1[說明需要的格式，停止]
+ C -- 是 --> D{使用者已說明資料類型<br/>與一筆觀測的定義?}
+ D -- 否 --> E[提出判斷與依據，詢問使用者]
+ E --> F
+ D -- 是 --> F{購物資料或類別問卷?}
+ F -- 購物 --> G[購物前處理（圖 B）]
+ F -- 問卷 --> H[問卷前處理（圖 C）]
+ G --> I[前處理紀錄：每步筆數、分母 N]
+ H --> I
+ I --> J{使用者已指定分析目標?}
+ J -- 否 --> K[詢問：自由探索、指定前件或指定後件]
+ K --> L
+ J -- 是 --> L[列出示範設定與理由：<br/>最低支持度與對應筆數、confidence、<br/>lift、規則長度、最低前件筆數]
+ L --> M{使用者確認設定?}
+ M -- 否 --> N[使用者修改；寫入設定紀錄]
+ N --> M
+ M -- 是 --> O[Apriori：頻繁項目集 → 規則<br/>依序篩選並記錄]
+ O --> P{保留的規則數?}
+ P -- 0 條 --> Q[說明原因，提出放寬方案]
+ P -- 多到無法逐條檢視 --> R[說明原因，提出收斂方案]
+ Q --> M
+ R --> M
+ P -- 可以檢視 --> S[解讀：分母、共同筆數、<br/>confidence 與後件比例、lift]
+ S --> T{使用者要做保留資料驗證?<br/>（選用）}
+ T -- 是 --> U[隨機切分；依時間切分<br/>只用使用者確認的時間欄位]
+ U --> V
+ T -- 否 --> V([報告：設定紀錄、前處理紀錄、<br/>規則、限制、程式碼])
+ class B,G,H,I,L,O,S,U proc
+ class C,D,F,J,M,P,T dec
+ class E,K,N,Q,R user
+ class A,V out
+ class X1 stop
+ classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
+ classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
+ classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
+ classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
+ classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+```
+
+## B. 購物資料前處理
+
+```{mermaid}
+%%| fig-cap: "圖 B：購物資料前處理決策"
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#24303A"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
+flowchart TD
+ A([購物資料]) --> B{原始格式?}
+ B -- 交易明細長表 --> C{交易 ID 的意義已確認?}
+ B -- 購物清單 --> B1{分隔符號已確認?}
+ B1 -- 否 --> U0[詢問分隔符號]
+ U0 --> B2
+ B1 -- 是 --> B2[拆成交易明細長表]
+ B2 --> C
+ B -- 0/1 矩陣 --> B3{1 代表「有買」已確認?}
+ B3 -- 否 --> U6[詢問 0/1 的意義]
+ U6 --> B3
+ B3 -- 是 --> B4[取值為 1 的欄名作為商品]
+ B4 --> C
+ B -- 其他 --> X1[說明需要的格式，停止]
+ C -- 否 --> U1[詢問：ID 是一張發票、<br/>一位顧客或一位顧客的一天?]
+ U1 --> C
+ C -- 是 --> C1{交易 ID 有缺失?}
+ C1 -- 是 --> X2[無法分組，請使用者補資料，停止]
+ C1 -- 否 --> D[去除商品名稱前後空白]
+ D --> E{有空白的商品名稱?}
+ E -- 是 --> U2[詢問：排除這些列或先補資料]
+ U2 --> F
+ E -- 否 --> F{有疑似同義名稱?<br/>只差大小寫、全形半形、空白}
+ F -- 是 --> U3[列出對照，詢問是否為同一商品]
+ U3 --> G
+ F -- 否 --> G{有數量 ≤ 0 的列?}
+ G -- 是 --> U4[詢問：退貨或取消如何處理]
+ U4 --> H
+ G -- 否 --> H[同一交易同商品只算一次<br/>數量、金額不成為項目<br/>不產生「未購買」項目]
+ H --> I[保留單一商品交易與內容相同的交易]
+ I --> J([輸出：basket、0/1 矩陣、前處理紀錄、N])
+ class B2,B4,D,H,I proc
+ class B,B1,B3,C,C1,E,F,G dec
+ class U0,U1,U2,U3,U4,U6 user
+ class A,J out
+ class X1,X2 stop
+ classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
+ classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
+ classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
+ classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
+ classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+```
+
+## C. 類別問卷前處理
+
+```{mermaid}
+%%| fig-cap: "圖 C：類別問卷前處理決策"
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#24303A"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
+flowchart TD
+ A([問卷資料]) --> B{一列一位受訪者?}
+ B -- 否 --> X1[說明需要的格式，停止]
+ B -- 是 --> C{有資料字典?}
+ C -- 否 --> D{有數字代碼、0/1<br/>或意義不明的值?}
+ D -- 是 --> U1[詢問：提供資料字典或說明代碼]
+ U1 --> D2{使用者能說明?}
+ D2 -- 是 --> E
+ D2 -- 否 --> X2[該欄不納入；<br/>全部欄位都無法說明時停止]
+ D -- 否 --> E
+ C -- 是 --> E[依資料字典解碼；未回答、不知道、<br/>不適用、拒答設為缺失]
+ E --> F[ID、權重、開放題不成為項目，列出原因]
+ F --> G{分析欄位已指定?}
+ G -- 否 --> U2[詢問要分析的欄位]
+ U2 --> H
+ G -- 是 --> H{選定欄位中有<br/>未分組的連續數值?}
+ H -- 是 --> X3[第一版不自動分箱：<br/>請改用已分組欄位或不選該欄]
+ X3 --> G
+ H -- 否 --> I{選定欄位有缺失?}
+ I -- 是 --> U3[說明排除筆數與可能影響，<br/>詢問是否採完整案例分析]
+ U3 -- 不同意 --> X4[第一版只支援完整案例分析，停止]
+ U3 -- 同意 --> J[排除選定欄位任一缺失者]
+ J --> K
+ I -- 否 --> K[每人一個 basket；項目為「欄位=類別」<br/>「否」也是項目；序位變數當類別<br/>答案相同的人都保留；不合併類別]
+ K --> L([輸出：basket、編碼對照、<br/>前處理紀錄、分析前後人數])
+ class E,F,J,K proc
+ class B,C,D,D2,G,H,I dec
+ class U1,U2,U3 user
+ class A,L out
+ class X1,X2,X3,X4 stop
+ classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
+ classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
+ classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
+ classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
+ classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+```
+
+## 操作規格
+
+| 步驟 | 觸發條件 | 自動操作 | 使用者選項 | 預設行為 | 輸出 | 停止條件 |
+|:--|:--|:--|:--|:--|:--|:--|
+| 1. 讀取與檢查 | 收到資料 | 讀取筆數、欄位、前 5 列；依結構提出格式判斷與依據；檢查缺失、ID 候選、數字欄位 | 無 | 欄位名稱只當輔助線索 | 資料概況、格式判斷與依據 | 結構不屬於支援的格式 |
+| 2. 確認資料類型與一筆觀測 | 使用者未說明 | 無 | 購物或問卷；ID 的意義 | 使用者已說明就沿用，不再問 | 確認紀錄 | 無法定義一筆觀測 |
+| 3a. 購物前處理 | 資料類型為購物 | 去空白；同交易同商品記一次；數量、金額不成項目；保留單一商品交易與相同交易 | 空白商品名稱、疑似同義名稱、數量 ≤ 0 的處理 | 有這些情況才問 | basket、0/1 矩陣、前處理紀錄、N | 交易 ID 缺失；0/1 矩陣有空白或其他值 |
+| 3b. 問卷前處理 | 資料類型為問卷 | 依資料字典解碼；缺失代碼設為缺失；ID、權重、開放題不成項目；產生「欄位=類別」 | 資料字典或代碼說明；分析欄位；是否採完整案例分析 | 不分箱、不合併類別、不刪相同答案 | basket、編碼對照、前處理紀錄、分析前後人數 | 代碼無法說明；選定欄位是未分組數值；不同意完整案例分析 |
+| 4. 選擇分析目標 | 使用者未指定 | 無 | 自由探索、指定前件、指定後件 | 使用者已指定就沿用 | 規則形式 | 指定的項目不在資料中（列出相近名稱，請使用者確認） |
+| 5. 設定參數 | 進入探勘前 | 把最低支持度換算成最低筆數 | 最低支持度、confidence、lift、規則長度、最低前件筆數 | 列出示範設定與理由，**不宣稱是通用標準** | 設定紀錄 | 無 |
+| 6. 產生與篩選 | 設定已確認 | Apriori；依序篩選；移除冗餘規則；記錄每一步剩下幾條 | 無規則或規則過多時，是否接受放寬或收斂方案 | 不自行調整門檻 | 規則表、篩選紀錄 | 無規則且使用者不同意調整（如實回報「沒有規則」） |
+| 7. 解讀 | 有規則 | 列出分母、共同筆數、confidence 與後件比例、lift | 無 | 不寫因果；未檢定時不寫顯著 | 解讀文字 | 無 |
+| 8. 保留資料驗證（選用） | 使用者要求 | 隨機切分（固定 seed）；在保留資料上重算 | 是否做、切分比例、時間欄位 | 不做；不假設資料列順序代表時間 | 驗證表 | 要求依時間切分，但時間欄位未經確認 |
+| 9. 報告 | 分析完成 | 彙整設定紀錄、前處理紀錄、規則、限制、程式碼 | 無 | 程式碼預設摺疊 | 報告檔 | 無 |
+
+# 正確性驗證、限制與參考資料
+
+::: {.test-name}
+計算正確、規則穩定、實際有用是三件不同的事
+:::
+
+## 三件事要分開
+
+| 問題 | 回答的方式 | 本指南的狀態 |
+|:--|:--|:--|
+| **計算正確**：support、confidence、lift 算對了嗎？ | 手算小案例；與既有套件比對 | [已執行]{.badge-run}（下表） |
+| **規則穩定**：換一批資料還成立嗎？ | 保留資料驗證（選用）；Fisher's exact test 與多重比較校正 | [示意]{.badge-demo}（只說明做法） |
+| **實際有用**：值得採取行動嗎？ | 領域知識；必要時以實驗確認 | 由使用者判斷 |
+
+## 計算正確：手算與既有套件核對 [已執行]{.badge-run}
+
+第 7 章兩個小案例的所有候選規則（前件 ≤ 2 項、後件 1 項、至少 1 筆共同出現），以三種方式計算後比對：本指南程式的逐筆計數、Python mlxtend 的 `apriori` + `association_rules`、R arules 的 `apriori`。
+
+{{< include examples/output/crosscheck.md >}}
+
+三者找到的規則完全相同，數值差異在浮點數誤差範圍內。執行環境：
+
+{{< include examples/output/environment.md >}}
+
+自行核對的方法：
+
+1. 從 basket 表數出前件、後件、兩者都有的筆數，代入第 2 章的公式。
+2. 用 R 重算：`docs/examples/crosscheck_arules.R`（arules 的 `apriori`，`supp` 設為至少 1 筆、`conf = 0`）。
+3. 重新執行 `python docs/examples/build_guide_examples.py`，所有表格會重新產生；表格有任何變動，代表輸入或程式變了。
+
+## 規則穩定（選用）[示意]{.badge-demo}
+
+- **保留資料驗證**：探勘前隨機保留一部分觀測（例如 30%，固定亂數種子），只用其餘資料找規則，再到保留資料上重算 support、confidence、lift。只有在使用者確認某欄位是可信的時間時，才依時間切分；**不得假設資料列順序代表時間**。
+- **統計檢定**：教科書 10.4.1 節以 Fisher's exact test 評估兩個項目的共同出現次數，並以茶與咖啡的資料為例（Example 10.9）。一次檢定很多條規則時，要做多重比較校正（例如 Benjamini–Hochberg）。
+- 這些都是**選用**步驟，第一版不強制。沒有做時，報告要寫明結果是描述性、探索性的。
+
+## 限制
+
+- 關聯不代表因果；可能有隱藏變數（5.7.3 節 Simpson's paradox）。
+- 結果依賴門檻與前處理；報告必須列出設定紀錄與前處理紀錄。
+- 問卷採完整案例分析時，若缺失不是隨機發生，結果可能偏誤。
+- 未使用調查權重，問卷結果描述的是樣本，不代表整體人口。
+- 第一版不處理原始數值變數的分箱、複選題、序列樣式。
+- 第 7 章的小案例只有 8 筆與 10 筆，只用來示範計算，不能據以下結論。
+
+## 參考資料
+
+Agrawal, R., Imieliński, T., & Swami, A. (1993). Mining association rules between sets of items in large databases. *Proceedings of the 1993 ACM SIGMOD International Conference on Management of Data*, 207–216.
+
+Agrawal, R., & Srikant, R. (1994). Fast algorithms for mining association rules. *Proceedings of the 20th International Conference on Very Large Data Bases (VLDB)*, 487–499.
+
+Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society: Series B, 57*(1), 289–300.
+
+Hahsler, M., Grün, B., & Hornik, K. (2005). arules – A computational environment for mining association rules and frequent item sets. *Journal of Statistical Software, 14*(15), 1–25.
+
+Hahsler, M., Hornik, K., & Reutterer, T. (2006). Implications of probabilistic data modeling for mining association rules. In *From Data and Information Analysis to Knowledge Engineering* (pp. 598–605). Springer.（Groceries 資料來源）
+
+Raschka, S. (2018). MLxtend: Providing machine learning and data science utilities and extensions to Python's scientific computing stack. *Journal of Open Source Software, 3*(24), 638.
+
+Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.). Pearson.
+
+本指南核對過的教科書內容：第 5 章開頭與 Table 5.1；5.1 節（Table 5.2、式 5.1–5.2、Example 5.1、Definition 5.1、關聯與因果的提醒）；5.2.1 節 Theorem 5.1（Apriori 原理）；5.7.1 節（Table 5.6、Example 5.3、Table 5.7–5.8、式 5.4–5.6 interest factor）；5.7.3 節（Simpson's paradox，Table 5.17–5.18）；6.1 節（Table 6.1–6.2，類別屬性的二元化與三項注意事項）；6.2 節開頭與 6.2.1 節（連續屬性與離散化，第一版不採用）；10.4.1 節（Fisher's exact test，Example 10.9）。

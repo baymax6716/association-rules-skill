@@ -1,10 +1,38 @@
-.code-toggle-bar { margin: .5rem 0 1rem; }
-.code-toggle-bar button {
-  padding: .35rem .9rem; border: 1px solid #888; border-radius: 6px;
-  background: transparent; color: inherit; cursor: pointer; font: inherit;
+:root {
+  --bs-body-font-family: "Times New Roman", "DFKai-SB", "標楷體", "BiauKai", "Microsoft JhengHei",
+    "微軟正黑體", "PingFang TC", "Noto Sans TC", "PMingLiU", "新細明體", serif;
 }
-details.code-fold { margin: .4rem 0 .9rem; }
+body, h1, h2, h3, h4, h5, h6, .quarto-title-block, #TOC, .sidebar, table, .callout {
+  font-family: var(--bs-body-font-family);
+}
+.quarto-title-block .quarto-title .title { font-weight: 700; }
+body { font-size: 1.02rem; line-height: 1.75; letter-spacing: 0.01em; }
+#quarto-content main { max-width: 960px; }
+main p { text-align: justify; }
+h1, h2, h3 { font-weight: 700; letter-spacing: 0.01em; }
+h1 { border-bottom: 2px solid #d0d7de; padding-bottom: .3rem; margin-top: 2.2rem; }
+h2 { margin-top: 1.8rem; }
+
+main table { margin: 1rem auto; border-collapse: collapse; display: block; max-width: 100%; overflow-x: auto; }
+main table thead th { background: #f2f5f8; border-bottom: 2px solid #b9c2cc; }
+main table td, main table th { padding: .4rem .7rem; border: 1px solid #e2e6ea; text-align: left; vertical-align: top; }
+.math.display { font-size: 1.03rem; }
+
+.test-name {
+  font-size: 1.2rem; font-style: italic; color: #5a6b7b; font-weight: 500;
+  margin-top: -.3rem; margin-bottom: 1.4rem; padding-left: .6rem; border-left: 4px solid #4c72b0;
+}
+.callout { border-radius: 8px; }
+pre.sourceCode { border-radius: 8px; }
+
+/* 執行狀態標籤：已執行驗證 vs 示意 */
+.badge-run, .badge-demo {
+  display: inline-block; font-size: .78rem; font-style: normal; font-weight: 600;
+  padding: .05rem .5rem; border-radius: 999px; margin-right: .35rem; vertical-align: .08rem;
+}
+.badge-run { background: #EAF5EC; color: #1E4D2B; border: 1px solid #4E9A5B; }
+.badge-demo { background: #FDF4E7; color: #5A3A12; border: 1px solid #D49A4A; }
+
+/* 程式碼摺疊 */
+details.code-fold { margin: .4rem 0 1rem; }
 details.code-fold > summary { cursor: pointer; color: #2a6db0; }
-dl dt { margin-top: .9rem; }
-dl dd { margin-left: 1.2rem; }
-table { display: block; overflow-x: auto; }

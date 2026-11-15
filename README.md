@@ -7,7 +7,7 @@ unsupervised learning）。它讀取使用者的購物清單或類別問卷，�
 所有數字都由同一支程式 `scripts/run_arules.py` 依 `config.json` 算出，AI 只負責和使用者溝通、記錄確認與撰寫解讀。
 同一份資料、同樣的設定與套件版本，會得到相同的結果。
 
-📖 **導覽**：[`docs/skill-guide.html`](docs/skill-guide.html) 說明流程、每個決策與專業術語（原始檔 [`docs/skill-guide.qmd`](docs/skill-guide.qmd)）。
+📖 **分析指南**：[`docs/skill-guide.html`](docs/skill-guide.html)（原始檔 [`docs/skill-guide.qmd`](docs/skill-guide.qmd)）說明基本觀念、兩種資料的前處理、參數設定、規則解讀、可手算的完整示範，以及決策流程圖與操作規格。指南中的範例數字都由 [`docs/examples/build_guide_examples.py`](docs/examples/build_guide_examples.py) 產生，並與 mlxtend、R arules 交叉核對。
 
 ## 支援的資料與問題
 
@@ -42,7 +42,10 @@ association-rules-skill/
 │   └── textbook-notes.md       教科書章節重點與 R arules 對照程式碼
 ├── scripts/
 │   └── run_arules.py           主程式：inspect / run / finalize
-├── docs/                       給人看的導覽（skill-guide.qmd / .html）
+├── docs/
+│   ├── skill-guide.qmd / .html 分析指南（原始檔與可閱讀的 HTML）
+│   ├── guide.css
+│   └── examples/               指南的範例資料、計算程式、R 核對程式與產生的表格
 └── data/                       兩個練習資料集（Groceries、IncomeESL），見 data/README.md
 ```
 

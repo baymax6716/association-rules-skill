@@ -1,0 +1,167 @@
+{
+ "shopping": {
+  "N": 8,
+  "items": 5,
+  "config": {
+   "minsup": 0.25,
+   "minconf": 0.6,
+   "minlift": 1.0,
+   "min_lhs_count": 3,
+   "max_lhs": 2
+  },
+  "kept": 4,
+  "candidates": 31,
+  "rule_eggs_toast": {
+   "N": 8,
+   "cA": 3,
+   "cB": 5,
+   "cAB": 3,
+   "support": 0.375,
+   "confidence": 1.0,
+   "base": 0.625,
+   "lift": 1.6
+  },
+  "rule_toast_milk": {
+   "N": 8,
+   "cA": 5,
+   "cB": 6,
+   "cAB": 4,
+   "support": 0.5,
+   "confidence": 0.8,
+   "base": 0.75,
+   "lift": 1.0666666666666667
+  },
+  "rule_coffee_cookie": {
+   "N": 8,
+   "cA": 3,
+   "cB": 2,
+   "cAB": 1,
+   "support": 0.125,
+   "confidence": 0.3333333333333333,
+   "base": 0.25,
+   "lift": 1.3333333333333333
+  }
+ },
+ "survey": {
+  "N_raw": 12,
+  "N": 10,
+  "excluded": [
+   "R08",
+   "R11"
+  ],
+  "columns": [
+   "年齡層",
+   "網購",
+   "運動頻率"
+  ],
+  "config": {
+   "minsup": 0.2,
+   "minconf": 0.6,
+   "minlift": 1.0,
+   "min_lhs_count": 3,
+   "max_lhs": 2
+  },
+  "candidates": 46,
+  "kept": 14,
+  "rhs_kept": 3,
+  "lhs_kept": 2,
+  "rule_noshop_noexercise": {
+   "N": 10,
+   "cA": 4,
+   "cB": 3,
+   "cAB": 3,
+   "support": 0.3,
+   "confidence": 0.75,
+   "base": 0.3,
+   "lift": 2.5
+  },
+  "rule_young_shop": {
+   "N": 10,
+   "cA": 5,
+   "cB": 6,
+   "cAB": 5,
+   "support": 0.5,
+   "confidence": 1.0,
+   "base": 0.6,
+   "lift": 1.6666666666666667
+  }
+ },
+ "crosscheck": [
+  {
+   "案例": "購物小案例",
+   "核對工具": "mlxtend 0.25.0",
+   "手算規則數": 31,
+   "工具規則數": 31,
+   "兩邊都有": 31,
+   "只在一邊": 0,
+   "support／confidence／lift 最大差異": "0.0e+00"
+  },
+  {
+   "案例": "購物小案例",
+   "核對工具": "R arules 1.7.15",
+   "手算規則數": 31,
+   "工具規則數": 31,
+   "兩邊都有": 31,
+   "只在一邊": 0,
+   "support／confidence／lift 最大差異": "3.6e-15"
+  },
+  {
+   "案例": "問卷小案例",
+   "核對工具": "mlxtend 0.25.0",
+   "手算規則數": 46,
+   "工具規則數": 46,
+   "兩邊都有": 46,
+   "只在一邊": 0,
+   "support／confidence／lift 最大差異": "0.0e+00"
+  },
+  {
+   "案例": "問卷小案例",
+   "核對工具": "R arules 1.7.15",
+   "手算規則數": 46,
+   "工具規則數": 46,
+   "兩邊都有": 46,
+   "只在一邊": 0,
+   "support／confidence／lift 最大差異": "3.6e-15"
+  }
+ ],
+ "groceries": {
+  "N": 9835,
+  "items": 169,
+  "sensitivity": [
+   {
+    "最低支持度": 0.005,
+    "對應最低筆數": 50,
+    "頻繁項目集數": 989,
+    "其中 ≥ 2 項": 869,
+    "規則數（confidence ≥ 0.3、lift > 1）": 442
+   },
+   {
+    "最低支持度": 0.01,
+    "對應最低筆數": 99,
+    "頻繁項目集數": 333,
+    "其中 ≥ 2 項": 245,
+    "規則數（confidence ≥ 0.3、lift > 1）": 125
+   },
+   {
+    "最低支持度": 0.02,
+    "對應最低筆數": 197,
+    "頻繁項目集數": 122,
+    "其中 ≥ 2 項": 63,
+    "規則數（confidence ≥ 0.3、lift > 1）": 37
+   },
+   {
+    "最低支持度": 0.05,
+    "對應最低筆數": 492,
+    "頻繁項目集數": 31,
+    "其中 ≥ 2 項": 3,
+    "規則數（confidence ≥ 0.3、lift > 1）": 3
+   }
+  ]
+ },
+ "environment": {
+  "python": "3.14.7",
+  "pandas": "3.0.5",
+  "numpy": "2.5.2",
+  "mlxtend": "0.25.0"
+ }
+}

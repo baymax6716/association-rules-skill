@@ -11,6 +11,7 @@
   2. 問卷小案例：類別問卷寬表 + 資料字典 → 解碼 → 選欄位 → 完整案例分析 → 「欄位=類別」項目 → 規則
   3. 交叉核對：手算（逐筆計數）、mlxtend、R arules（若有安裝 R）三者結果是否一致
   4. 門檻敏感度：Groceries 練習資料在不同最低支持度下的項目集與規則數（說明門檻沒有通用標準）
+  5. Apriori 逐層示範：購物小案例的候選產生、剪枝、計數，以及規則產生時的 confidence 剪枝
 """
 import inspect
 import json
@@ -413,12 +414,74 @@ def sensitivity():
     RESULTS["groceries"] = {"N": n, "items": X.shape[1], "sensitivity": df.to_dict("records")}
 
 
+# ----------------------------------------------------------------------------- 5. Apriori 逐層示範
+
+def apriori_levels(baskets, min_count):
+    """Apriori 的逐層搜尋：由頻繁 (k-1)-項目集產生 k-項目集候選，先剪掉「有子集不頻繁」的候選，再掃描資料計數。"""
+    rows, freq = [], {}
+    items = sorted({i for b in baskets.values() for i in b})
+    cands = [frozenset([i]) for i in items]
+    k = 1
+    while cands:
+        level = {}
+        for c in cands:
+            bad = [s for s in combinations(sorted(c), k - 1) if k > 1 and frozenset(s) not in freq]
+            if bad:
+                rows.append([k, set_text(c), "剪掉：子集 " + set_text(bad[0]) + " 不頻繁", "不計數", "—"])
+                continue
+            n = count(baskets, c)
+            ok = n >= min_count
+            rows.append([k, set_text(c), "掃描資料計數", n, "頻繁" if ok else "不頻繁"])
+            if ok:
+                level[c] = n
+        freq.update(level)
+        k += 1
+        prev = sorted(level, key=lambda s: sorted(s))
+        cands = sorted({a | b for a, b in combinations(prev, 2) if len(a | b) == k}, key=lambda s: sorted(s))
+    return rows, freq
+
+
+def rule_pruning(baskets, itemset, minconf):
+    """同一個頻繁項目集產生的規則：前件較大的規則若 confidence 不夠，把前件再縮小的規則一定也不夠，可直接跳過。"""
+    I, rows = frozenset(itemset), []
+    failed = []
+    for k in range(len(I) - 1, 0, -1):
+        for lhs in combinations(sorted(I), k):
+            A = frozenset(lhs)
+            if any(A < f for f in failed):
+                rows.append([set_text(A), set_text(I - A), "—", "跳過：前件更大的規則已不合格"])
+                continue
+            c = count(baskets, I) / count(baskets, A)
+            ok = c >= minconf - 1e-12
+            rows.append([set_text(A), set_text(I - A), c, "合格" if ok else "不合格"])
+            if not ok:
+                failed.append(A)
+    return rows
+
+
+def apriori_demo(baskets):
+    min_count = 2
+    rows, freq = apriori_levels(baskets, min_count)
+    df = pd.DataFrame(rows, columns=["層", "候選項目集", "處理", "出現筆數", "結果"])
+    write("apriori_levels.md", md_table(df))
+    n_items = len({i for b in baskets.values() for i in b})
+    brute = sum(math.comb(n_items, k) for k in range(1, max(len(s) for s in freq) + 1))
+    counted = int((df["處理"] == "掃描資料計數").sum())
+    pruned = int(df["處理"].str.startswith("剪掉").sum())
+    top = max((s for s in freq if len(s) == 3), key=lambda s: (freq[s], sorted(s)))
+    write("rule_pruning.md", md_table(pd.DataFrame(rule_pruning(baskets, top, 0.6),
+                                                   columns=["前件", "後件", "confidence", "結果（門檻 0.6）"])))
+    RESULTS["apriori"] = {"min_count": min_count, "counted": counted, "pruned": pruned, "brute": brute,
+                          "frequent": len(freq), "max_size": max(len(s) for s in freq), "demo_itemset": sorted(top)}
+
+
 # ----------------------------------------------------------------------------- 程式碼片段（指南中顯示的程式就是實際執行的程式）
 
 def code_fragments():
     write("code_shopping.md", code_block(prep_shopping_long, prep_shopping_basket))
     write("code_survey.md", code_block(decode_survey, complete_case, encode_items))
     write("code_rules.md", code_block(count, enumerate_rules, apply_filters))
+    write("code_apriori.md", code_block(apriori_levels, rule_pruning))
 
 
 def check_prose():
@@ -433,6 +496,8 @@ def check_prose():
         "問卷原始 12 人、N = 10、排除 R08 R11": v["N_raw"] == 12 and v["N"] == 10 and v["excluded"] == ["R08", "R11"],
         "網購=否→幾乎不運動 3/4、0.3、2.5": (c["cA"], c["cB"], c["cAB"]) == (4, 3, 3) and close(c["lift"], 2.5),
         "Groceries N = 9,835、169 種": g["N"] == 9835 and g["items"] == 169,
+        "Apriori 示範：計數 16、剪掉 5、暴力列舉 25、頻繁 11": (RESULTS["apriori"]["counted"], RESULTS["apriori"]["pruned"],
+                                                RESULTS["apriori"]["brute"], RESULTS["apriori"]["frequent"]) == (16, 5, 25, 11),
         "Groceries 規則數 3 → 442": [r["規則數（confidence ≥ 0.3、lift > 1）"] for r in g["sensitivity"]][::3] == [442, 3],
     }
     bad = [k for k, ok in checks.items() if not ok]
@@ -446,6 +511,7 @@ def main():
     survey = survey_case()
     crosscheck({"購物小案例": shop, "問卷小案例": survey})
     sensitivity()
+    apriori_demo(shop[0])
     code_fragments()
     check_prose()
     env = {"python": sys.version.split()[0]}

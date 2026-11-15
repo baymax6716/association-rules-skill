@@ -158,6 +158,19 @@
    }
   ]
  },
+ "apriori": {
+  "min_count": 2,
+  "counted": 16,
+  "pruned": 5,
+  "brute": 25,
+  "frequent": 11,
+  "max_size": 3,
+  "demo_itemset": [
+   "吐司",
+   "牛奶",
+   "雞蛋"
+  ]
+ },
  "environment": {
   "python": "3.14.7",
   "pandas": "3.0.5",

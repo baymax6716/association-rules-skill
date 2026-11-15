@@ -8,7 +8,7 @@ Apriori，屬於 unsupervised learning）。它讀取購物資料或類別型問
 所有數字都由同一支程式 `scripts/run_arules.py` 依 `config.json` 算出，AI 只負責和使用者溝通、記錄確認與撰寫解讀。
 同一份資料、同樣的設定與套件版本，會得到相同的結果。
 
-📖 **分析指南**：[`docs/skill-guide.html`](docs/skill-guide.html)（原始檔 [`docs/skill-guide.qmd`](docs/skill-guide.qmd)）說明基本觀念、兩種資料的前處理、參數設定、規則解讀、可手算的完整示範，以及決策流程圖與操作規格。指南中的範例數字都由 [`docs/examples/build_guide_examples.py`](docs/examples/build_guide_examples.py) 產生，並與 mlxtend、R arules 交叉核對。
+📖 **分析指南**：[`docs/skill-guide.html`](docs/skill-guide.html)（原始檔 [`docs/skill-guide.qmd`](docs/skill-guide.qmd)）說明基本觀念、兩種資料的前處理、參數設定、規則解讀、可手算的完整示範，以及決策流程圖與操作規格。指南中的範例數字都由 [`docs/guide-examples/build_guide_examples.py`](docs/guide-examples/build_guide_examples.py) 產生，並與 mlxtend、R arules 交叉核對。
 
 ## 支援的資料與分析目標
 
@@ -49,7 +49,8 @@ association-rules-skill/
 ├── docs/
 │   ├── skill-guide.qmd / .html 分析指南（原始檔與可閱讀的 HTML）
 │   ├── guide.css
-│   └── examples/               指南的範例資料、計算程式、R 核對程式與產生的表格
+│   └── guide-examples/         指南專用：data/（可手算的小型範例資料）、build_guide_examples.py（計算程式）、
+│                               crosscheck_arules.R（R 核對）、generated-tables/（程式產生、指南嵌入的表格）
 └── data/                       兩個練習資料集（Groceries、IncomeESL），見 data/README.md
 ```
 

@@ -1,10 +1,10 @@
 """產生《關聯規則分析指南》中所有範例數字與表格。
 
-指南（docs/skill-guide.qmd）裡的範例表格都由本程式計算後寫入 examples/output/，
+指南（docs/skill-guide.qmd）裡的範例表格都由本程式計算後寫入 guide-examples/generated-tables/，
 再以 Quarto 的 include 載入；指南中沒有手寫的計算結果。
 
 執行（在 association-rules-skill 資料夾）：
-    python docs/examples/build_guide_examples.py
+    python docs/guide-examples/build_guide_examples.py
 
 內容
   1. 購物小案例：交易明細長表、購物清單兩種原始格式 → 前處理紀錄 → basket → 0/1 編碼 → 規則
@@ -31,7 +31,7 @@ except Exception:
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
-OUT = os.path.join(HERE, "output")
+OUT = os.path.join(HERE, "generated-tables")
 REPO = os.path.dirname(os.path.dirname(HERE))
 os.makedirs(OUT, exist_ok=True)
 RESULTS = {}

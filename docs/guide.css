@@ -1,38 +1,146 @@
+/* 關聯規則分析指南：版面樣式 */
 :root {
-  --bs-body-font-family: "Times New Roman", "DFKai-SB", "標楷體", "BiauKai", "Microsoft JhengHei",
-    "微軟正黑體", "PingFang TC", "Noto Sans TC", "PMingLiU", "新細明體", serif;
+  --ink: #1f2a30;
+  --muted: #5d6b73;
+  --accent: #0f6466;
+  --accent-soft: #e4f2f1;
+  --sand: #f7f3ec;
+  --line: #dde3e6;
+  --amber: #c9831a;
+  --rose: #c2453b;
+  --bs-body-font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Heiti TC", system-ui, sans-serif;
 }
-body, h1, h2, h3, h4, h5, h6, .quarto-title-block, #TOC, .sidebar, table, .callout {
+
+body {
   font-family: var(--bs-body-font-family);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.8;
+  letter-spacing: .015em;
 }
-.quarto-title-block .quarto-title .title { font-weight: 700; }
-body { font-size: 1.02rem; line-height: 1.75; letter-spacing: 0.01em; }
-#quarto-content main { max-width: 960px; }
-main p { text-align: justify; }
-h1, h2, h3 { font-weight: 700; letter-spacing: 0.01em; }
-h1 { border-bottom: 2px solid #d0d7de; padding-bottom: .3rem; margin-top: 2.2rem; }
-h2 { margin-top: 1.8rem; }
+#quarto-content main { max-width: 980px; }
 
-main table { margin: 1rem auto; border-collapse: collapse; display: block; max-width: 100%; overflow-x: auto; }
-main table thead th { background: #f2f5f8; border-bottom: 2px solid #b9c2cc; }
-main table td, main table th { padding: .4rem .7rem; border: 1px solid #e2e6ea; text-align: left; vertical-align: top; }
-.math.display { font-size: 1.03rem; }
-
-.test-name {
-  font-size: 1.2rem; font-style: italic; color: #5a6b7b; font-weight: 500;
-  margin-top: -.3rem; margin-bottom: 1.4rem; padding-left: .6rem; border-left: 4px solid #4c72b0;
+/* 標題橫幅 */
+#title-block-header.quarto-title-block {
+  background: linear-gradient(120deg, #0f6466 0%, #1d7f7a 55%, #3b9a8a 100%);
+  color: #fff;
+  border-radius: 14px;
+  padding: 2rem 2rem 1.6rem;
+  margin: 1rem 0 2rem;
 }
-.callout { border-radius: 8px; }
-pre.sourceCode { border-radius: 8px; }
+#title-block-header .title { color: #fff; font-weight: 800; letter-spacing: .04em; }
+#title-block-header .subtitle { color: #d8efec; font-weight: 400; font-size: 1.05rem; }
+#title-block-header .quarto-title-meta-heading,
+#title-block-header .quarto-title-meta-contents p { color: #cfe8e4; }
 
-/* 執行狀態標籤：已執行驗證 vs 示意 */
+/* 章節標題 */
+h1, h2, h3, h4 { font-family: var(--bs-body-font-family); color: var(--ink); font-weight: 700; }
+main h1 {
+  font-size: 1.75rem;
+  margin-top: 3rem;
+  padding-bottom: .5rem;
+  border-bottom: 3px solid var(--accent-soft);
+}
+main h1 .header-section-number {
+  display: inline-block;
+  min-width: 2.1rem;
+  padding: .05rem .5rem;
+  margin-right: .55rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+  vertical-align: .15rem;
+}
+main h2 { font-size: 1.3rem; margin-top: 2.2rem; color: var(--accent); }
+main h2 .header-section-number, main h3 .header-section-number { color: var(--muted); font-weight: 500; margin-right: .4rem; }
+main h3 { font-size: 1.1rem; margin-top: 1.6rem; }
+
+/* 章節導言 */
+.chapter-lead {
+  background: var(--sand);
+  border-radius: 10px;
+  padding: .7rem 1rem;
+  margin: .4rem 0 1.6rem;
+  color: #574b37;
+  font-weight: 500;
+}
+.chapter-lead p { margin: 0; }
+.chapter-lead p::before { content: "▸ "; color: var(--amber); }
+
+/* 流程速覽 */
+.flow-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .6rem;
+  margin: 1.4rem 0 2rem;
+}
+.flow-strip .step {
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: .6rem .75rem;
+  background: #fff;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.flow-strip .step strong { display: block; color: var(--accent); font-size: .78rem; letter-spacing: .08em; }
+.flow-strip .step.ask { border-top-color: var(--amber); }
+
+/* 表格 */
+main table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1rem 0 1.4rem;
+  font-size: .92rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+main table thead th {
+  background: var(--accent-soft);
+  color: #12454a;
+  font-weight: 700;
+  border-bottom: 1px solid #b9d9d6;
+}
+main table td, main table th { padding: .45rem .75rem; text-align: left; vertical-align: top; border: none; }
+main table tbody tr:nth-child(even) td { background: #fafbfb; }
+main table tbody tr td { border-top: 1px solid #eef1f2; }
+
+/* 標籤：已執行驗證 vs 示意 */
 .badge-run, .badge-demo {
-  display: inline-block; font-size: .78rem; font-style: normal; font-weight: 600;
-  padding: .05rem .5rem; border-radius: 999px; margin-right: .35rem; vertical-align: .08rem;
+  display: inline-block;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: .02rem .55rem;
+  border-radius: 6px;
+  margin: 0 .3rem;
+  vertical-align: .1rem;
+  letter-spacing: .05em;
 }
-.badge-run { background: #EAF5EC; color: #1E4D2B; border: 1px solid #4E9A5B; }
-.badge-demo { background: #FDF4E7; color: #5A3A12; border: 1px solid #D49A4A; }
+.badge-run { background: var(--accent); color: #fff; }
+.badge-demo { background: #fff; color: var(--amber); border: 1.5px dashed var(--amber); }
 
-/* 程式碼摺疊 */
-details.code-fold { margin: .4rem 0 1rem; }
-details.code-fold > summary { cursor: pointer; color: #2a6db0; }
+/* 提示框、程式碼、引言 */
+.callout { border-radius: 10px; }
+div.sourceCode, pre.sourceCode { border-radius: 10px; background: #f4f6f7; }
+details.code-fold {
+  margin: .6rem 0 1.2rem;
+  border: 1px dashed #b9d9d6;
+  border-radius: 10px;
+  padding: .3rem .8rem;
+  background: #fbfdfd;
+}
+details.code-fold > summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+blockquote {
+  border-left: 4px solid var(--amber);
+  background: #fffaf2;
+  padding: .6rem 1rem;
+  border-radius: 0 10px 10px 0;
+  color: #4a3d28;
+}
+.math.display { font-size: 1.02rem; }
+figcaption { color: var(--muted); font-size: .9rem; }

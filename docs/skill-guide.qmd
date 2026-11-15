@@ -10,12 +10,11 @@ language:
 date: "2026-11-15"
 format:
   html:
-    theme: cosmo
+    theme: flatly
     toc: true
     toc-title: "目錄"
-    toc-location: left
-    toc-depth: 3
-    toc-expand: true
+    toc-location: right
+    toc-depth: 2
     number-sections: true
     number-depth: 3
     section-divs: true
@@ -31,13 +30,42 @@ format:
 
 - **讀者**：具備基本統計知識、但未必熟悉關聯規則的人。本指南假設你**已經決定要做關聯規則分析**，不討論其他機器學習方法。
 - **用途**：一方面給人閱讀；另一方面，第 8 章的流程圖與操作規格是後續實作 Skill 的依據。
-- **兩種標籤**：[已執行]{.badge-run} 表示表格或數字由 `docs/examples/build_guide_examples.py` 實際計算產生（第 9 章另以 mlxtend 與 R arules 交叉核對）；[示意]{.badge-demo} 表示只是說明用的格式或設定，沒有對應的計算結果。
+- **兩種標籤**：[已執行]{.badge-run} 表示表格或數字由 `docs/guide-examples/build_guide_examples.py` 實際計算產生（第 9 章另以 mlxtend 與 R arules 交叉核對）；[示意]{.badge-demo} 表示只是說明用的格式或設定，沒有對應的計算結果。
 - **教科書**：以 Tan, Steinbach, Karpatne & Kumar (2019) 第 5、6 章為主要參考。引用處只標章節、表號或例號；手邊的電子版沒有印刷頁碼，所以本指南不列頁碼。
 :::
 
+::: {.flow-strip}
+::: {.step}
+**STEP 1**
+讀取資料，判斷格式
+:::
+::: {.step .ask}
+**STEP 2**
+確認一筆觀測與前處理
+:::
+::: {.step .ask}
+**STEP 3**
+選擇分析目標
+:::
+::: {.step .ask}
+**STEP 4**
+確認參數與對應筆數
+:::
+::: {.step}
+**STEP 5**
+產生規則、依序篩選
+:::
+::: {.step}
+**STEP 6**
+解讀並產出報告
+:::
+:::
+
+上方色條為青綠色的步驟可以自動執行；琥珀色的步驟需要使用者確認（使用者已經說明的不再問）。
+
 # 分析目的與適用問題
 
-::: {.test-name}
+::: {.chapter-lead}
 找出「經常一起出現」的項目，而不是預測或解釋因果
 :::
 
@@ -82,7 +110,7 @@ format:
 
 # 基本觀念與公式
 
-::: {.test-name}
+::: {.chapter-lead}
 transaction、item、itemset，以及 support、confidence、lift
 :::
 
@@ -135,25 +163,25 @@ $$
 
 # 資料輸入與適用性檢查
 
-::: {.test-name}
+::: {.chapter-lead}
 先確認「一筆是什麼」，再談項目
 :::
 
 ## 三種原始格式
 
-以下是第 7 章使用的範例資料（`docs/examples/data/`），以原始樣貌呈現；「␣」標示原始資料中多打的空白。
+以下是第 7 章使用的範例資料（`docs/guide-examples/data/`），以原始樣貌呈現；「␣」標示原始資料中多打的空白。
 
 **(1) 交易明細長表**：一列一個（交易, 商品），可能附數量與金額。
 
-{{< include examples/output/shop_raw_long.md >}}
+{{< include guide-examples/generated-tables/shop_raw_long.md >}}
 
 **(2) 購物清單**：一列一筆交易，商品寫在同一格，以逗號分隔。
 
-{{< include examples/output/shop_raw_basket.md >}}
+{{< include guide-examples/generated-tables/shop_raw_basket.md >}}
 
 **(3) 類別問卷寬表**：一列一位受訪者，一欄一題；部分題目以數字代碼記錄，需要搭配資料字典。
 
-{{< include examples/output/survey_raw.md >}}
+{{< include guide-examples/generated-tables/survey_raw.md >}}
 
 ## 如何辨識格式
 
@@ -189,7 +217,7 @@ $$
 
 # 兩種資料各自的前處理流程
 
-::: {.test-name}
+::: {.chapter-lead}
 原始資料 → 轉換規則 → basket → 編碼結果
 :::
 
@@ -214,22 +242,22 @@ $$
 
 **步驟 2：套用轉換規則，記錄每一步的筆數。**
 
-{{< include examples/output/shop_log.md >}}
+{{< include guide-examples/generated-tables/shop_log.md >}}
 
 `T02` 的「吐司␣」去除空白後與其他「吐司」相同；`T08` 的兩列牛奶合併為一次；`T05` 只有咖啡，保留；`T02` 與 `T07` 內容相同，兩筆都保留。
 
 **步驟 3：basket**（support 的分母 $N = 8$ 筆交易）。
 
-{{< include examples/output/shop_baskets.md >}}
+{{< include guide-examples/generated-tables/shop_baskets.md >}}
 
 **步驟 4：編碼結果**（0/1 矩陣；0 只代表「沒有出現」，不是一個項目）。
 
-{{< include examples/output/shop_binary.md >}}
+{{< include guide-examples/generated-tables/shop_binary.md >}}
 
 <details class="code-fold">
 <summary>顯示程式碼：購物資料前處理（即產生上表的程式）</summary>
 
-{{< include examples/output/code_shopping.md >}}
+{{< include guide-examples/generated-tables/code_shopping.md >}}
 
 </details>
 
@@ -256,23 +284,23 @@ $$
 
 **步驟 1：原始資料與資料字典。**
 
-{{< include examples/output/survey_dictionary.md >}}
+{{< include guide-examples/generated-tables/survey_dictionary.md >}}
 
 **步驟 2：依資料字典解碼。** `網購` 的 1/0 換成「是／否」；`運動頻率` 的 8（不知道）、9（拒答）與 `居住地` 的空白設為缺失。
 
-{{< include examples/output/survey_decoded.md >}}
+{{< include guide-examples/generated-tables/survey_decoded.md >}}
 
 **步驟 3：選擇分析欄位、完整案例分析，並記錄每一步的筆數。** 本例使用者選擇 `年齡層`、`網購`、`運動頻率`。`R06` 的居住地缺失，但居住地不在分析欄位中，所以 `R06` 保留；`R08`、`R11` 的運動頻率缺失，排除。`R07` 與 `R12` 答案完全相同，兩人都保留。
 
-{{< include examples/output/survey_log.md >}}
+{{< include guide-examples/generated-tables/survey_log.md >}}
 
 **步驟 4：basket（「欄位=類別」）**，support 的分母是完整案例分析後的 $N = 10$ 人，不是原始的 12 人。
 
-{{< include examples/output/survey_baskets.md >}}
+{{< include guide-examples/generated-tables/survey_baskets.md >}}
 
 **步驟 5：編碼結果。** `網購=否` 是一個獨立的項目，不是「沒有 `網購=是`」。
 
-{{< include examples/output/survey_binary.md >}}
+{{< include guide-examples/generated-tables/survey_binary.md >}}
 
 ::: {.callout-important}
 ## 完整案例分析的可能影響
@@ -283,13 +311,13 @@ $$
 <details class="code-fold">
 <summary>顯示程式碼：問卷前處理（即產生上表的程式）</summary>
 
-{{< include examples/output/code_survey.md >}}
+{{< include guide-examples/generated-tables/code_survey.md >}}
 
 </details>
 
 # 分析目標與參數設定
 
-::: {.test-name}
+::: {.chapter-lead}
 門檻是使用者的決定，不是通用標準
 :::
 
@@ -340,19 +368,19 @@ lift: "> 1"
 
 以 Groceries 練習資料（$N$ = 9,835 筆交易、169 種商品）為例，只改變最低支持度（其他條件：前件 + 後件 ≤ 3 項、後件 1 項、confidence ≥ 0.3、lift > 1）：
 
-{{< include examples/output/groceries_sensitivity.md >}}
+{{< include guide-examples/generated-tables/groceries_sensitivity.md >}}
 
 最低支持度從 0.05 降到 0.005，規則數從 3 條變成 442 條。沒有哪一個值是「正確」的：要依分析目的、可以閱讀的規則數、每條規則至少要幾筆支持來決定，並在報告中寫出理由。Groceries 中最常見的商品如下；whole milk 出現在約四分之一的交易中，以它為後件的規則 confidence 容易偏高：
 
-{{< include examples/output/groceries_top_items.md >}}
+{{< include guide-examples/generated-tables/groceries_top_items.md >}}
 
 Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products ` 結尾有空白）：
 
-{{< include examples/output/groceries_log.md >}}
+{{< include guide-examples/generated-tables/groceries_log.md >}}
 
 # 規則產生、篩選與解讀
 
-::: {.test-name}
+::: {.chapter-lead}
 先找頻繁項目集，再產生規則，依序篩選並記錄每一步
 :::
 
@@ -365,7 +393,7 @@ Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products 
 <details class="code-fold">
 <summary>顯示程式碼：規則計數與篩選</summary>
 
-{{< include examples/output/code_rules.md >}}
+{{< include guide-examples/generated-tables/code_rules.md >}}
 
 </details>
 
@@ -373,7 +401,7 @@ Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products 
 
 篩選順序固定：最低筆數 → 最低前件筆數 → confidence → lift → 冗餘規則。每一步都記下剩下幾條，讓讀者知道規則是怎麼被排除的。以第 7 章購物小案例為例 [已執行]{.badge-run}：
 
-{{< include examples/output/shop_filter_steps.md >}}
+{{< include guide-examples/generated-tables/shop_filter_steps.md >}}
 
 ## 常見情況與處理
 
@@ -395,7 +423,7 @@ Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products 
 
 **設定紀錄示範** [已執行]{.badge-run}：第一次設定沒有規則，說明原因後經使用者同意放寬。
 
-{{< include examples/output/shop_settings_log.md >}}
+{{< include guide-examples/generated-tables/shop_settings_log.md >}}
 
 ## 解讀
 
@@ -407,11 +435,11 @@ Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products 
 
 # 完整示範
 
-::: {.test-name}
+::: {.chapter-lead}
 兩個可以手算的小案例：輸入、判斷、操作、輸出
 :::
 
-以下所有表格都由 `docs/examples/build_guide_examples.py` 計算 [已執行]{.badge-run}。
+以下所有表格都由 `docs/guide-examples/build_guide_examples.py` 計算 [已執行]{.badge-run}。
 
 ## 購物資料
 
@@ -425,23 +453,23 @@ Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products 
 
 **操作**：第 4 章的購物前處理，得到 $N = 8$ 筆交易、5 種商品。各商品出現次數：
 
-{{< include examples/output/shop_item_freq.md >}}
+{{< include guide-examples/generated-tables/shop_item_freq.md >}}
 
 **設定**：第 5 章的示範設定（最低支持度 0.25 = 至少 2 筆、confidence ≥ 0.6、lift > 1、前件 ≤ 2 項、前件筆數 ≥ 3）。
 
 **輸出**：保留的規則。
 
-{{< include examples/output/shop_rules_kept.md >}}
+{{< include guide-examples/generated-tables/shop_rules_kept.md >}}
 
 幾條代表性規則被保留或排除的原因：
 
-{{< include examples/output/shop_rules_examples.md >}}
+{{< include guide-examples/generated-tables/shop_rules_examples.md >}}
 
 ### 完整計算一條規則：{雞蛋} → {吐司}
 
 2×2 列聯表（格式同 Tan et al., 2019, Table 5.6）：
 
-{{< include examples/output/shop_contingency.md >}}
+{{< include guide-examples/generated-tables/shop_contingency.md >}}
 
 $$
 \text{support} = \frac{3}{8} = 0.375,\quad
@@ -472,23 +500,23 @@ $$
 
 **設定**：最低支持度 0.2（至少 2 人）、confidence ≥ 0.6、lift > 1、前件 ≤ 2 項、前件筆數 ≥ 3。
 
-{{< include examples/output/survey_filter_steps.md >}}
+{{< include guide-examples/generated-tables/survey_filter_steps.md >}}
 
 **輸出 1：自由探索**
 
-{{< include examples/output/survey_rules_free.md >}}
+{{< include guide-examples/generated-tables/survey_rules_free.md >}}
 
 **輸出 2：指定後件 {網購=是}**
 
-{{< include examples/output/survey_rules_rhs.md >}}
+{{< include guide-examples/generated-tables/survey_rules_rhs.md >}}
 
 **輸出 3：指定前件 {網購=否}**
 
-{{< include examples/output/survey_rules_lhs.md >}}
+{{< include guide-examples/generated-tables/survey_rules_lhs.md >}}
 
 ### 完整計算一條規則：{網購=否} → {運動頻率=幾乎不運動}
 
-{{< include examples/output/survey_contingency.md >}}
+{{< include guide-examples/generated-tables/survey_contingency.md >}}
 
 $$
 \text{support} = \frac{3}{10} = 0.3,\quad
@@ -508,14 +536,14 @@ $$
 
 # 決策流程圖與操作規格
 
-::: {.test-name}
+::: {.chapter-lead}
 後續實作 Skill 的依據
 :::
 
 ## 圖例
 
 ```{mermaid}
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "primaryTextColor": "#24303A"}}}%%
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#7A8B92", "primaryTextColor": "#1F2A30"}}}%%
 flowchart LR
  L1[自動處理] ~~~ L2{判斷} ~~~ L3[詢問使用者] ~~~ L4([輸入或輸出]) ~~~ L5[停止並說明]
  class L1 proc
@@ -523,20 +551,20 @@ flowchart LR
  class L3 user
  class L4 out
  class L5 stop
- classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
- classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
- classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
- classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
- classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+ classDef proc fill:#F4F1EA,stroke:#B5AA96,color:#3A3226
+ classDef dec fill:#E4F2F1,stroke:#0F6466,color:#0D3F41
+ classDef user fill:#FFF1DB,stroke:#C9831A,color:#5C3B0B
+ classDef out fill:#E8F3EC,stroke:#3A8D5B,color:#1F4A30
+ classDef stop fill:#FCE8E6,stroke:#C2453B,color:#6E1E18
 ```
 
-灰色為可以自動執行的機械性操作；藍色菱形為判斷；橘色為需要詢問使用者的步驟（只有在現有設定不足以決定時才問，使用者已指定的不再問）；綠色為輸入或輸出；紅色為停止並說明需要的調整。
+米色為可以自動執行的機械性操作；青綠色菱形為判斷；琥珀色為需要詢問使用者的步驟（只有在現有設定不足以決定時才問，使用者已指定的不再問）；綠色為輸入或輸出；紅色為停止並說明需要的調整。
 
 ## A. 整體分析流程
 
 ```{mermaid}
 %%| fig-cap: "圖 A：整體分析流程"
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#24303A"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#7A8B92", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#1F2A30"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
 flowchart TD
  A([取得資料與使用者說明]) --> B[讀取：筆數、欄位、前 5 列]
  B --> C{結構屬於支援的格式?}
@@ -572,18 +600,18 @@ flowchart TD
  class E,K,N,Q,R user
  class A,V out
  class X1 stop
- classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
- classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
- classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
- classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
- classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+ classDef proc fill:#F4F1EA,stroke:#B5AA96,color:#3A3226
+ classDef dec fill:#E4F2F1,stroke:#0F6466,color:#0D3F41
+ classDef user fill:#FFF1DB,stroke:#C9831A,color:#5C3B0B
+ classDef out fill:#E8F3EC,stroke:#3A8D5B,color:#1F4A30
+ classDef stop fill:#FCE8E6,stroke:#C2453B,color:#6E1E18
 ```
 
 ## B. 購物資料前處理
 
 ```{mermaid}
 %%| fig-cap: "圖 B：購物資料前處理決策"
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#24303A"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#7A8B92", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#1F2A30"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
 flowchart TD
  A([購物資料]) --> B{原始格式?}
  B -- 交易明細長表 --> C{交易 ID 的意義已確認?}
@@ -620,18 +648,18 @@ flowchart TD
  class U0,U1,U2,U3,U4,U6 user
  class A,J out
  class X1,X2 stop
- classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
- classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
- classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
- classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
- classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+ classDef proc fill:#F4F1EA,stroke:#B5AA96,color:#3A3226
+ classDef dec fill:#E4F2F1,stroke:#0F6466,color:#0D3F41
+ classDef user fill:#FFF1DB,stroke:#C9831A,color:#5C3B0B
+ classDef out fill:#E8F3EC,stroke:#3A8D5B,color:#1F4A30
+ classDef stop fill:#FCE8E6,stroke:#C2453B,color:#6E1E18
 ```
 
 ## C. 類別問卷前處理
 
 ```{mermaid}
 %%| fig-cap: "圖 C：類別問卷前處理決策"
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#8A96A3", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#24303A"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Noto Sans TC, Microsoft JhengHei, sans-serif", "fontSize": "14px", "lineColor": "#7A8B92", "edgeLabelBackground": "#FFFFFF", "primaryTextColor": "#1F2A30"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 40}}}%%
 flowchart TD
  A([問卷資料]) --> B{一列一位受訪者?}
  B -- 否 --> X1[說明需要的格式，停止]
@@ -662,11 +690,11 @@ flowchart TD
  class U1,U2,U3 user
  class A,L out
  class X1,X2,X3,X4 stop
- classDef proc fill:#F6F8FA,stroke:#A0AAB4,color:#24303A
- classDef dec fill:#EAF2FB,stroke:#4C78A8,color:#1F3A5F
- classDef user fill:#FDF4E7,stroke:#D49A4A,color:#5A3A12
- classDef out fill:#EAF5EC,stroke:#4E9A5B,color:#1E4D2B
- classDef stop fill:#FBEAEA,stroke:#C0504D,color:#6B1F1D
+ classDef proc fill:#F4F1EA,stroke:#B5AA96,color:#3A3226
+ classDef dec fill:#E4F2F1,stroke:#0F6466,color:#0D3F41
+ classDef user fill:#FFF1DB,stroke:#C9831A,color:#5C3B0B
+ classDef out fill:#E8F3EC,stroke:#3A8D5B,color:#1F4A30
+ classDef stop fill:#FCE8E6,stroke:#C2453B,color:#6E1E18
 ```
 
 ## 操作規格
@@ -686,7 +714,7 @@ flowchart TD
 
 # 正確性驗證、限制與參考資料
 
-::: {.test-name}
+::: {.chapter-lead}
 計算正確、規則穩定、實際有用是三件不同的事
 :::
 
@@ -702,17 +730,17 @@ flowchart TD
 
 第 7 章兩個小案例的所有候選規則（前件 ≤ 2 項、後件 1 項、至少 1 筆共同出現），以三種方式計算後比對：本指南程式的逐筆計數、Python mlxtend 的 `apriori` + `association_rules`、R arules 的 `apriori`。
 
-{{< include examples/output/crosscheck.md >}}
+{{< include guide-examples/generated-tables/crosscheck.md >}}
 
 三者找到的規則完全相同，數值差異在浮點數誤差範圍內。執行環境：
 
-{{< include examples/output/environment.md >}}
+{{< include guide-examples/generated-tables/environment.md >}}
 
 自行核對的方法：
 
 1. 從 basket 表數出前件、後件、兩者都有的筆數，代入第 2 章的公式。
-2. 用 R 重算：`docs/examples/crosscheck_arules.R`（arules 的 `apriori`，`supp` 設為至少 1 筆、`conf = 0`）。
-3. 重新執行 `python docs/examples/build_guide_examples.py`，所有表格會重新產生；表格有任何變動，代表輸入或程式變了。
+2. 用 R 重算：`docs/guide-examples/crosscheck_arules.R`（arules 的 `apriori`，`supp` 設為至少 1 筆、`conf = 0`）。
+3. 重新執行 `python docs/guide-examples/build_guide_examples.py`，所有表格會重新產生；表格有任何變動，代表輸入或程式變了。
 
 ## 規則穩定（選用）[示意]{.badge-demo}
 

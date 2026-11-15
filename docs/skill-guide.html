@@ -5482,10 +5482,10 @@ table { display: block; overflow-x: auto; }
   <li><a href="#步驟-5評估可靠性" id="toc-步驟-5評估可靠性" class="nav-link" data-scroll-target="#步驟-5評估可靠性"><span class="header-section-number">3.5</span> 步驟 5：評估可靠性</a></li>
   <li><a href="#步驟-6實務解讀與分析報告確認-③" id="toc-步驟-6實務解讀與分析報告確認-③" class="nav-link" data-scroll-target="#步驟-6實務解讀與分析報告確認-③"><span class="header-section-number">3.6</span> 步驟 6：實務解讀與分析報告（確認 ③）</a></li>
   </ul></li>
-  <li><a href="#完整示範" id="toc-完整示範" class="nav-link" data-scroll-target="#完整示範"><span class="header-section-number">4</span> 完整示範</a>
+  <li><a href="#自己試試看" id="toc-自己試試看" class="nav-link" data-scroll-target="#自己試試看"><span class="header-section-number">4</span> 自己試試看</a>
   <ul class="collapse">
-  <li><a href="#超市交易資料" id="toc-超市交易資料" class="nav-link" data-scroll-target="#超市交易資料"><span class="header-section-number">4.1</span> 超市交易資料</a></li>
-  <li><a href="#問卷資料" id="toc-問卷資料" class="nav-link" data-scroll-target="#問卷資料"><span class="header-section-number">4.2</span> 問卷資料</a></li>
+  <li><a href="#交易資料groceries.csv" id="toc-交易資料groceries.csv" class="nav-link" data-scroll-target="#交易資料groceries.csv"><span class="header-section-number">4.1</span> 交易資料：groceries.csv</a></li>
+  <li><a href="#問卷資料income_esl.csv" id="toc-問卷資料income_esl.csv" class="nav-link" data-scroll-target="#問卷資料income_esl.csv"><span class="header-section-number">4.2</span> 問卷資料：income_esl.csv</a></li>
   </ul></li>
   <li><a href="#常見陷阱" id="toc-常見陷阱" class="nav-link" data-scroll-target="#常見陷阱"><span class="header-section-number">5</span> 常見陷阱</a></li>
   <li><a href="#sec-glossary" id="toc-sec-glossary" class="nav-link" data-scroll-target="#sec-glossary"><span class="header-section-number">6</span> 術語表</a>
@@ -5992,120 +5992,82 @@ X \rightarrow Y
 <p>最後，skill 會自動產生一份<strong>分析報告</strong>（<code>report.qmd</code> 與 <code>report.html</code>），記錄這次做的每一步、 當時的輸出、可以摺疊的指令與 Python / R 程式碼，以及驗證是否仍然獨立。</p>
 </section>
 </section>
-<section id="完整示範" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> 完整示範</h1>
-<section id="超市交易資料" class="level2" data-number="4.1">
-<h2 data-number="4.1" class="anchored" data-anchor-id="超市交易資料"><span class="header-section-number">4.1</span> 超市交易資料</h2>
-<p>範例資料 <code>data/sample_baskets.csv</code> 有 1,200 筆模擬交易、27 種商品，平均每籃 3.5 件。腳本的 profile 步驟在這份資料裡找出了品名大小寫不一致、缺漏品名、退貨（數量 ≤ 0）與重複列，並在清理紀錄中列出。 換成你自己的交易資料，流程和指令都一樣。</p>
-<details class="code-fold">
-<summary>
-顯示程式碼：完整指令
-</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py profile data/sample_baskets.csv</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py split data/sample_baskets.csv <span class="at">--method</span> time <span class="at">--test-frac</span> 0.3</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py mine arules_output/train.csv <span class="at">--min-support</span> 0.02 <span class="at">--min-confidence</span> 0.3 <span class="dt">\</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--min-lift</span> 1.2 <span class="at">--hconf</span> 0.05</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py validate arules_output/test.csv <span class="at">--rules</span> arules_output/rules.csv</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py report <span class="at">--notes</span> arules_output/interpretation.md</span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<p><strong>結果摘要</strong></p>
-<ul>
-<li>依時間切分：前 840 筆探勘、後 360 筆驗證。</li>
-<li>產生 280 條規則，保留 33 條；排除原因：confidence 不足 189、lift 不足 43、cross-support 10、冗餘 5。</li>
-<li>驗證集重現 28 / 33（85%）。</li>
-</ul>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>規則</th>
-<th>support</th>
-<th>confidence</th>
-<th>後件基準比例</th>
-<th>lift</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>{wine} → {cheese}</td>
-<td>0.032</td>
-<td>0.844</td>
-<td>0.055</td>
-<td>15.4</td>
-</tr>
-<tr class="even">
-<td>{pasta} → {tomato sauce}</td>
-<td>0.075</td>
-<td>0.612</td>
-<td>0.075</td>
-<td>8.2</td>
-</tr>
-</tbody>
-</table>
-<p>被 cross-support 排除的例子：<code>{butter, chips} → {milk}</code> 的 confidence 高達 0.905，但牛奶本來就出現在 約 60% 的籃子裡，h-confidence 只有 0.035，這條規則只是「牛奶到處都有」。</p>
-<p>沒有重現的例子：<code>{cheese} → {bread}</code> 在探勘集 lift 1.36，到了驗證集 lift 只有 0.76（q = 0.82）， 是探勘集裡的偶然。這正是先切出驗證資料的價值。</p>
-</section>
-<section id="問卷資料" class="level2" data-number="4.2">
-<h2 data-number="4.2" class="anchored" data-anchor-id="問卷資料"><span class="header-section-number">4.2</span> 問卷資料</h2>
-<p>範例資料 <code>data/sample_survey.csv</code> 有 1,200 位受訪者，附 codebook。它包含問卷常見的情況： 98 / 99 特殊代碼、漏答、跳題、複選題、調查權重與自由文字。換成你自己的問卷，只要提供 codebook， 其餘由 encode 自動判斷並列在摘要裡。</p>
-<details class="code-fold">
-<summary>
-顯示程式碼：完整指令
-</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py encode data/sample_survey.csv <span class="at">--codebook</span> data/sample_codebook.csv <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bins</span> 年齡=18,30,45,65 <span class="at">--multi</span> 關注議題 <span class="at">--exclude</span> 縣市</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py split arules_output/items.csv <span class="at">--method</span> random</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py mine arules_output/train.csv <span class="at">--min-count</span> 20 <span class="at">--max-lhs</span> 2 <span class="at">--max-rhs</span> 1 <span class="dt">\</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--rhs</span> 政策A態度 政策B態度 <span class="at">--hconf</span> 0.1 <span class="at">--min-lift</span> 1.2</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py validate arules_output/test.csv <span class="at">--rules</span> arules_output/rules.csv <span class="at">--min-test-count</span> 5</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py report <span class="at">--notes</span> arules_output/interpretation.md <span class="at">--title</span> <span class="st">&quot;政策態度的關聯規則&quot;</span></span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<p><strong>encode 的自動檢查</strong>抓到了：</p>
-<ul>
-<li>工作滿意度的空白集中在「就業狀態=非就業」→ 跳題；</li>
-<li>縣市 → 區域有函數關係 → 「縣市=台南市 → 區域=南部」會被標成定義性規則；</li>
-<li>「使用網路=有」占 85% → 建議加 hconf；</li>
-<li>權重欄位 → 提醒結果是未加權的樣本描述。</li>
-</ul>
-<p><strong>結果摘要</strong>：保留 45 條以政策態度為後件的規則，驗證集重現 10 條。</p>
+<section id="自己試試看" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> 自己試試看</h1>
+<p><code>data/</code> 裡有兩個公開的練習資料集，都來自 R 套件 arules。這份導覽<strong>不提供</strong>它們的分析結果： 請把資料交給 skill，照三次確認的流程自己做一次，最後會得到你自己的分析報告。 來源、欄位說明與授權見 <code>data/README.md</code>。</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 16%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>規則</th>
-<th>探勘集 confidence</th>
-<th>後件基準比例</th>
-<th>lift</th>
-<th>驗證集 q</th>
-<th>分級</th>
+<th>檔案</th>
+<th>類型</th>
+<th>規模</th>
+<th>可以練習什麼</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>{區域=南部, 年齡=18–29} → {政策A態度=支持}</td>
-<td>0.83</td>
-<td>0.36</td>
-<td>2.32</td>
-<td>&lt; 0.001</td>
-<td>✅</td>
+<td><code>groceries.csv</code></td>
+<td>交易資料（長格式）</td>
+<td>9,835 筆雜貨店交易、169 種商品</td>
+<td>設定 min_support、處理高頻商品造成的 cross-support、規則太多時怎麼收斂；沒有時間戳記時的隨機切分</td>
 </tr>
 <tr class="even">
-<td>{關注議題=交通} → {政策B態度=反對}</td>
-<td>0.66</td>
-<td>0.43</td>
-<td>1.56</td>
-<td>&lt; 0.001</td>
-<td>✅</td>
+<td><code>income_esl.csv</code></td>
+<td>問卷資料（一列一人）</td>
+<td>8,993 位受訪者、14 個人口特徵</td>
+<td>編碼與缺失處理、有序答案要不要合併、指定後件（例如 income）、近乎定義性的規則（婚姻狀態與雙薪）</td>
 </tr>
 </tbody>
 </table>
-<p>解讀：住在南部的 18–29 歲受訪者中，約 83% 支持政策 A，是全體受訪者的 2.3 倍。這是樣本中的 共同出現，不代表年齡或居住地造成態度，而且沒有加權，不能推論到母體。</p>
+<section id="交易資料groceries.csv" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="交易資料groceries.csv"><span class="header-section-number">4.1</span> 交易資料：groceries.csv</h2>
+<p>在 Claude Code 中輸入：</p>
+<pre class="text"><code>/association-rules-skill 幫我分析 data/groceries.csv，找出哪些商品常一起被買</code></pre>
+<p>skill 會先執行 profile，列出清理紀錄、籃子大小分布與商品頻率，接著進入確認 ①。</p>
+<details class="code-fold">
+<summary>
+顯示程式碼：指令形式
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py profile data/groceries.csv</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py split data/groceries.csv <span class="at">--method</span> random      <span class="co"># 沒有時間戳記</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py mine arules_output/train.csv <span class="at">--min-support</span> <span class="op">&lt;</span>S<span class="op">&gt;</span> --min-confidence <span class="op">&lt;</span>C<span class="op">&gt;</span>     --min-lift <span class="op">&lt;</span>L<span class="op">&gt;</span> [--hconf <span class="op">&lt;</span>H<span class="op">&gt;</span>]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py validate arules_output/test.csv <span class="at">--rules</span> arules_output/rules.csv</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py report <span class="at">--notes</span> arules_output/interpretation.md</span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<p>做的時候可以留意：</p>
+<ul>
+<li>profile 的商品頻率裡，最常見的商品佔多少交易？它會不會和很多商品湊成 confidence 很高的規則？</li>
+<li>用寬鬆、標準、嚴格三組 min_support 分別試試看，規則數怎麼變化？</li>
+<li>驗證集中，哪些規則重現、哪些沒有？</li>
+</ul>
+</section>
+<section id="問卷資料income_esl.csv" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="問卷資料income_esl.csv"><span class="header-section-number">4.2</span> 問卷資料：income_esl.csv</h2>
+<pre class="text"><code>/association-rules-skill 幫我分析 data/income_esl.csv，看看哪些人口特徵和高收入常一起出現</code></pre>
+<p>skill 會先執行 encode，列出資料設定摘要：分析單位、各題缺失、類別數、自動檢查，接著進入確認 ①。</p>
+<details class="code-fold">
+<summary>
+顯示程式碼：指令形式
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py encode data/income_esl.csv [--merge <span class="op">&lt;</span>題目<span class="op">&gt;</span>:<span class="op">&lt;</span>答案<span class="op">&gt;</span>+<span class="op">&lt;</span>答案<span class="op">&gt;</span>=<span class="op">&lt;</span>新答案<span class="op">&gt;</span>] [--where <span class="op">&lt;</span>題目<span class="op">&gt;</span>=<span class="op">&lt;</span>值<span class="op">&gt;</span>]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py split arules_output/items.csv <span class="at">--method</span> random</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py mine arules_output/train.csv <span class="at">--min-count</span> <span class="op">&lt;</span>N<span class="op">&gt;</span> --max-lhs 2 <span class="at">--max-rhs</span> 1 <span class="at">--rhs</span> income</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py validate arules_output/test.csv <span class="at">--rules</span> arules_output/rules.csv</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py report <span class="at">--notes</span> arules_output/interpretation.md</span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<p>做的時候可以留意：</p>
+<ul>
+<li>收入有 9 級，要保留，還是合併成兩三組？合併前後的人數各是多少？</li>
+<li>哪些題目的缺失特別多？這些人沒有項目，會怎麼影響規則的分母？</li>
+<li><code>dual incomes=not married</code> 這類幾乎由婚姻狀態決定的規則，confidence 很高但有沒有新資訊？ （提示：<code>mine --flag-definitional</code>）</li>
+<li>規則能不能解讀成「教育程度造成高收入」？為什麼不能？</li>
+</ul>
 </section>
 </section>
 <section id="常見陷阱" class="level1" data-number="5">

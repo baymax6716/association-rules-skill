@@ -15,18 +15,18 @@
 所有計算都以 Tan, Steinbach, Karpatne & Kumar (2019), Introduction to Data Mining (2nd ed.)
 第 5、6 章與 10.4 節的定義為準，詳見 references/measures.md 與 references/validation.md。
 
-範例（交易資料）
-  python scripts/run_arules.py profile data/sample_baskets.csv
-  python scripts/run_arules.py split data/sample_baskets.csv --method time --test-frac 0.3
-  python scripts/run_arules.py mine arules_output/train.csv --min-support 0.015 --min-confidence 0.3
+指令形式（<…> 的值依資料決定；data/ 有兩個練習資料集，見 data/README.md）
+交易資料
+  python scripts/run_arules.py profile <交易資料.csv>
+  python scripts/run_arules.py split <交易資料.csv> --method time --test-frac 0.3
+  python scripts/run_arules.py mine arules_output/train.csv --min-support <S> --min-confidence <C>
   python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv
   python scripts/run_arules.py report --notes arules_output/interpretation.md
 
-範例（問卷資料）
-  python scripts/run_arules.py encode data/sample_survey.csv --codebook data/sample_codebook.csv \\
-      --bins 年齡=18,30,45,65 --exclude 縣市
+問卷資料
+  python scripts/run_arules.py encode <問卷.csv> [--codebook <codebook.csv>] [--bins <題目>=<切點>]
   python scripts/run_arules.py split arules_output/items.csv --method random
-  python scripts/run_arules.py mine arules_output/train.csv --min-count 30 --rhs 政策A態度 --max-lhs 2 --max-rhs 1
+  python scripts/run_arules.py mine arules_output/train.csv --min-count <N> --rhs <題目> --max-lhs 2 --max-rhs 1
 """
 import argparse
 import io

@@ -217,82 +217,74 @@ skill 會列出保留的規則，也列出**被排除的規則與原因**，讓�
 最後，skill 會自動產生一份**分析報告**（`report.qmd` 與 `report.html`），記錄這次做的每一步、
 當時的輸出、可以摺疊的指令與 Python / R 程式碼，以及驗證是否仍然獨立。
 
-# 完整示範
+# 自己試試看
 
-## 超市交易資料
+`data/` 裡有兩個公開的練習資料集，都來自 R 套件 arules。這份導覽**不提供**它們的分析結果：
+請把資料交給 skill，照三次確認的流程自己做一次，最後會得到你自己的分析報告。
+來源、欄位說明與授權見 `data/README.md`。
 
-範例資料 `data/sample_baskets.csv` 有 1,200 筆模擬交易、27 種商品，平均每籃 3.5 件。腳本的 profile
-步驟在這份資料裡找出了品名大小寫不一致、缺漏品名、退貨（數量 ≤ 0）與重複列，並在清理紀錄中列出。
-換成你自己的交易資料，流程和指令都一樣。
+| 檔案 | 類型 | 規模 | 可以練習什麼 |
+|---|---|---|---|
+| `groceries.csv` | 交易資料（長格式） | 9,835 筆雜貨店交易、169 種商品 | 設定 min_support、處理高頻商品造成的 cross-support、規則太多時怎麼收斂；沒有時間戳記時的隨機切分 |
+| `income_esl.csv` | 問卷資料（一列一人） | 8,993 位受訪者、14 個人口特徵 | 編碼與缺失處理、有序答案要不要合併、指定後件（例如 income）、近乎定義性的規則（婚姻狀態與雙薪） |
+
+## 交易資料：groceries.csv
+
+在 Claude Code 中輸入：
+
+```text
+/association-rules-skill 幫我分析 data/groceries.csv，找出哪些商品常一起被買
+```
+
+skill 會先執行 profile，列出清理紀錄、籃子大小分布與商品頻率，接著進入確認 ①。
 
 <details class="code-fold">
-<summary>顯示程式碼：完整指令</summary>
+<summary>顯示程式碼：指令形式</summary>
 
 ```bash
-python scripts/run_arules.py profile data/sample_baskets.csv
-python scripts/run_arules.py split data/sample_baskets.csv --method time --test-frac 0.3
-python scripts/run_arules.py mine arules_output/train.csv --min-support 0.02 --min-confidence 0.3 \
-    --min-lift 1.2 --hconf 0.05
+python scripts/run_arules.py profile data/groceries.csv
+python scripts/run_arules.py split data/groceries.csv --method random      # 沒有時間戳記
+python scripts/run_arules.py mine arules_output/train.csv --min-support <S> --min-confidence <C>     --min-lift <L> [--hconf <H>]
 python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv
 python scripts/run_arules.py report --notes arules_output/interpretation.md
 ```
 
 </details>
 
-**結果摘要**
+做的時候可以留意：
 
-- 依時間切分：前 840 筆探勘、後 360 筆驗證。
-- 產生 280 條規則，保留 33 條；排除原因：confidence 不足 189、lift 不足 43、cross-support 10、冗餘 5。
-- 驗證集重現 28 / 33（85%）。
+- profile 的商品頻率裡，最常見的商品佔多少交易？它會不會和很多商品湊成 confidence 很高的規則？
+- 用寬鬆、標準、嚴格三組 min_support 分別試試看，規則數怎麼變化？
+- 驗證集中，哪些規則重現、哪些沒有？
 
-| 規則 | support | confidence | 後件基準比例 | lift |
-|---|---|---|---|---|
-| {wine} → {cheese} | 0.032 | 0.844 | 0.055 | 15.4 |
-| {pasta} → {tomato sauce} | 0.075 | 0.612 | 0.075 | 8.2 |
+## 問卷資料：income_esl.csv
 
-被 cross-support 排除的例子：`{butter, chips} → {milk}` 的 confidence 高達 0.905，但牛奶本來就出現在
-約 60% 的籃子裡，h-confidence 只有 0.035，這條規則只是「牛奶到處都有」。
+```text
+/association-rules-skill 幫我分析 data/income_esl.csv，看看哪些人口特徵和高收入常一起出現
+```
 
-沒有重現的例子：`{cheese} → {bread}` 在探勘集 lift 1.36，到了驗證集 lift 只有 0.76（q = 0.82），
-是探勘集裡的偶然。這正是先切出驗證資料的價值。
-
-## 問卷資料
-
-範例資料 `data/sample_survey.csv` 有 1,200 位受訪者，附 codebook。它包含問卷常見的情況：
-98 / 99 特殊代碼、漏答、跳題、複選題、調查權重與自由文字。換成你自己的問卷，只要提供 codebook，
-其餘由 encode 自動判斷並列在摘要裡。
+skill 會先執行 encode，列出資料設定摘要：分析單位、各題缺失、類別數、自動檢查，接著進入確認 ①。
 
 <details class="code-fold">
-<summary>顯示程式碼：完整指令</summary>
+<summary>顯示程式碼：指令形式</summary>
 
 ```bash
-python scripts/run_arules.py encode data/sample_survey.csv --codebook data/sample_codebook.csv \
-    --bins 年齡=18,30,45,65 --multi 關注議題 --exclude 縣市
+python scripts/run_arules.py encode data/income_esl.csv [--merge <題目>:<答案>+<答案>=<新答案>] [--where <題目>=<值>]
 python scripts/run_arules.py split arules_output/items.csv --method random
-python scripts/run_arules.py mine arules_output/train.csv --min-count 20 --max-lhs 2 --max-rhs 1 \
-    --rhs 政策A態度 政策B態度 --hconf 0.1 --min-lift 1.2
-python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv --min-test-count 5
-python scripts/run_arules.py report --notes arules_output/interpretation.md --title "政策態度的關聯規則"
+python scripts/run_arules.py mine arules_output/train.csv --min-count <N> --max-lhs 2 --max-rhs 1 --rhs income
+python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv
+python scripts/run_arules.py report --notes arules_output/interpretation.md
 ```
 
 </details>
 
-**encode 的自動檢查**抓到了：
+做的時候可以留意：
 
-- 工作滿意度的空白集中在「就業狀態=非就業」→ 跳題；
-- 縣市 → 區域有函數關係 → 「縣市=台南市 → 區域=南部」會被標成定義性規則；
-- 「使用網路=有」占 85% → 建議加 hconf；
-- 權重欄位 → 提醒結果是未加權的樣本描述。
-
-**結果摘要**：保留 45 條以政策態度為後件的規則，驗證集重現 10 條。
-
-| 規則 | 探勘集 confidence | 後件基準比例 | lift | 驗證集 q | 分級 |
-|---|---|---|---|---|---|
-| {區域=南部, 年齡=18–29} → {政策A態度=支持} | 0.83 | 0.36 | 2.32 | < 0.001 | ✅ |
-| {關注議題=交通} → {政策B態度=反對} | 0.66 | 0.43 | 1.56 | < 0.001 | ✅ |
-
-解讀：住在南部的 18–29 歲受訪者中，約 83% 支持政策 A，是全體受訪者的 2.3 倍。這是樣本中的
-共同出現，不代表年齡或居住地造成態度，而且沒有加權，不能推論到母體。
+- 收入有 9 級，要保留，還是合併成兩三組？合併前後的人數各是多少？
+- 哪些題目的缺失特別多？這些人沒有項目，會怎麼影響規則的分母？
+- `dual incomes=not married` 這類幾乎由婚姻狀態決定的規則，confidence 很高但有沒有新資訊？
+  （提示：`mine --flag-definitional`）
+- 規則能不能解讀成「教育程度造成高收入」？為什麼不能？
 
 # 常見陷阱
 

@@ -125,23 +125,22 @@ support 不夠而消失。所以要列出各組人數讓使用者判斷，必要
 這比把權重複製成多筆受訪者，或忽略權重直接做母體推論更清楚。之後即使加入加權比例，標準誤與顯著性
 也還需要考慮抽樣設計（分層、群集）。
 
-## 完整指令範例
+## 指令形式
+
+以下是指令的形式；`<…>` 的值依實際資料決定（確認 ① ② 時由 skill 提出建議）。練習用的問卷資料
+`data/income_esl.csv` 不需要 codebook，可以直接從 `encode data/income_esl.csv` 開始。
 
 ```bash
-# 全部資料先看一次設定摘要
-python scripts/run_arules.py encode data/sample_survey.csv --codebook data/sample_codebook.csv \
-    --bins 年齡=18,30,45,65 --multi 關注議題 --exclude 縣市
-# 驗證安排（切點固定，可在編碼後切分）
+# 先看一次資料設定摘要
+python scripts/run_arules.py encode <問卷.csv> [--codebook <codebook.csv>] [--bins <題目>=<切點>]     [--multi <複選題>] [--merge <題目>:<答案>+<答案>=<新答案>] [--where <題目>=<值>] [--exclude <欄位>]
+# 驗證安排（切點固定時，可在編碼後切分）
 python scripts/run_arules.py split arules_output/items.csv --method random --test-frac 0.3
-# 只用人口特徵解釋政策態度
-python scripts/run_arules.py mine arules_output/train.csv --min-count 20 --max-lhs 2 --max-rhs 1 \
-    --rhs 政策A態度 政策B態度 --hconf 0.1 --min-lift 1.2
-python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv --min-test-count 5
+# 只用指定的題目解釋某個題目
+python scripts/run_arules.py mine arules_output/train.csv --min-count <N> --max-lhs 2 --max-rhs 1     --rhs <想解釋的題目> --lhs-cols <用來解釋的題目…>
+python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv
 
-# 資料導向切點（等頻）：先切分再編碼
-python scripts/run_arules.py split data/sample_survey.csv --format survey --method random --out-dir out
-python scripts/run_arules.py encode out/survey_train.csv --codebook data/sample_codebook.csv \
-    --bins 年齡=quantile:4 --cuts-out out/cuts.json --out-dir out --output train.csv
-python scripts/run_arules.py encode out/survey_test.csv --codebook data/sample_codebook.csv \
-    --cuts-in out/cuts.json --out-dir out --output test.csv
+# 資料導向切點（等頻 / 等寬）：先切分再編碼，切點只用探勘集決定
+python scripts/run_arules.py split <問卷.csv> --format survey --method random --out-dir out
+python scripts/run_arules.py encode out/survey_train.csv --bins <題目>=quantile:4 --cuts-out out/cuts.json     --out-dir out --output train.csv
+python scripts/run_arules.py encode out/survey_test.csv --cuts-in out/cuts.json --out-dir out --output test.csv
 ```

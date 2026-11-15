@@ -143,39 +143,45 @@ Mining* (2nd ed.). Pearson.
 
 ## 11. R（arules）對照程式碼
 
+練習資料 `data/groceries.csv` 和 `data/income_esl.csv` 就是 arules 內建的 `Groceries`、`IncomeESL`，
+在 R 裡可以直接 `data()` 載入。下面的門檻值（`minsup` 等）只是佔位，請換成確認 ② 決定的值。
+
 ```r
 # install.packages(c("arules", "arulesViz"))
 library(arules)
+minsup <- 0.01; minconf <- 0.3; minlift <- 1.2      # 換成確認 ② 決定的值
 
-# 步驟 1：長格式（transaction_id, item）→ transactions
-df <- read.csv("data/sample_baskets.csv", stringsAsFactors = FALSE)
-df$item <- tolower(trimws(df$item))
-df <- subset(df, item != "" & quantity > 0)
-df <- unique(df[, c("transaction_id", "item")])
-trans <- as(split(df$item, df$transaction_id), "transactions")
+# 步驟 1：交易資料 → transactions
+data(Groceries); trans <- Groceries
+# 自己的長格式資料（transaction_id, item[, quantity]）：
+# df <- read.csv("my_transactions.csv", stringsAsFactors = FALSE)
+# df$item <- tolower(trimws(df$item))
+# df <- subset(df, item != "")                      # 有數量欄時再加 & quantity > 0
+# df <- unique(df[, c("transaction_id", "item")])
+# trans <- as(split(df$item, df$transaction_id), "transactions")
 summary(trans)                         # 交易數、商品數、籃子大小分布
 itemFrequency(trans, type = "relative") |> sort(decreasing = TRUE) |> head(15)
 # itemFrequencyPlot(trans, topN = 30)  # 先問使用者再畫
 
 # 步驟 3–4：探勘（arules 的 maxlen 是「整條規則」的品項數）
-rules <- apriori(trans, parameter = list(supp = 0.02, conf = 0.3, minlen = 2, maxlen = 3))
-rules <- subset(rules, lift > 1.2)
+rules <- apriori(trans, parameter = list(supp = minsup, conf = minconf, minlen = 2, maxlen = 3))
+rules <- subset(rules, lift > minlift)
 rules <- rules[!is.redundant(rules)]
 inspect(head(sort(rules, by = "lift"), 20))
 
 # 其他指標（含 null-invariant 指標）
 quality(rules) <- cbind(quality(rules),
-  interestMeasure(rules, c("leverage", "conviction", "phi", "cosine", "kulczynski", "allConfidence"),
-                  transactions = trans))
+  interestMeasure(rules, c("leverage", "conviction", "phi", "cosine", "kulczynski"),
+                  transactions = trans))   # all-confidence 只能算在 itemset 上，見下方
 
 # cross-support：h-confidence（= all-confidence）
-itemsets <- eclat(trans, parameter = list(supp = 0.02, maxlen = 3))
+itemsets <- eclat(trans, parameter = list(supp = minsup, maxlen = 3))
 quality(itemsets)$hconf <- interestMeasure(itemsets, "allConfidence", transactions = trans)
 
 # 精簡表示
 sum(is.closed(itemsets)); sum(is.maximal(itemsets))
 
-# 步驟 5：Fisher exact test + BH（arules 內建）
+# 步驟 5：Fisher exact test + BH（arules 內建；正式做法是在驗證集上計算）
 p <- interestMeasure(rules, "fishersExactTest", transactions = trans)   # 單尾，正相關
 q <- p.adjust(p, method = "BH")
 ```
@@ -184,28 +190,21 @@ q <- p.adjust(p, method = "BH")
 
 ```r
 library(arules)
-sv <- read.csv("data/sample_survey.csv", colClasses = "character")
-cb <- read.csv("data/sample_codebook.csv", colClasses = "character")
-# 代碼 → 標籤；98/99（missing 欄非空白）設為 NA，不產生項目
-for (v in unique(cb$column)) {
-  m <- cb[cb$column == v, ]
-  lab <- setNames(ifelse(m$missing == "", m$label, NA), m$code)
-  sv[[v]] <- unname(lab[sv[[v]]])
-}
-sv[sv == ""] <- NA
-sv$年齡 <- cut(as.numeric(sv$年齡), breaks = c(-Inf, 18, 30, 45, 65, Inf), right = FALSE,
-              labels = c("<18", "18–29", "30–44", "45–64", "≥65"))
-# 或用 discretizeDF(sv, methods = list(年齡 = list(method = "frequency", breaks = 4)))
-items <- sv[, c("年齡", "性別", "區域", "就業狀態", "政策A態度", "政策B態度")]
-items[] <- lapply(items, factor)
-trans <- as(items, "transactions")      # 自動產生「欄位=值」項目，NA 不產生項目
-itemLabels(trans)[1:6]
+data(IncomeESL); sv <- IncomeESL                    # 或 read.csv("data/income_esl.csv", na.strings = "")
+# 有序答案可以先合併（例如收入分成兩組）；要不要合併由使用者決定，並列出合併前後人數
+table(sv$income)
+# sv$income <- factor(ifelse(sv$income %in% c("[50,75)", "75+"), "50+", "<50"))
+# 自己的問卷有代碼時：先依 codebook 把代碼換成標籤，拒答 / 不知道設為 NA
+# 連續數值：discretizeDF(df, methods = list(年齡 = list(method = "fixed", breaks = c(-Inf, 18, 30, 45, 65, Inf))))
+sv[] <- lapply(sv, function(x) factor(x, ordered = FALSE))
+trans <- as(sv, "transactions")         # 自動產生「欄位=值」項目，NA 不產生項目
+head(itemLabels(trans))
 
-# 指定後件：只找以政策A態度為後件的規則
-rules <- apriori(trans, parameter = list(supp = 20 / length(trans), conf = 0.3, minlen = 2, maxlen = 3),
-                 appearance = list(rhs = grep("^政策A態度=", itemLabels(trans), value = TRUE),
+# 指定後件：只找以 income 為後件的規則
+rules <- apriori(trans, parameter = list(supp = minsup, conf = minconf, minlen = 2, maxlen = 3),
+                 appearance = list(rhs = grep("^income=", itemLabels(trans), value = TRUE),
                                    default = "lhs"))
-inspect(head(sort(subset(rules, lift > 1.2), by = "lift"), 10))
+inspect(head(sort(subset(rules, lift > minlift), by = "lift"), 10))
 ```
 
 Python 對應：`scripts/run_arules.py`（mlxtend 的 `fpgrowth` / `apriori` + scipy 的

@@ -53,17 +53,18 @@ association-rules-skill/
 ├── scripts/
 │   └── run_arules.py           # 計算腳本（encode / profile / split / mine / validate / permtest / stratify / report）
 └── data/
-    ├── sample_baskets.csv      # 範例：1,200 筆模擬超市交易（長格式）
-    ├── sample_survey.csv       # 範例：1,200 位模擬受訪者（一列一人）
-    ├── sample_codebook.csv     # 問卷代碼表
-    └── region_map.csv          # 縣市 → 區域對照表（示範項目粒度）
+    ├── README.md               # 兩個練習資料集的來源、欄位說明、怎麼自己試
+    ├── groceries.csv           # arules 的 Groceries：9,835 筆雜貨店交易（交易資料練習）
+    └── income_esl.csv          # arules 的 IncomeESL：8,993 位受訪者的問卷（問卷資料練習）
 ```
 
 ## `scripts/run_arules.py`
 
 腳本不綁定任何特定資料：欄位角色、資料格式、缺失、跳題、高頻值等都由腳本從**你丟進來的資料**判斷，
-`data/` 裡的檔案只是示範輸入。換成自己的資料時，把下面指令的檔名換掉即可；欄位名稱偵測不到時，
-用 `--tid-col` / `--item-col` / `--id-col` 指定。
+`data/` 裡是給你下載後自己練習的公開資料集（見 [`data/README.md`](data/README.md)）。換成自己的資料時，
+把檔名換掉即可；欄位名稱偵測不到時，用 `--tid-col` / `--item-col` / `--id-col` 指定。
+
+下面是指令的形式；`<…>` 的參數值由 skill 依你的資料在確認 ② 提出建議，不要直接照抄。
 
 ```bash
 pip install mlxtend scipy pandas numpy matplotlib
@@ -72,23 +73,23 @@ pip install mlxtend scipy pandas numpy matplotlib
 **交易資料**
 
 ```bash
-python scripts/run_arules.py profile  data/sample_baskets.csv
-python scripts/run_arules.py split    data/sample_baskets.csv --method time --test-frac 0.3
-python scripts/run_arules.py mine     arules_output/train.csv --min-support 0.02 --min-confidence 0.3 --min-lift 1.2 --hconf 0.05
+python scripts/run_arules.py profile  <交易資料.csv>
+python scripts/run_arules.py split    <交易資料.csv> --method time --test-frac 0.3      # 沒有時間戳記時改 --method random
+python scripts/run_arules.py mine     arules_output/train.csv --min-support <S> --min-confidence <C> --min-lift <L> [--hconf <H>]
 python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv
-python scripts/run_arules.py permtest arules_output/train.csv --min-support 0.02 --min-lift 1.2 --hconf 0.05 --n-perm 50
-python scripts/run_arules.py stratify data/sample_baskets.csv --rules arules_output/rules.csv --by weekend
+python scripts/run_arules.py permtest arules_output/train.csv --min-support <S> --min-lift <L> --n-perm 50
+python scripts/run_arules.py stratify <交易資料.csv> --rules arules_output/rules.csv --by weekend
 python scripts/run_arules.py report   --notes arules_output/interpretation.md
 ```
 
 **問卷資料**
 
 ```bash
-python scripts/run_arules.py encode   data/sample_survey.csv --codebook data/sample_codebook.csv --bins 年齡=18,30,45,65 --multi 關注議題 --exclude 縣市
+python scripts/run_arules.py encode   <問卷.csv> [--codebook <codebook.csv>] [--bins <題目>=<切點>] [--multi <複選題>] [--exclude <欄位>]
 python scripts/run_arules.py split    arules_output/items.csv --method random
-python scripts/run_arules.py mine     arules_output/train.csv --min-count 20 --max-lhs 2 --max-rhs 1 --rhs 政策A態度 政策B態度 --hconf 0.1 --min-lift 1.2
-python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv --min-test-count 5
-python scripts/run_arules.py report   --notes arules_output/interpretation.md --title "政策態度的關聯規則"
+python scripts/run_arules.py mine     arules_output/train.csv --min-count <N> --max-lhs 2 --max-rhs 1 [--rhs <想解釋的題目>]
+python scripts/run_arules.py validate arules_output/test.csv --rules arules_output/rules.csv
+python scripts/run_arules.py report   --notes arules_output/interpretation.md
 ```
 
 輸出寫入 `arules_output/`（可用 `--out-dir` 更改）：`items.csv`、`train.csv`、`test.csv`、`rules.csv`、
@@ -109,9 +110,9 @@ tea→honey 的 φ = 0.5847，皆與書中數值一致。
 2. 安裝 Python 套件：`pip install mlxtend scipy pandas numpy matplotlib`。報告要用 Quarto 轉檔的話，
    另外安裝 [Quarto](https://quarto.org)（RStudio 已內建）；沒有也可以。
 3. 觸發方式（兩種都可以）：
-   - 直接輸入 `/association-rules-skill`，也可以接著寫需求，例如 `/association-rules-skill 分析 data/sample_survey.csv`；
-   - 用自然語言描述需求，例如「幫我分析這份超市交易資料有哪些商品常一起買」或「這份問卷哪些族群的
-     政策態度比較特別」，skill 會自動觸發。
+   - 直接輸入 `/association-rules-skill`，也可以接著寫需求，例如 `/association-rules-skill 分析 data/income_esl.csv`；
+   - 用自然語言描述需求，例如「幫我分析這份超市交易資料有哪些商品常一起買」或「這份問卷哪些人口特徵
+     和高收入常一起出現」，skill 會自動觸發。
 
 ## 參考文獻
 

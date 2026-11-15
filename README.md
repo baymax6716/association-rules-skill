@@ -51,17 +51,19 @@ association-rules-skill/
 │   ├── validation.md           # 切分、Fisher exact、BH-FDR、置換檢定、分層
 │   └── textbook-notes.md       # 教科書章節重點（改寫）+ R arules 對照程式碼
 ├── scripts/
-│   ├── run_arules.py           # 計算腳本（encode / profile / split / mine / validate / permtest / stratify / report）
-│   ├── make_sample_data.py     # 產生交易範例資料
-│   └── make_sample_survey.py   # 產生問卷範例資料
+│   └── run_arules.py           # 計算腳本（encode / profile / split / mine / validate / permtest / stratify / report）
 └── data/
-    ├── sample_baskets.csv      # 1,200 筆模擬超市交易（含刻意放入的髒資料）
-    ├── sample_survey.csv       # 1,200 位模擬受訪者（含特殊代碼、跳題、複選題、權重）
+    ├── sample_baskets.csv      # 範例：1,200 筆模擬超市交易（長格式）
+    ├── sample_survey.csv       # 範例：1,200 位模擬受訪者（一列一人）
     ├── sample_codebook.csv     # 問卷代碼表
     └── region_map.csv          # 縣市 → 區域對照表（示範項目粒度）
 ```
 
 ## `scripts/run_arules.py`
+
+腳本不綁定任何特定資料：欄位角色、資料格式、缺失、跳題、高頻值等都由腳本從**你丟進來的資料**判斷，
+`data/` 裡的檔案只是示範輸入。換成自己的資料時，把下面指令的檔名換掉即可；欄位名稱偵測不到時，
+用 `--tid-col` / `--item-col` / `--id-col` 指定。
 
 ```bash
 pip install mlxtend scipy pandas numpy matplotlib

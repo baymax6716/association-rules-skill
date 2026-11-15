@@ -5996,7 +5996,7 @@ X \rightarrow Y
 <h1 data-number="4"><span class="header-section-number">4</span> 完整示範</h1>
 <section id="超市交易資料" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="超市交易資料"><span class="header-section-number">4.1</span> 超市交易資料</h2>
-<p>範例資料 <code>data/sample_baskets.csv</code> 有 1,200 筆模擬交易、27 種商品，平均每籃 3.5 件。資料裡刻意放了 大小寫不一致、缺漏品名、退貨、重複列，以及幾組已知的商品關聯。</p>
+<p>範例資料 <code>data/sample_baskets.csv</code> 有 1,200 筆模擬交易、27 種商品，平均每籃 3.5 件。腳本的 profile 步驟在這份資料裡找出了品名大小寫不一致、缺漏品名、退貨（數量 ≤ 0）與重複列，並在清理紀錄中列出。 換成你自己的交易資料，流程和指令都一樣。</p>
 <details class="code-fold">
 <summary>
 顯示程式碼：完整指令
@@ -6046,7 +6046,7 @@ X \rightarrow Y
 </section>
 <section id="問卷資料" class="level2" data-number="4.2">
 <h2 data-number="4.2" class="anchored" data-anchor-id="問卷資料"><span class="header-section-number">4.2</span> 問卷資料</h2>
-<p>範例資料 <code>data/sample_survey.csv</code> 有 1,200 位受訪者，附 codebook。資料裡刻意放了： 98 / 99 特殊代碼、漏答、只有就業者回答的題目（跳題）、複選題、調查權重、自由文字，以及由縣市決定的 區域欄位。</p>
+<p>範例資料 <code>data/sample_survey.csv</code> 有 1,200 位受訪者，附 codebook。它包含問卷常見的情況： 98 / 99 特殊代碼、漏答、跳題、複選題、調查權重與自由文字。換成你自己的問卷，只要提供 codebook， 其餘由 encode 自動判斷並列在摘要裡。</p>
 <details class="code-fold">
 <summary>
 顯示程式碼：完整指令

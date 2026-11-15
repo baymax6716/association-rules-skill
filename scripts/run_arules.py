@@ -154,6 +154,9 @@ def load_transactions(args):
         item_cols = [c for c in df.columns if c != tid_c]
         long = df.melt(id_vars=[tid_c], value_vars=item_cols, var_name="item", value_name="v")
         long = long[long["v"].isin(["1", "True", "true"])]
+        empty = df[tid_c].nunique() - long[tid_c].nunique()
+        if empty:
+            log.append(f"{empty} 筆交易沒有任何品項（整列都是 0），不納入分析")
         df = long.rename(columns={tid_c: "tid"})[["tid", "item"]]
         time_c = qty_c = None
     elif fmt == "basket":
@@ -163,7 +166,7 @@ def load_transactions(args):
             df["_row"] = [f"R{i+1}" for i in range(len(df))]
             tid_c = "_row"
         time_c = pick(df.columns, TIME_NAMES, getattr(args, "time_col", None))
-        df = df.assign(item=df[col].str.split(sep)).explode("item")
+        df = df.assign(item=df[col].str.split(sep)).explode("item").reset_index(drop=True)
         df = df.rename(columns={tid_c: "tid"})
         keep = ["tid", "item"] + ([time_c] if time_c else [])
         df = df[keep].rename(columns={time_c: "time"} if time_c else {})

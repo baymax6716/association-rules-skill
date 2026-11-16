@@ -435,13 +435,7 @@ Apriori 每一層都要產生候選、再掃描一次資料計數。FP-growth �
 | 適合 | 資料不大、想逐層理解過程或對照教科書 | 交易多、項目多、門檻低時通常較快 |
 | 限制 | 門檻低時候選很多，計算慢 | 交易之間共同項目少時，樹壓縮不了，優勢變小 |
 
-**Groceries 上的比較** [已執行]{.badge-run}：兩種演算法找到的頻繁項目集與 support 完全相同（程式中有檢查）。計算時間每次執行都會略有不同，只供參考。
-
-{{< include guide-examples/generated-tables/algorithm_compare.md >}}
-
 **在 skill 中**：演算法是一個由使用者選擇的參數（`params.algorithm` = `apriori` 或 `fpgrowth`），在確認參數時一起詢問。示範設定預設 FP-growth，並說明兩者結果相同。實作上使用 Python mlxtend 套件的 `apriori` 與 `fpgrowth`。指定前件時，程式直接計數包含前件的交易，不需要找全部頻繁項目集，因此演算法選項不影響結果。
-
-本指南的範例程式為了讓讀者逐筆核對，另外直接列出所有前件 ≤ 2 項、後件 1 項的候選規則並逐筆計數。第 9 章再以 mlxtend 與 R arules 核對，結果相同。
 
 <details class="code-fold">
 <summary>顯示程式碼：Apriori 與 FP-growth 示範、規則計數與篩選</summary>
@@ -793,7 +787,7 @@ flowchart TD
 
 1. 從 basket 表數出前件、後件、兩者都有的筆數，代入第 2 章的公式。
 2. 用 R 重算：`docs/guide-examples/crosscheck_arules.R`（arules 的 `apriori`，`supp` 設為至少 1 筆、`conf = 0`）。
-3. 重新執行 `python docs/guide-examples/build_guide_examples.py`，所有表格會重新產生。除了演算法比較表的計算時間，表格有任何變動，代表輸入或程式變了。
+3. 重新執行 `python docs/guide-examples/build_guide_examples.py`，所有表格會重新產生；表格有任何變動，代表輸入或程式變了。
 
 ## 限制
 

@@ -7855,57 +7855,7 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p><strong>Groceries 上的比較</strong> <span class="badge-run">已執行</span>：兩種演算法找到的頻繁項目集與 support 完全相同（程式中有檢查）。計算時間每次執行都會略有不同，只供參考。</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">最低支持度</th>
-<th style="text-align: left;">對應最低筆數</th>
-<th style="text-align: left;">演算法</th>
-<th style="text-align: left;">頻繁項目集數</th>
-<th style="text-align: left;">計算時間（會因電腦而異）</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">0.01</td>
-<td style="text-align: left;">99</td>
-<td style="text-align: left;">Apriori</td>
-<td style="text-align: left;">333</td>
-<td style="text-align: left;">0.06 秒</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">0.01</td>
-<td style="text-align: left;">99</td>
-<td style="text-align: left;">FP-growth</td>
-<td style="text-align: left;">333</td>
-<td style="text-align: left;">0.09 秒</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">0.005</td>
-<td style="text-align: left;">50</td>
-<td style="text-align: left;">Apriori</td>
-<td style="text-align: left;">989</td>
-<td style="text-align: left;">0.19 秒</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">0.005</td>
-<td style="text-align: left;">50</td>
-<td style="text-align: left;">FP-growth</td>
-<td style="text-align: left;">989</td>
-<td style="text-align: left;">0.12 秒</td>
-</tr>
-</tbody>
-</table>
 <p><strong>在 skill 中</strong>：演算法是一個由使用者選擇的參數（<code>params.algorithm</code> = <code>apriori</code> 或 <code>fpgrowth</code>），在確認參數時一起詢問。示範設定預設 FP-growth，並說明兩者結果相同。實作上使用 Python mlxtend 套件的 <code>apriori</code> 與 <code>fpgrowth</code>。指定前件時，程式直接計數包含前件的交易，不需要找全部頻繁項目集，因此演算法選項不影響結果。</p>
-<p>本指南的範例程式為了讓讀者逐筆核對，另外直接列出所有前件 ≤ 2 項、後件 1 項的候選規則並逐筆計數。第 9 章再以 mlxtend 與 R arules 核對，結果相同。</p>
 <details class="code-fold">
 <summary>
 顯示程式碼：Apriori 與 FP-growth 示範、規則計數與篩選
@@ -9244,7 +9194,7 @@ flowchart TD
 <ol type="1">
 <li>從 basket 表數出前件、後件、兩者都有的筆數，代入第 2 章的公式。</li>
 <li>用 R 重算：<code>docs/guide-examples/crosscheck_arules.R</code>（arules 的 <code>apriori</code>，<code>supp</code> 設為至少 1 筆、<code>conf = 0</code>）。</li>
-<li>重新執行 <code>python docs/guide-examples/build_guide_examples.py</code>，所有表格會重新產生。除了演算法比較表的計算時間，表格有任何變動，代表輸入或程式變了。</li>
+<li>重新執行 <code>python docs/guide-examples/build_guide_examples.py</code>，所有表格會重新產生；表格有任何變動，代表輸入或程式變了。</li>
 </ol>
 </section>
 <section id="限制" class="level2" data-number="9.3">

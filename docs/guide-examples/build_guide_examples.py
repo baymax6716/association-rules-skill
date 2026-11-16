@@ -12,7 +12,7 @@
   3. 交叉核對：手算（逐筆計數）、mlxtend、R arules（若有安裝 R）三者結果是否一致
   4. 門檻敏感度：Groceries 練習資料在不同最低支持度下的項目集與規則數（說明門檻沒有通用標準）
   5. Apriori 逐層示範：購物小案例的候選產生、剪枝、計數，以及規則產生時的 confidence 剪枝
-  6. FP-growth 示範：排序、FP-tree、前綴路徑、條件樹遞迴；並在 Groceries 上比較兩種演算法
+  6. FP-growth 示範：排序、FP-tree、前綴路徑、條件樹遞迴
 """
 import inspect
 import json
@@ -574,28 +574,6 @@ def fpgrowth_demo(baskets, apriori_freq):
     assert same, "FP-growth 與 Apriori 找到的頻繁項目集應該完全相同"
 
 
-def algorithm_compare():
-    """Groceries 上比較 mlxtend 的 apriori 與 fpgrowth：結果是否相同，以及計算時間（時間會因電腦而異）。"""
-    import time
-    from mlxtend.frequent_patterns import apriori, fpgrowth
-    g = pd.read_csv(os.path.join(REPO, "data", "groceries.csv"), dtype=str, keep_default_na=False)
-    baskets, _ = prep_shopping_long(g, "transaction_id", "item")
-    X = binary_matrix(baskets).set_index("編號").astype(bool)
-    rows, sets = [], {}
-    for s in (0.01, 0.005):
-        for name, f in (("Apriori", apriori), ("FP-growth", fpgrowth)):
-            t0 = time.perf_counter()
-            fi = f(X, min_support=s, use_colnames=True, max_len=3)
-            dt = time.perf_counter() - t0
-            sets[(s, name)] = {frozenset(x): round(v, 12) for x, v in zip(fi["itemsets"], fi["support"])}
-            rows.append([s, math.ceil(s * len(X) - 1e-9), name, len(fi), f"{dt:.2f} 秒"])
-    df = pd.DataFrame(rows, columns=["最低支持度", "對應最低筆數", "演算法", "頻繁項目集數", "計算時間（會因電腦而異）"])
-    same = all(sets[(s, "Apriori")] == sets[(s, "FP-growth")] for s in (0.01, 0.005))
-    write("algorithm_compare.md", md_table(df))
-    RESULTS["algorithm_compare"] = {"same": same, "table": df.to_dict("records")}
-    assert same, "兩種演算法找到的頻繁項目集與 support 應該完全相同"
-
-
 # ----------------------------------------------------------------------------- 程式碼片段（指南中顯示的程式就是實際執行的程式）
 
 def code_fragments():
@@ -622,7 +600,6 @@ def check_prose():
                                                 RESULTS["apriori"]["brute"], RESULTS["apriori"]["frequent"]) == (16, 5, 25, 11),
         "FP-tree 11 個節點（原始 19 列）、頻繁項目集 11 個、與 Apriori 相同": (RESULTS["fpgrowth"]["nodes"], RESULTS["fpgrowth"]["rows"],
             RESULTS["fpgrowth"]["frequent"], RESULTS["fpgrowth"]["same_as_apriori"]) == (11, 19, 11, True),
-        "Groceries 兩種演算法結果相同": RESULTS["algorithm_compare"]["same"],
         "Groceries 規則數 3 → 442": [r["rules"] for r in g["sensitivity"]][::3] == [442, 3],
         "Groceries 0.005：989 個頻繁項目集＝120 單一＋869 多項": (g["sensitivity"][0]["itemsets"], g["sensitivity"][0]["single"],
                                                        g["sensitivity"][0]["multi"]) == (989, 120, 869),
@@ -642,7 +619,6 @@ def main():
     sensitivity()
     apriori_demo(shop[0])
     fpgrowth_demo(shop[0], RESULTS.pop("_apriori_freq"))
-    algorithm_compare()
     code_fragments()
     check_prose()
     env = {"python": sys.version.split()[0]}

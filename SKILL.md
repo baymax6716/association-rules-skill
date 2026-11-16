@@ -95,6 +95,7 @@ python scripts/run_arules.py inspect --data <資料檔> --out arules_output [--t
 2. **一筆觀測的定義**：購物資料要確認交易 ID 代表一張發票、一位顧客，還是一位顧客的一天，填 `unit`。
 3. **前處理**：規則見 decision-tree.md 第 3 節。
    - **購物**：固定規則不問。只有以下情況才問，答案寫入 `shopping.decisions`：
+     - 空白的交易 ID：建議排除該列，不猜測屬於哪一筆交易
      - 空白的商品名稱
      - 疑似同義名稱：確認是同一商品的才寫入 `item_aliases`
      - 數量 ≤ 0
@@ -167,7 +168,7 @@ python scripts/run_arules.py finalize --config config.json --report arules_outpu
 | `unit` | 一筆觀測的定義，例如「一張發票」「一位受訪者」 |
 | `shopping.format` | `long`（交易明細長表）、`basket`（購物清單，商品以 `sep` 分隔）、`wide01`（0/1 矩陣） |
 | `shopping.tid_col`、`item_col`、`item_cols`、`sep`、`qty_col` | 欄位角色；`qty_col` 只用來檢查數量 ≤ 0；時間欄位不使用 |
-| `shopping.decisions` | `missing_item: "exclude"`、`empty_baskets: "exclude"/"keep"`、`nonpositive_qty: "exclude"/"keep"`、`synonyms: "reviewed"` |
+| `shopping.decisions` | `missing_tid: "exclude"`、`missing_item: "exclude"`、`empty_baskets: "exclude"/"keep"`、`nonpositive_qty: "exclude"/"keep"`、`synonyms: "reviewed"` |
 | `shopping.item_aliases` | 使用者確認為同一商品的名稱對照 `{"原名": "統一名稱"}` |
 | `survey.format` | `wide`（一列一位受訪者）或 `long_kv`（一列一個「欄位=類別」） |
 | `survey.id_col`、`exclude_cols` | ID；不納入規則的欄位與原因 `[{"name", "reason"}]` |

@@ -6153,7 +6153,7 @@ window.Quarto = {
 <h2 data-number="3.4" class="anchored" data-anchor-id="不支援的資料"><span class="header-section-number">3.4</span> 不支援的資料</h2>
 <p>遇到下列情況時，說明需要的調整並停止，不自行猜測完成：</p>
 <ul>
-<li>無法判斷一筆觀測的定義，或交易 ID 有缺失。</li>
+<li>無法判斷一筆觀測的定義。</li>
 <li>原始數值變數（例如原始年齡、原始所得金額）：第一版不自動分箱。已經分組的年齡層、所得區間可以當類別使用。</li>
 <li>複選題寫在同一格、同一人同一題有多個答案。</li>
 <li>代碼意義不明，且使用者無法提供資料字典。</li>
@@ -6219,6 +6219,11 @@ window.Quarto = {
 <td style="text-align: left;">項目是非對稱二元變數，沒出現不是一個項目</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">交易 ID 空白</td>
+<td style="text-align: left;">詢問</td>
+<td style="text-align: left;">無法判斷這一列屬於哪一筆交易；併到相鄰交易或自成一筆都是猜測，所以建議排除，經使用者同意才排除並記錄列數</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">商品名稱空白、疑似同義名稱、數量 ≤ 0</td>
 <td style="text-align: left;">詢問</td>
 <td style="text-align: left;">涉及資料意義，不能自行決定</td>
@@ -8945,7 +8950,8 @@ flowchart TD
  C -- 否 --&gt; U1[詢問：ID 是一張發票、&lt;br/&gt;一位顧客或一位顧客的一天?]
  U1 --&gt; C
  C -- 是 --&gt; C1{交易 ID 有缺失?}
- C1 -- 是 --&gt; X2[無法分組，請使用者補資料，停止]
+ C1 -- 是 --&gt; U5[詢問：排除沒有交易 ID 的列，&lt;br/&gt;或先補上 ID]
+ U5 --&gt; D
  C1 -- 否 --&gt; D[去除商品名稱前後空白]
  D --&gt; E{有空白的商品名稱?}
  E -- 是 --&gt; U2[詢問：排除這些列或先補資料]
@@ -8961,9 +8967,9 @@ flowchart TD
  I --&gt; J([輸出：basket、0/1 矩陣、前處理紀錄、N])
  class B2,B4,D,H,I proc
  class B,B1,B3,C,C1,E,F,G dec
- class U0,U1,U2,U3,U4,U6 user
+ class U0,U1,U2,U3,U4,U5,U6 user
  class A,J out
- class X1,X2 stop
+ class X1 stop
  classDef proc fill:#F4F1EA,stroke:#B5AA96,color:#3A3226
  classDef dec fill:#E4F2F1,stroke:#0F6466,color:#0D3F41
  classDef user fill:#FFF1DB,stroke:#C9831A,color:#5C3B0B
@@ -9072,10 +9078,10 @@ flowchart TD
 <td style="text-align: left;">3a. 購物前處理</td>
 <td style="text-align: left;">資料類型為購物</td>
 <td style="text-align: left;">去空白；同交易同商品記一次；數量、金額不成項目；保留單一商品交易與相同交易</td>
-<td style="text-align: left;">空白商品名稱、疑似同義名稱、數量 ≤ 0 的處理</td>
+<td style="text-align: left;">交易 ID 空白、商品名稱空白、疑似同義名稱、數量 ≤ 0 的處理</td>
 <td style="text-align: left;">有這些情況才問</td>
 <td style="text-align: left;">basket、0/1 矩陣、前處理紀錄、N</td>
-<td style="text-align: left;">交易 ID 缺失；0/1 矩陣有空白或其他值</td>
+<td style="text-align: left;">0/1 矩陣有空白或其他值</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">3b. 問卷前處理</td>

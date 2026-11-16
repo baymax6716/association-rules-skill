@@ -474,11 +474,17 @@ def prep_shopping(df, s, preview=False):
         problems.append(f"不支援的購物資料格式：{fmtx}")
         return dict(units=[], ids=[], times=None, log=log, pending=pending, problems=problems)
 
-    # (2) 訂單編號缺失：無法判斷屬於哪一張訂單 → 格式問題
+    # (2) 交易編號缺失（需確認）：無法判斷屬於哪一筆交易，不猜測歸屬
     d["tid"] = d["tid"].str.strip()
-    no_tid = int((d["tid"] == "").sum())
-    if no_tid:
-        problems.append(f"{no_tid:,} 列沒有訂單編號，無法判斷屬於哪一張訂單：請補上編號或說明如何處理")
+    no_tid = d["tid"] == ""
+    v = ask(dec, "missing_tid", int(no_tid.sum()),
+            f"有 {int(no_tid.sum()):,} 列沒有交易編號，無法判斷屬於哪一筆交易（併到相鄰交易或自成一筆都是猜測）。"
+            "建議排除這些列；若不同意，請先補上交易編號", ["exclude"], pending)
+    if v == "exclude":
+        log_add(log, "使用者確認", "排除沒有交易編號的列", "無法判斷屬於哪一筆交易，不猜測歸屬", f"{int(no_tid.sum()):,} 列")
+    elif not no_tid.sum():
+        log_add(log, "檢查", "交易編號空白", "未發現", "0 列")
+    d = d[~no_tid].copy() if v == "exclude" or preview else d
 
     # (3) 固定規則：去除商品名稱前後空白
     raw = d["item"].astype(str)

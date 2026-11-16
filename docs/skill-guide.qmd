@@ -521,7 +521,7 @@ Apriori 每一層都要產生候選、再掃描一次資料計數。FP-growth �
 
 {{< include guide-examples/generated-tables/shop_rules_examples.md >}}
 
-### 完整計算一條規則：{雞蛋} → {吐司}
+### 完整計算一條規則：\{雞蛋\} → \{吐司\}
 
 2×2 列聯表：
 
@@ -570,7 +570,7 @@ $$
 
 {{< include guide-examples/generated-tables/survey_rules_lhs.md >}}
 
-### 完整計算一條規則：{網購=否} → {運動頻率=幾乎不運動}
+### 完整計算一條規則：\{網購=否\} → \{運動頻率=幾乎不運動\}
 
 {{< include guide-examples/generated-tables/survey_contingency.md >}}
 

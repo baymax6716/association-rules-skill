@@ -117,7 +117,7 @@ $$
 
 同樣的情形出現在第 7 章購物小案例 [已執行]{.badge-run}：{吐司} → {牛奶} 的 confidence = 4 / 5 = 0.8，但 8 筆中有 6 筆買牛奶（後件比例 0.75），lift 只有 1.0667。牛奶幾乎每筆都有，「買吐司的人常買牛奶」大部分只是因為牛奶本來就常見。**因此，報告 confidence 時一定要同時列出後件比例。**
 
-**lift > 1 不等於統計顯著，也不等於因果。** lift 只是樣本中的比例比較。第 7 章 {雞蛋} → {吐司} 的 lift = 1.6，但只建立在 3 筆交易上，換一批資料可能就不成立。是否顯著要另做檢定（第 9 章），是否有因果則需要實驗設計。
+**lift > 1 不等於統計顯著，也不等於因果。** lift 只是樣本中的比例比較。第 7 章 {雞蛋} → {吐司} 的 lift = 1.6，但只建立在 3 筆交易上，換一批資料可能就不成立。第一版不做統計檢定，結果只描述這份資料；是否有因果則需要實驗設計。
 
 **lift 是對稱的。** $\text{lift}(X \rightarrow Y) = \text{lift}(Y \rightarrow X)$，但 confidence 不對稱。所以規則表常會成對出現 lift 相同、confidence 不同的兩條規則（例如第 7 章的 {網購=否} → {運動頻率=幾乎不運動} 與反方向）。
 
@@ -163,7 +163,6 @@ $$
 | 資料字典：代碼的意義、哪些代碼代表未回答／不知道／不適用／拒答 | 數字可能是類別代碼；缺失不可當成答案 | 詢問使用者；無法取得時，該欄不納入 |
 | 要分析的欄位（問卷） | 完整案例分析只看選定欄位 | 詢問使用者 |
 | 分析目標：自由探索、指定前件或指定後件 | 決定規則形式 | 詢問使用者 |
-| 是否有可信的時間欄位 | 只有在要做保留資料驗證且依時間切分時才需要 | 不假設資料列順序代表時間 |
 
 ## 不支援的資料
 
@@ -648,10 +647,7 @@ flowchart TD
  Q --> M
  R --> M
  P -- 可以檢視 --> S[解讀：分母、共同筆數、<br/>confidence 與後件比例、lift]
- S --> T{使用者要做保留資料驗證?<br/>（選用）}
- T -- 是 --> U[隨機切分；依時間切分<br/>只用使用者確認的時間欄位]
- U --> V
- T -- 否 --> V([報告：設定紀錄、前處理紀錄、<br/>規則、限制、程式碼])
+ S --> V([報告：設定紀錄、前處理紀錄、<br/>規則、限制、程式碼])
  class B,G,H,I,L,O,S,U proc
  class C,D,F,J,M,P,T dec
  class E,K,N,Q,R user
@@ -765,22 +761,20 @@ flowchart TD
 | 4. 選擇分析目標 | 使用者未指定 | 無 | 自由探索、指定前件、指定後件 | 使用者已指定就沿用 | 規則形式 | 指定的項目不在資料中（列出相近名稱，請使用者確認） |
 | 5. 設定參數 | 進入探勘前 | 把最低支持度換算成最低筆數；列出只改一個參數時的規則數 | 演算法（Apriori／FP-growth）、最低支持度、confidence、lift、規則長度、最低前件筆數 | 列出示範設定與理由，**不宣稱是通用標準** | 設定紀錄 | 無 |
 | 6. 產生與篩選 | 設定已確認 | 依選定的演算法找頻繁項目集；依序篩選；移除冗餘規則；記錄每一步剩下幾條 | 無規則或規則過多時，是否接受放寬或收斂方案 | 不自行調整門檻 | 規則表、篩選紀錄 | 無規則且使用者不同意調整（如實回報「沒有規則」） |
-| 7. 解讀 | 有規則 | 列出分母、共同筆數、confidence 與後件比例、lift | 無 | 不寫因果；未檢定時不寫顯著 | 解讀文字 | 無 |
-| 8. 保留資料驗證（選用） | 使用者要求 | 隨機切分（固定 seed）；在保留資料上重算 | 是否做、切分比例、時間欄位 | 不做；不假設資料列順序代表時間 | 驗證表 | 要求依時間切分，但時間欄位未經確認 |
-| 9. 報告 | 分析完成 | 彙整設定紀錄、前處理紀錄、規則、限制、程式碼 | 無 | 程式碼預設摺疊 | 報告檔 | 無 |
+| 7. 解讀 | 有規則 | 列出分母、共同筆數、confidence 與後件比例、lift | 無 | 不寫因果、不寫顯著；註明結果為描述性、探索性 | 解讀文字 | 無 |
+| 8. 報告 | 分析完成 | 彙整設定紀錄、前處理紀錄、規則、限制、程式碼 | 無 | 程式碼預設摺疊 | 報告檔 | 無 |
 
 # 正確性驗證、限制與參考資料
 
 ::: {.chapter-lead}
-計算正確、規則穩定、實際有用是三件不同的事
+計算正確與實際有用是兩件不同的事
 :::
 
-## 三件事要分開
+## 兩件事要分開
 
 | 問題 | 回答的方式 | 本指南的狀態 |
 |:--|:--|:--|
 | **計算正確**：support、confidence、lift 算對了嗎？ | 手算小案例；與既有套件比對 | [已執行]{.badge-run}（下表） |
-| **規則穩定**：換一批資料還成立嗎？ | 保留資料驗證（選用）；Fisher's exact test 與多重比較校正 | [示意]{.badge-demo}（只說明做法） |
 | **實際有用**：值得採取行動嗎？ | 領域知識；必要時以實驗確認 | 由使用者判斷 |
 
 ## 計算正確：手算與既有套件核對 [已執行]{.badge-run}
@@ -799,14 +793,9 @@ flowchart TD
 2. 用 R 重算：`docs/guide-examples/crosscheck_arules.R`（arules 的 `apriori`，`supp` 設為至少 1 筆、`conf = 0`）。
 3. 重新執行 `python docs/guide-examples/build_guide_examples.py`，所有表格會重新產生。除了演算法比較表的計算時間，表格有任何變動，代表輸入或程式變了。
 
-## 規則穩定（選用）[示意]{.badge-demo}
-
-- **保留資料驗證**：探勘前隨機保留一部分觀測（例如 30%，固定亂數種子），只用其餘資料找規則，再到保留資料上重算 support、confidence、lift。只有在使用者確認某欄位是可信的時間時，才依時間切分；**不得假設資料列順序代表時間**。
-- **統計檢定**：可以用 Fisher's exact test 檢定兩個項目的共同出現次數是否多於獨立時的預期。一次檢定很多條規則時，要做多重比較校正（例如 Benjamini–Hochberg）。
-- 這些都是**選用**步驟，第一版不強制。沒有做時，報告要寫明結果是描述性、探索性的。
-
 ## 限制
 
+- 結果是對這份資料的描述，屬探索性。第一版不檢驗規則換一批資料是否仍成立，也不做統計檢定，lift > 1 不代表統計顯著。
 - 關聯不代表因果；可能有隱藏變數（Simpson's paradox）。
 - 結果依賴門檻與前處理；報告必須列出設定紀錄與前處理紀錄。
 - 問卷採完整案例分析時，若缺失不是隨機發生，結果可能偏誤。
@@ -819,8 +808,6 @@ flowchart TD
 Agrawal, R., Imieliński, T., & Swami, A. (1993). Mining association rules between sets of items in large databases. *Proceedings of the 1993 ACM SIGMOD International Conference on Management of Data*, 207–216.
 
 Agrawal, R., & Srikant, R. (1994). Fast algorithms for mining association rules. *Proceedings of the 20th International Conference on Very Large Data Bases (VLDB)*, 487–499.
-
-Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society: Series B, 57*(1), 289–300.
 
 Hahsler, M., Grün, B., & Hornik, K. (2005). arules – A computational environment for mining association rules and frequent item sets. *Journal of Statistical Software, 14*(15), 1–25.
 
@@ -847,4 +834,3 @@ Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Da
 | Simpson's paradox | 5.7.3 節（Table 5.17、5.18） |
 | 類別屬性轉成「欄位=類別」項目、是非題兩種答案都成為項目、少見類別與高頻類別 | 6.1 節（Table 6.1、6.2） |
 | 連續屬性與離散化（第一版不採用） | 6.2 節開頭、6.2.1 節 |
-| Fisher's exact test | 10.4.1 節（Example 10.9） |

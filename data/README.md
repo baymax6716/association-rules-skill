@@ -19,7 +19,7 @@
 | `transaction_id` | 交易編號（T00001 ～ T09835，依原資料順序編號） |
 | `item` | 商品類別，例如 `whole milk`、`other vegetables`、`rolls/buns` |
 
-- 沒有時間戳記和數量欄位；若要做選用的保留資料驗證，只能隨機切分（不能把資料列順序當成時間）。
+- 沒有時間戳記和數量欄位。
 - 原始標籤中 `cream cheese `、`roll products ` 結尾有空白，可以看到「去除前後空白」這條固定規則的紀錄。
 - 有幾個商品出現在很大比例的交易裡（例如 whole milk），可以比較 confidence 和後件基準比例。
 

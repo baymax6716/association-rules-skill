@@ -6,7 +6,7 @@ description: >
   0/1 矩陣），項目是商品；(2) 類別型問卷（一列一位受訪者），項目是「欄位=類別」。分析目標有三種：
   自由探索、指定前件（例如「買牛奶的人還買什麼」）、指定後件（例如「哪些特徵與網購=是一起出現」）。
   前處理只做已定義、可重現的機械性操作，涉及資料意義的事一次一項詢問使用者；門檻由使用者確認並保留
-  設定紀錄；保留資料驗證為選用。最後輸出 HTML、Markdown、Quarto 報告並附完整程式碼。使用者提到 Apriori、
+  設定紀錄；結果為描述性、探索性。最後輸出 HTML、Markdown、Quarto 報告並附完整程式碼。使用者提到 Apriori、
   FP-growth、support、confidence、lift、購物籃、商品組合、交叉銷售、問卷答案的關聯，或只說「幫我看
   這份購物明細／問卷有什麼關聯」時，都使用本 skill。
 ---
@@ -144,8 +144,7 @@ python scripts/run_arules.py run --config config.json
 - **沒有規則，或規則多到無法逐條檢視**：說明原因，提出一個放寬或收斂方案。經使用者同意才修改 `params`，
   並更新 `reason`。設定紀錄會保留每一次。使用者不同意調整時，如實回報「沒有規則」。
 - **指定的項目找不到**：程式會列出相近名稱，請使用者確認，不自行替換。
-- **保留資料驗證是選用步驟**：使用者要求時才把 `validation.enabled` 設為 true。預設隨機切分；只有使用者確認
-  某欄位是可信的時間時，才設 `by_time: true`。**不假設資料列順序代表時間。**
+- **不做保留資料驗證或統計檢定**：結果是對這份資料的描述，屬探索性。使用者問到時說明第一版不支援。
 
 ### 步驟 6：撰寫解讀並完成報告
 
@@ -167,7 +166,7 @@ python scripts/run_arules.py finalize --config config.json --report arules_outpu
 | `data_type` | `shopping` 或 `survey`（經使用者確認） |
 | `unit` | 一筆觀測的定義，例如「一張發票」「一位受訪者」 |
 | `shopping.format` | `long`（交易明細長表）、`basket`（購物清單，商品以 `sep` 分隔）、`wide01`（0/1 矩陣） |
-| `shopping.tid_col`、`item_col`、`item_cols`、`sep`、`time_col`、`qty_col` | 欄位角色；`qty_col` 只用來檢查數量 ≤ 0；`time_col` 只在使用者確認後用於依時間切分 |
+| `shopping.tid_col`、`item_col`、`item_cols`、`sep`、`qty_col` | 欄位角色；`qty_col` 只用來檢查數量 ≤ 0；時間欄位不使用 |
 | `shopping.decisions` | `missing_item: "exclude"`、`empty_baskets: "exclude"/"keep"`、`nonpositive_qty: "exclude"/"keep"`、`synonyms: "reviewed"` |
 | `shopping.item_aliases` | 使用者確認為同一商品的名稱對照 `{"原名": "統一名稱"}` |
 | `survey.format` | `wide`（一列一位受訪者）或 `long_kv`（一列一個「欄位=類別」） |
@@ -179,5 +178,4 @@ python scripts/run_arules.py finalize --config config.json --report arules_outpu
 | `survey.complete_case_confirmed` | 使用者同意的完整案例分析人數 `{"excluded": n, "remaining": m}` |
 | `question` | `goal`（`free`／`lhs`／`rhs`）、`items`、`label`（使用者的原始問題） |
 | `params` | `algorithm`（`apriori`／`fpgrowth`）、`min_support`、`min_confidence`、`min_lift`、`max_lhs`、`min_lhs_count`、`confirmed`、`reason` |
-| `validation` | 選用：`enabled`（預設 false）、`test_frac`（0.3）、`seed`（2026）、`by_time`（需使用者確認時間欄位） |
 | `report` | `title`、`background` |

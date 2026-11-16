@@ -27,7 +27,7 @@ Apriori，屬於 unsupervised learning）。它讀取購物資料或類別型問
 2. **確認資料類型、一筆觀測與前處理**：一次問一項；機械性操作自動執行並記錄筆數。
 3. **選擇分析目標**。
 4. **確認參數**：程式列出示範設定（不是通用標準）與「只改一個參數時的規則數」，使用者確認或修改。
-5. **產生與篩選規則**：依序篩選並記錄；每次執行的設定都寫入設定紀錄。保留資料驗證為選用。
+5. **產生與篩選規則**：依序篩選並記錄；每次執行的設定都寫入設定紀錄。結果為描述性、探索性。
 6. **解讀與報告**：附前處理紀錄、設定紀錄、config 與完整程式碼。
 
 skill 不會默默刪資料、不自動分箱、不合併類別、不刪除內容相同的觀測、不把缺失當成「否」、不把 ID 或權重當成項目、
@@ -57,7 +57,7 @@ association-rules-skill/
 ## 安裝
 
 ```bash
-pip install pandas numpy mlxtend scipy
+pip install pandas numpy mlxtend
 ```
 
 報告的 HTML 有安裝 [Quarto](https://quarto.org)（RStudio 已內建）時用 Quarto 轉檔，沒有時由程式自行產生，一樣可以摺疊程式碼。
@@ -93,4 +93,4 @@ python scripts/run_arules.py finalize --config config.json --report arules_outpu
 ## 參考文獻
 
 Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining*
-(2nd ed.). Pearson. 第 5 章、6.1–6.2 節與 10.4 節。
+(2nd ed.). Pearson. 第 5 章與 6.1–6.2 節。

@@ -5509,11 +5509,10 @@ window.Quarto = {
   </ul></li>
   <li><a href="#正確性驗證限制與參考資料" id="toc-正確性驗證限制與參考資料" class="nav-link" data-scroll-target="#正確性驗證限制與參考資料"><span class="header-section-number">9</span> 正確性驗證、限制與參考資料</a>
   <ul class="collapse">
-  <li><a href="#三件事要分開" id="toc-三件事要分開" class="nav-link" data-scroll-target="#三件事要分開"><span class="header-section-number">9.1</span> 三件事要分開</a></li>
+  <li><a href="#兩件事要分開" id="toc-兩件事要分開" class="nav-link" data-scroll-target="#兩件事要分開"><span class="header-section-number">9.1</span> 兩件事要分開</a></li>
   <li><a href="#計算正確手算與既有套件核對-已執行" id="toc-計算正確手算與既有套件核對-已執行" class="nav-link" data-scroll-target="#計算正確手算與既有套件核對-已執行"><span class="header-section-number">9.2</span> 計算正確：手算與既有套件核對 <span class="badge-run">已執行</span></a></li>
-  <li><a href="#規則穩定選用示意" id="toc-規則穩定選用示意" class="nav-link" data-scroll-target="#規則穩定選用示意"><span class="header-section-number">9.3</span> 規則穩定（選用）<span class="badge-demo">示意</span></a></li>
-  <li><a href="#限制" id="toc-限制" class="nav-link" data-scroll-target="#限制"><span class="header-section-number">9.4</span> 限制</a></li>
-  <li><a href="#參考資料" id="toc-參考資料" class="nav-link" data-scroll-target="#參考資料"><span class="header-section-number">9.5</span> 參考資料</a></li>
+  <li><a href="#限制" id="toc-限制" class="nav-link" data-scroll-target="#限制"><span class="header-section-number">9.3</span> 限制</a></li>
+  <li><a href="#參考資料" id="toc-參考資料" class="nav-link" data-scroll-target="#參考資料"><span class="header-section-number">9.4</span> 參考資料</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -5760,7 +5759,7 @@ window.Quarto = {
 <h2 data-number="2.3" class="anchored" data-anchor-id="容易誤解之處"><span class="header-section-number">2.3</span> 容易誤解之處</h2>
 <p><strong>高 confidence 可能只是後件本來就常見。</strong> 教科書中的茶與咖啡例子：1,000 人中 200 人喝茶、800 人喝咖啡、150 人兩者都喝。{茶} → {咖啡} 的 confidence 是 75%，看起來很高；但所有人中喝咖啡的比例是 80%，知道一個人喝茶，反而讓他喝咖啡的機率從 80% 降到 75%，lift = 0.15 / (0.2 × 0.8) = 0.9375 &lt; 1。</p>
 <p>同樣的情形出現在第 7 章購物小案例 <span class="badge-run">已執行</span>：{吐司} → {牛奶} 的 confidence = 4 / 5 = 0.8，但 8 筆中有 6 筆買牛奶（後件比例 0.75），lift 只有 1.0667。牛奶幾乎每筆都有，「買吐司的人常買牛奶」大部分只是因為牛奶本來就常見。<strong>因此，報告 confidence 時一定要同時列出後件比例。</strong></p>
-<p><strong>lift &gt; 1 不等於統計顯著，也不等於因果。</strong> lift 只是樣本中的比例比較。第 7 章 {雞蛋} → {吐司} 的 lift = 1.6，但只建立在 3 筆交易上，換一批資料可能就不成立。是否顯著要另做檢定（第 9 章），是否有因果則需要實驗設計。</p>
+<p><strong>lift &gt; 1 不等於統計顯著，也不等於因果。</strong> lift 只是樣本中的比例比較。第 7 章 {雞蛋} → {吐司} 的 lift = 1.6，但只建立在 3 筆交易上，換一批資料可能就不成立。第一版不做統計檢定，結果只描述這份資料；是否有因果則需要實驗設計。</p>
 <p><strong>lift 是對稱的。</strong> <span class="math inline">\(\text{lift}(X \rightarrow Y) = \text{lift}(Y \rightarrow X)\)</span>，但 confidence 不對稱。所以規則表常會成對出現 lift 相同、confidence 不同的兩條規則（例如第 7 章的 {網購=否} → {運動頻率=幾乎不運動} 與反方向）。</p>
 </section>
 </section>
@@ -6146,11 +6145,6 @@ window.Quarto = {
 <td style="text-align: left;">分析目標：自由探索、指定前件或指定後件</td>
 <td style="text-align: left;">決定規則形式</td>
 <td style="text-align: left;">詢問使用者</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">是否有可信的時間欄位</td>
-<td style="text-align: left;">只有在要做保留資料驗證且依時間切分時才需要</td>
-<td style="text-align: left;">不假設資料列順序代表時間</td>
 </tr>
 </tbody>
 </table>
@@ -7887,21 +7881,21 @@ window.Quarto = {
 <td style="text-align: left;">99</td>
 <td style="text-align: left;">FP-growth</td>
 <td style="text-align: left;">333</td>
-<td style="text-align: left;">0.06 秒</td>
+<td style="text-align: left;">0.09 秒</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">0.005</td>
 <td style="text-align: left;">50</td>
 <td style="text-align: left;">Apriori</td>
 <td style="text-align: left;">989</td>
-<td style="text-align: left;">0.16 秒</td>
+<td style="text-align: left;">0.19 秒</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">0.005</td>
 <td style="text-align: left;">50</td>
 <td style="text-align: left;">FP-growth</td>
 <td style="text-align: left;">989</td>
-<td style="text-align: left;">0.13 秒</td>
+<td style="text-align: left;">0.12 秒</td>
 </tr>
 </tbody>
 </table>
@@ -8908,10 +8902,7 @@ flowchart TD
  Q --&gt; M
  R --&gt; M
  P -- 可以檢視 --&gt; S[解讀：分母、共同筆數、&lt;br/&gt;confidence 與後件比例、lift]
- S --&gt; T{使用者要做保留資料驗證?&lt;br/&gt;（選用）}
- T -- 是 --&gt; U[隨機切分；依時間切分&lt;br/&gt;只用使用者確認的時間欄位]
- U --&gt; V
- T -- 否 --&gt; V([報告：設定紀錄、前處理紀錄、&lt;br/&gt;規則、限制、程式碼])
+ S --&gt; V([報告：設定紀錄、前處理紀錄、&lt;br/&gt;規則、限制、程式碼])
  class B,G,H,I,L,O,S,U proc
  class C,D,F,J,M,P,T dec
  class E,K,N,Q,R user
@@ -9127,21 +9118,12 @@ flowchart TD
 <td style="text-align: left;">有規則</td>
 <td style="text-align: left;">列出分母、共同筆數、confidence 與後件比例、lift</td>
 <td style="text-align: left;">無</td>
-<td style="text-align: left;">不寫因果；未檢定時不寫顯著</td>
+<td style="text-align: left;">不寫因果、不寫顯著；註明結果為描述性、探索性</td>
 <td style="text-align: left;">解讀文字</td>
 <td style="text-align: left;">無</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">8. 保留資料驗證（選用）</td>
-<td style="text-align: left;">使用者要求</td>
-<td style="text-align: left;">隨機切分（固定 seed）；在保留資料上重算</td>
-<td style="text-align: left;">是否做、切分比例、時間欄位</td>
-<td style="text-align: left;">不做；不假設資料列順序代表時間</td>
-<td style="text-align: left;">驗證表</td>
-<td style="text-align: left;">要求依時間切分，但時間欄位未經確認</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">9. 報告</td>
+<td style="text-align: left;">8. 報告</td>
 <td style="text-align: left;">分析完成</td>
 <td style="text-align: left;">彙整設定紀錄、前處理紀錄、規則、限制、程式碼</td>
 <td style="text-align: left;">無</td>
@@ -9156,10 +9138,10 @@ flowchart TD
 <section id="正確性驗證限制與參考資料" class="level1" data-number="9">
 <h1 data-number="9"><span class="header-section-number">9</span> 正確性驗證、限制與參考資料</h1>
 <div class="chapter-lead">
-<p>計算正確、規則穩定、實際有用是三件不同的事</p>
+<p>計算正確與實際有用是兩件不同的事</p>
 </div>
-<section id="三件事要分開" class="level2" data-number="9.1">
-<h2 data-number="9.1" class="anchored" data-anchor-id="三件事要分開"><span class="header-section-number">9.1</span> 三件事要分開</h2>
+<section id="兩件事要分開" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="兩件事要分開"><span class="header-section-number">9.1</span> 兩件事要分開</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -9180,11 +9162,6 @@ flowchart TD
 <td style="text-align: left;"><span class="badge-run">已執行</span>（下表）</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;"><strong>規則穩定</strong>：換一批資料還成立嗎？</td>
-<td style="text-align: left;">保留資料驗證（選用）；Fisher’s exact test 與多重比較校正</td>
-<td style="text-align: left;"><span class="badge-demo">示意</span>（只說明做法）</td>
-</tr>
-<tr class="odd">
 <td style="text-align: left;"><strong>實際有用</strong>：值得採取行動嗎？</td>
 <td style="text-align: left;">領域知識；必要時以實驗確認</td>
 <td style="text-align: left;">由使用者判斷</td>
@@ -9264,17 +9241,10 @@ flowchart TD
 <li>重新執行 <code>python docs/guide-examples/build_guide_examples.py</code>，所有表格會重新產生。除了演算法比較表的計算時間，表格有任何變動，代表輸入或程式變了。</li>
 </ol>
 </section>
-<section id="規則穩定選用示意" class="level2" data-number="9.3">
-<h2 data-number="9.3" class="anchored" data-anchor-id="規則穩定選用示意"><span class="header-section-number">9.3</span> 規則穩定（選用）<span class="badge-demo">示意</span></h2>
+<section id="限制" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="限制"><span class="header-section-number">9.3</span> 限制</h2>
 <ul>
-<li><strong>保留資料驗證</strong>：探勘前隨機保留一部分觀測（例如 30%，固定亂數種子），只用其餘資料找規則，再到保留資料上重算 support、confidence、lift。只有在使用者確認某欄位是可信的時間時，才依時間切分；<strong>不得假設資料列順序代表時間</strong>。</li>
-<li><strong>統計檢定</strong>：可以用 Fisher’s exact test 檢定兩個項目的共同出現次數是否多於獨立時的預期。一次檢定很多條規則時，要做多重比較校正（例如 Benjamini–Hochberg）。</li>
-<li>這些都是<strong>選用</strong>步驟，第一版不強制。沒有做時，報告要寫明結果是描述性、探索性的。</li>
-</ul>
-</section>
-<section id="限制" class="level2" data-number="9.4">
-<h2 data-number="9.4" class="anchored" data-anchor-id="限制"><span class="header-section-number">9.4</span> 限制</h2>
-<ul>
+<li>結果是對這份資料的描述，屬探索性。第一版不檢驗規則換一批資料是否仍成立，也不做統計檢定，lift &gt; 1 不代表統計顯著。</li>
 <li>關聯不代表因果；可能有隱藏變數（Simpson’s paradox）。</li>
 <li>結果依賴門檻與前處理；報告必須列出設定紀錄與前處理紀錄。</li>
 <li>問卷採完整案例分析時，若缺失不是隨機發生，結果可能偏誤。</li>
@@ -9283,17 +9253,16 @@ flowchart TD
 <li>第 7 章的小案例只有 8 筆與 10 筆，只用來示範計算，不能據以下結論。</li>
 </ul>
 </section>
-<section id="參考資料" class="level2" data-number="9.5">
-<h2 data-number="9.5" class="anchored" data-anchor-id="參考資料"><span class="header-section-number">9.5</span> 參考資料</h2>
+<section id="參考資料" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="參考資料"><span class="header-section-number">9.4</span> 參考資料</h2>
 <p>Agrawal, R., Imieliński, T., &amp; Swami, A. (1993). Mining association rules between sets of items in large databases. <em>Proceedings of the 1993 ACM SIGMOD International Conference on Management of Data</em>, 207–216.</p>
 <p>Agrawal, R., &amp; Srikant, R. (1994). Fast algorithms for mining association rules. <em>Proceedings of the 20th International Conference on Very Large Data Bases (VLDB)</em>, 487–499.</p>
-<p>Benjamini, Y., &amp; Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. <em>Journal of the Royal Statistical Society: Series B, 57</em>(1), 289–300.</p>
 <p>Hahsler, M., Grün, B., &amp; Hornik, K. (2005). arules – A computational environment for mining association rules and frequent item sets. <em>Journal of Statistical Software, 14</em>(15), 1–25.</p>
 <p>Hahsler, M., Hornik, K., &amp; Reutterer, T. (2006). Implications of probabilistic data modeling for mining association rules. In <em>From Data and Information Analysis to Knowledge Engineering</em> (pp. 598–605). Springer.（Groceries 資料來源）</p>
 <p>Raschka, S. (2018). MLxtend: Providing machine learning and data science utilities and extensions to Python’s scientific computing stack. <em>Journal of Open Source Software, 3</em>(24), 638.</p>
 <p>Tan, P.-N., Steinbach, M., Karpatne, A., &amp; Kumar, V. (2019). <em>Introduction to Data Mining</em> (2nd ed.). Pearson.</p>
-<section id="本指南與教科書的對照" class="level3" data-number="9.5.1">
-<h3 data-number="9.5.1" class="anchored" data-anchor-id="本指南與教科書的對照"><span class="header-section-number">9.5.1</span> 本指南與教科書的對照</h3>
+<section id="本指南與教科書的對照" class="level3" data-number="9.4.1">
+<h3 data-number="9.4.1" class="anchored" data-anchor-id="本指南與教科書的對照"><span class="header-section-number">9.4.1</span> 本指南與教科書的對照</h3>
 <p>內文不逐處標註出處，以下列出各概念在 Tan et al. (2019) 中的位置。這些內容都已對照原文核對；手邊的電子版沒有印刷頁碼，所以只列章節、表號與例號。</p>
 <table class="caption-top table">
 <colgroup>
@@ -9350,10 +9319,6 @@ flowchart TD
 <tr class="odd">
 <td style="text-align: left;">連續屬性與離散化（第一版不採用）</td>
 <td style="text-align: left;">6.2 節開頭、6.2.1 節</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Fisher’s exact test</td>
-<td style="text-align: left;">10.4.1 節（Example 10.9）</td>
 </tr>
 </tbody>
 </table>

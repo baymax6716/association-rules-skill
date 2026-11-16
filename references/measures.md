@@ -1,7 +1,7 @@
 # 指標：定義、計算與解讀界線
 
 本檔與分析指南 `docs/skill-guide.html` 第 2 章一致。skill 的規則表只輸出下列欄位：
-前件筆數、共同筆數、support、confidence、後件比例、lift（有做保留資料驗證時另加保留資料 lift、q 值、重現）。
+前件筆數、共同筆數、support、confidence、後件比例、lift。
 
 ## 符號
 
@@ -49,7 +49,6 @@
 
 - confidence = 150/200 = 75%，看似很高。
 - 但整體喝咖啡的比例是 80%，所以 lift = 0.15 / (0.2 × 0.8) = 0.9375 < 1：喝茶反而稍微降低喝咖啡的比例。
-- Fisher's exact test（看負相關方向的左尾）p ≈ 0.032。
 
 **茶與蜂蜜**：200 人喝茶、120 人用蜂蜜、100 人兩者都有。
 
@@ -69,10 +68,10 @@
 - **Simpson's paradox**：合併資料中的關聯，依隱藏變數（門市、年齡層等）分層後可能消失或反轉。
   skill 不做分層檢查；資料來自多個群體時，要在報告的限制中說明。
 - **有不有趣**：指標只能排序。「買奶油的人也買麵包」可靠但顯而易見；是否有用、能否行動，要由使用者以領域知識判斷。
-- **顯著**：lift > 1 只是樣本比例的比較。要談顯著，必須做保留資料驗證與檢定（見 decision-tree.md 第 7 節）。
+- **顯著**：lift > 1 只是樣本比例的比較。第一版不做統計檢定，所以不能寫「顯著」。
 
 ## 出處
 
 Tan, Steinbach, Karpatne & Kumar (2019), *Introduction to Data Mining* (2nd ed.)：
 support 與 confidence 見 5.1 節；lift（interest factor）、2×2 列聯表、茶與咖啡及茶與蜂蜜的例子、其他客觀指標見 5.7.1 節；
-Simpson's paradox 見 5.7.3 節；茶與咖啡的 Fisher's exact test 見 10.4.1 節。
+Simpson's paradox 見 5.7.3 節。

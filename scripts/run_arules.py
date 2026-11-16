@@ -8,7 +8,7 @@
   run       依 config 前處理。需要使用者確認的事項（含一筆觀測的定義、完整案例分析、分析目標、
             分析參數）還沒確認時，列出事項與示範設定後停止（結束代碼 2）；資料不符合支援格式時，
             說明需要的調整後停止（結束代碼 1）。通過後依分析目標（自由探索／指定前件／指定後件）
-            產生規則並依序篩選；使用者要求時才做保留資料驗證。輸出 results.json、results_full.csv、
+            產生規則並依序篩選。輸出 results.json、results_full.csv、
             settings_log.json 與 report_draft.md。
   finalize  確認報告沒有未填寫處，附上 config、前處理紀錄與完整程式碼，
             輸出 report.md、report.qmd、report.html。
@@ -19,7 +19,7 @@
   python scripts/run_arules.py finalize --config config.json --report arules_output/report.md
 
 定義依據：Tan, Steinbach, Karpatne & Kumar (2019), Introduction to Data Mining (2nd ed.)
-第 5、6 章與 10.4 節；流程與規則見 docs/skill-guide.html 第 8 章與 references/decision-tree.md。
+第 5、6 章；流程與規則見 docs/skill-guide.html 第 8 章與 references/decision-tree.md。
 """
 import argparse
 import difflib
@@ -52,9 +52,6 @@ NUMERIC_SHARE = 0.8       # 非缺失值中可解析為數字的比例 ≥ 此�
 CODE_MAX_LEVELS = 10      # 數字欄位不同值 ≤ 此值 → 可能是選項代碼；否則視為數值
 HIGH_FREQ = 0.8           # 某答案占比 ≥ 此值 → 提醒（當後件時 lift 多半接近 1）
 SEPARATORS = [",", ";", "|", "、"]
-TEST_FRAC = 0.3           # 選用的保留資料驗證：預設保留比例
-SEED = 2026
-ALPHA = 0.05
 TOP = 20
 FD_MIN = 5                # 判斷欄位間函數關係時，每個值至少要出現的次數
 MISSING_LIKE = {"na", "n/a", "nan", "null", "none", "-", "--", ".", "?", "missing", "refused", "dk",
@@ -232,7 +229,7 @@ def detect_type(df, prof, args):
                 basis.append(f"`{it}` 有 {kv:.0%} 的值寫成「欄位=答案」：已完成的問卷項目")
                 return dict(type="itemset", format="long_kv", tid_col=t, item_col=it, basis=basis)
             if time_c:
-                basis.append(f"`{time_c}` 可解析為日期時間（{prof[time_c]['time_share']:.0%}）")
+                basis.append(f"`{time_c}` 是日期時間（{prof[time_c]['time_share']:.0%} 可解析）：不當成項目，也不用於分析")
             if qty_c:
                 basis.append(f"`{qty_c}` 全是數字，可能是數量（需確認）")
             return dict(type="shopping", format="long", tid_col=t, item_col=it, time_col=time_c, qty_col=qty_c,
@@ -264,7 +261,6 @@ def config_template(args, det, prof, df):
            "question": {"goal": None, "items": [], "label": None},
            "params": {"algorithm": None, "min_support": None, "min_confidence": None, "min_lift": None, "max_lhs": None,
                       "min_lhs_count": None, "confirmed": False, "reason": None},
-           "validation": {"enabled": False, "test_frac": 0.3, "seed": 2026, "by_time": False},
            "report": {"title": "關聯規則分析報告", "background": None, "goal": None},
            "confirmations": []}
     t = det["type"]
@@ -272,7 +268,7 @@ def config_template(args, det, prof, df):
         cfg["data_type"] = "shopping" if t == "shopping" else None
         cfg["shopping"] = {"format": det["format"], "tid_col": det.get("tid_col"), "item_col": det.get("item_col"),
                            "item_cols": det.get("item_cols"), "sep": det.get("sep"),
-                           "time_col": det.get("time_col"), "qty_col": det.get("qty_col"),
+                           "qty_col": det.get("qty_col"),
                            "decisions": {}, "item_aliases": {}}
     if t == "survey" or (t == "itemset" and det["format"] == "long_kv"):
         cfg["data_type"] = "survey"
@@ -379,8 +375,6 @@ def cmd_inspect(args):
             pending.append("資料格式問題：" + q)
         if s.get("qty_col"):
             notes.append(f"數量欄 `{s['qty_col']}` 只用來檢查 ≤ 0 的列；關聯規則只看「有沒有買」")
-        if s.get("time_col"):
-            notes.append(f"`{s['time_col']}` 看起來是時間：只有在使用者要做保留資料驗證、並確認它是可信的時間時才會使用")
         plan = ["確認交易 ID 的意義（一張發票、一位顧客或一位顧客的一天）",
                 "去除商品名稱前後空白（固定規則，記錄影響列數）",
                 "同一張訂單中重複出現的商品記為一次（固定規則，記錄影響列數）",
@@ -431,7 +425,7 @@ def prep_shopping(df, s, preview=False):
     log, pending, problems = [], [], []
     dec = s.get("decisions") or {}
     fmtx = s.get("format")
-    for k in ("tid_col", "item_col", "time_col", "qty_col"):
+    for k in ("tid_col", "item_col", "qty_col"):
         if s.get(k) and s[k] not in df.columns:
             problems.append(f"找不到欄位 `{s[k]}`（{k}）")
     if problems:
@@ -443,8 +437,6 @@ def prep_shopping(df, s, preview=False):
             problems.append("長格式需要指定訂單編號欄（tid_col）與商品欄（item_col）")
             return dict(units=[], ids=[], times=None, log=log, pending=pending, problems=problems)
         d = pd.DataFrame({"tid": df[s["tid_col"]].astype(str), "item": df[s["item_col"]].astype(str)})
-        if s.get("time_col"):
-            d["time"] = df[s["time_col"]].astype(str)
         if s.get("qty_col"):
             d["qty"] = df[s["qty_col"]].astype(str)
         d["empty_cell"] = False
@@ -457,8 +449,6 @@ def prep_shopping(df, s, preview=False):
         cell = df[s["item_col"]].astype(str)
         d = pd.DataFrame({"tid": tid.values, "item": cell.str.split(sep, regex=False).values,
                           "empty_cell": (cell.str.strip() == "").values})
-        if s.get("time_col"):
-            d["time"] = df[s["time_col"]].astype(str).values
         d = d.explode("item").reset_index(drop=True)
         log_add(log, "轉換格式", f"以「{sep}」拆開每一格的商品，一列一張訂單 → 一列一個商品", "統一成（訂單, 商品）格式",
                 f"{len(df):,} 列 → {len(d):,} 列")
@@ -568,16 +558,7 @@ def prep_shopping(df, s, preview=False):
             "項目是非對稱二元變數，只看有沒有出現", "—")
 
     # (9) 時間（只用來決定驗證資料的切法）
-    times = None
-    if "time" in d.columns:
-        tt = pd.to_datetime(d["time"], errors="coerce", format="mixed")
-        tmin = tt.groupby(d["tid"]).min()
-        bad_t = int(tmin.reindex(ids).isna().sum())
-        if bad_t:
-            log_add(log, "固定規則", "時間無法解析的訂單存在，驗證改用隨機切分", "時間切分需要每筆訂單都有時間", f"{bad_t:,} 筆訂單")
-        else:
-            times = list(tmin.reindex(ids))
-    return dict(units=units, ids=ids, times=times, log=log, pending=pending, problems=problems)
+    return dict(units=units, ids=ids, times=None, log=log, pending=pending, problems=problems)
 
 
 # ----------------------------------------------------------------------------- 前處理：類別問卷編碼
@@ -879,46 +860,6 @@ def mine(goal, B, units, P, target, survey):
     return rows, steps
 
 
-def split_units(units, times, vcfg):
-    """選用的保留資料驗證：預設隨機切分；只有使用者確認時間欄位時才依時間切分（不假設資料列順序代表時間）。"""
-    n = len(units)
-    frac, seed = vcfg.get("test_frac", TEST_FRAC), vcfg.get("seed", SEED)
-    k = int(round(n * frac))
-    if k < 1 or n - k < 1:
-        return None, "資料太少，無法切出保留資料"
-    if vcfg.get("by_time") and times is not None:
-        order = sorted(range(n), key=lambda i: (times[i], i))
-        return (sorted(order[:n - k]), sorted(order[n - k:])), \
-            f"依使用者確認的時間欄位切分：最早 {1 - frac:.0%}（{n - k:,}）探勘、最晚 {frac:.0%}（{k:,}）保留"
-    rng = np.random.default_rng(seed)
-    perm = rng.permutation(n)
-    return (sorted(perm[:n - k].tolist()), sorted(perm[n - k:].tolist())), \
-        f"隨機切分（seed = {seed}）：{1 - frac:.0%}（{n - k:,}）探勘、{frac:.0%}（{k:,}）保留"
-
-
-def validate(rows, T, alpha):
-    """在保留資料上重算，單尾 Fisher's exact test（H1：正相關）＋ Benjamini–Hochberg。"""
-    from scipy.stats import false_discovery_control, fisher_exact
-    idx, ps = [], []
-    for k, r in enumerate(rows):
-        A, Bs = frozenset(r["lhs"]), frozenset(r["rhs"])
-        cA, cB, cAB = T.count(A), T.count(Bs), T.count(A | Bs)
-        if cA and cB:
-            p = fisher_exact([[cAB, cA - cAB], [cB - cAB, T.n - cA - cB + cAB]], alternative="greater")[1]
-            lift = measures(T.n, cA, cB, cAB)["lift"]
-        else:
-            p, lift = 1.0, float("nan")
-        r.update(test_count=cAB, test_lift=lift, p_value=p)
-        idx.append(k)
-        ps.append(min(1.0, p))
-    if ps:
-        for k, q in zip(idx, false_discovery_control(ps, method="bh")):
-            r = rows[k]
-            r["q_value"] = float(q)
-            r["replicated"] = "是" if (r["test_lift"] == r["test_lift"] and r["test_lift"] > 1 and q < alpha) else "否"
-    return sum(1 for r in rows if r.get("replicated") == "是"), len(ps)
-
-
 # ----------------------------------------------------------------------------- run
 
 def load_config(path):
@@ -1007,7 +948,7 @@ def cmd_run(args):
         stop(1, "資料不符合支援的格式（需要使用者調整，不自行猜測）", prep["problems"], out, "unsupported")
     if prep["pending"]:
         stop(2, "以下事項需要使用者確認後才能執行（一次問一項）", prep["pending"], out, "pending")
-    units, times = prep["units"], prep["times"]
+    units = prep["units"]
     if not units:
         stop(1, "前處理後沒有任何觀測", ["請檢查資料或前處理設定"], out, "unsupported")
     survey = cfg["data_type"] == "survey"
@@ -1015,15 +956,8 @@ def cmd_run(args):
     if problems:
         stop(2 if goal is None else 1, "分析目標需要確認", problems, out, "question")
 
-    vcfg = cfg.get("validation") or {}
-    split, split_note = (None, "未做保留資料驗證（選用步驟）")
-    if vcfg.get("enabled"):
-        split, split_note = split_units(units, times, vcfg)
-    mine_units = [units[i] for i in split[0]] if split else units
+    mine_units = units
     B = Binary(mine_units)
-    miss = [x for x in target if x not in B.idx]
-    if miss:
-        stop(1, "指定的項目沒有出現在探勘資料中", [f"「{x}」只出現在保留資料中" for x in miss], out, "question")
 
     P = dict(cfg.get("params") or {})
     if not P.get("confirmed"):
@@ -1052,11 +986,6 @@ def cmd_run(args):
         stop(1, "參數不正確", [f"params.algorithm 只能是 {list(ALGORITHMS)}"], out, "params")
 
     rows, steps = mine(goal, B, mine_units, P, target, survey)
-    n_rep = n_test = 0
-    T = None
-    if split:
-        T = Binary([units[i] for i in split[1]])
-        n_rep, n_test = validate(rows, T, vcfg.get("alpha", ALPHA))
 
     os.makedirs(out, exist_ok=True)
     # 設定紀錄：每次執行的設定與結果都保留
@@ -1082,10 +1011,9 @@ def cmd_run(args):
         "question": {"goal": goal, "goal_label": GOAL_LABEL[goal], "items": target,
                      "label": (cfg.get("question") or {}).get("label")},
         "params": P, "settings": settings_text(P, B.n), "settings_log": hist,
-        "split": {"note": split_note, "mine_units": B.n, "test_units": T.n if T else 0},
+        "N": B.n,
         "filter_log": [{"step": s, "remaining": c} for s, c in steps],
         "n_results": len(rows), "top": rows[:TOP],
-        "validation": {"enabled": bool(split), "tested": n_test, "replicated": n_rep, "alpha": vcfg.get("alpha", ALPHA)},
         "environment": env_versions(),
     }
     with open(os.path.join(out, "results.json"), "w", encoding="utf-8") as f:
@@ -1096,23 +1024,21 @@ def cmd_run(args):
         json.dump({"status": "done"}, f)
 
     print(f"## 分析完成：{GOAL_LABEL[goal]}" + (f"（{', '.join(target)}）" if target else ""))
-    print(f"- 分母 N = {B.n:,}；{split_note}\n- 設定：{settings_text(P, B.n)}")
+    print(f"- 分母 N = {B.n:,}\n- 設定：{settings_text(P, B.n)}")
     for s, c in steps:
         print(f"- {s}：{c:,}")
-    print(f"- 保留規則 {len(rows):,} 條" + (f"；保留資料重現 {n_rep} / {n_test}" if split else ""))
+    print(f"- 保留規則 {len(rows):,} 條")
     if not rows:
         print("\n> 沒有規則。請向使用者說明原因並提出放寬方案；經同意才修改參數（設定紀錄會保留每一次）。")
-    print("\n" + result_table(rows[:TOP], bool(split)))
+    print("\n" + result_table(rows[:TOP]))
     print(f"\n輸出：{out}/results.json、{out}/results_full.csv、{out}/settings_log.json、{out}/report_draft.md")
 
 
 # ----------------------------------------------------------------------------- 報告
 
-def result_table(rows, val):
+def result_table(rows):
     cols = ["result", "lhs_count", "count", "support", "confidence", "base", "lift"]
     hd = ["規則", "前件筆數", "共同筆數", "support", "confidence", "後件比例", "lift"]
-    if val:
-        cols, hd = cols + ["test_lift", "q_value", "replicated"], hd + ["保留資料 lift", "q 值", "重現"]
     if any(r.get("note") for r in rows):
         cols, hd = cols + ["note"], hd + ["備註"]
     return md_table([dict(r, rank=i) for i, r in enumerate(rows, 1)], ["rank"] + cols, ["#"] + hd)
@@ -1120,7 +1046,7 @@ def result_table(rows, val):
 
 def env_versions():
     v = {"python": platform.python_version()}
-    for m in ("pandas", "numpy", "mlxtend", "scipy"):
+    for m in ("pandas", "numpy", "mlxtend"):
         try:
             v[m] = __import__(m).__version__
         except Exception:
@@ -1137,7 +1063,7 @@ def build_draft(cfg, r):
     rep = cfg.get("report") or {}
     typ = {"shopping": "購物資料", "survey": "類別問卷"}[d["type"]]
     unit = d.get("unit") or ("一筆交易" if d["type"] == "shopping" else "一位受訪者")
-    N = r["split"]["mine_units"]
+    N = r["N"]
     L = [f"# {rep.get('title') or '關聯規則分析報告'}\n"]
     L.append("## 1. 分析目的與資料\n")
     L.append(f"- 背景：{rep.get('background') or todo('使用者提供的背景；未提供寫「未提供」')}")
@@ -1145,7 +1071,7 @@ def build_draft(cfg, r):
     L.append(f"- 分析目標：**{q['goal_label']}**" + (f"（{', '.join(q['items'])}）" if q["items"] else ""))
     L.append(f"- 資料：`{d['path']}`，{d['rows']:,} 列、{len(d['columns'])} 個欄位；{typ}（格式 `{d['format']}`，經使用者確認）")
     L.append(f"- 一筆觀測：{unit}")
-    L.append(f"- **support 的分母 N = {N:,}**" + ("（保留資料驗證時為探勘資料的筆數）" if r["validation"]["enabled"] else "") + "\n")
+    L.append(f"- **support 的分母 N = {N:,}**\n")
     L.append("> 關聯規則描述的是共同出現，不代表因果。\n")
 
     L.append("## 2. 前處理\n")
@@ -1164,7 +1090,6 @@ def build_draft(cfg, r):
     L.append("## 3. 分析設定\n")
     L.append(f"- 本次設定：{r['settings']}（分母 N = {N:,}）")
     L.append(f"- 設定理由：{P.get('reason') or todo('使用者確認設定的理由')}")
-    L.append(f"- 保留資料驗證：{r['split']['note']}")
     L.append("- 這些門檻是本次分析的選擇，不是通用標準。\n")
     L.append("設定紀錄（每一次執行的設定與保留規則數）：\n")
     L.append(md_table(r["settings_log"], ["time", "goal", "settings", "n_rules", "reason"],
@@ -1176,26 +1101,17 @@ def build_draft(cfg, r):
 
     L.append("## 4. 結果與解讀\n")
     L.append(f"共保留 {r['n_results']:,} 條規則，下表依 lift 排序列出前 {min(TOP, r['n_results'])} 條（完整結果在 `results_full.csv`）。\n")
-    L.append(result_table(r["top"], r["validation"]["enabled"]) + "\n")
+    L.append(result_table(r["top"]) + "\n")
     L.append("support = 共同筆數 / N；confidence = 共同筆數 / 前件筆數；後件比例 = 後件筆數 / N；"
              "lift = confidence / 後件比例（1 表示與獨立情況相同）。lift > 1 不等於統計顯著。\n")
     if r["n_results"] == 0:
         L.append("> 本次設定下沒有規則。若之後經使用者同意調整設定，設定紀錄會保留每一次的結果。\n")
     L.append(todo("解讀主要規則：每條說明分母、共同筆數、confidence 與後件比例的對照、lift；不寫因果、不寫顯著") + "\n")
 
-    L.append("## 5. 規則穩定性\n")
-    v = r["validation"]
-    if v["enabled"]:
-        L.append(f"{r['split']['note']}。在保留資料（{r['split']['test_units']:,} 筆）上，對每條規則做單尾 Fisher's exact test"
-                 f"（H0：前件與後件獨立；H1：正相關），{v['tested']} 個檢定以 Benjamini–Hochberg "
-                 f"控制 FDR = {v['alpha']}。「重現」= 保留資料 lift > 1 且 q < {v['alpha']}。重現：**{v['replicated']} / {v['tested']}**。\n")
-        L.append(todo("說明哪些規則重現、哪些沒有") + "\n")
-    else:
-        L.append("本次沒有做保留資料驗證（選用步驟），結果是對這份資料的描述，屬探索性；lift > 1 不代表統計顯著。\n")
-
-    L.append("## 6. 結論與建議\n")
+    L.append("## 5. 結論與建議\n")
     L.append(todo("回答分析問題；行動建議寫成「可以考慮」，必要時建議以實驗確認") + "\n")
-    L.append("## 7. 限制\n")
+    L.append("## 6. 限制\n")
+    L.append("- 結果是對這份資料的描述，屬探索性；沒有檢驗規則在其他資料上是否成立，lift > 1 也不代表統計顯著。")
     L.append("- 關聯不代表因果；可能有未納入分析的隱藏變數（Simpson's paradox）。")
     L.append("- 結果依賴門檻與前處理；改變設定會改變規則數量與排序。")
     if d["type"] == "survey":
@@ -1208,7 +1124,7 @@ def build_draft(cfg, r):
              "| 後件比例 | σ(Y) / N |\n| lift | N σ(X∪Y) / (σ(X) σ(Y)) |\n")
     L.append("出處：Tan, P.-N., Steinbach, M., Karpatne, A., & Kumar, V. (2019). *Introduction to Data Mining* (2nd ed.). Pearson. "
              "support 與 confidence 見 5.1 節；lift（interest factor）見 5.7.1 節；Apriori 見 5.2 節；FP-growth 見 5.6 節；"
-             "類別屬性轉成項目見 6.1 節；Fisher's exact test 見 10.4.1 節。\n")
+             "類別屬性轉成項目見 6.1 節。\n")
     return "\n".join(L)
 
 

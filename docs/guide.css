@@ -69,25 +69,6 @@ main h3 { font-size: 1.1rem; margin-top: 1.6rem; }
 .chapter-lead p { margin: 0; }
 .chapter-lead p::before { content: "▸ "; color: var(--amber); }
 
-/* 流程速覽 */
-.flow-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: .6rem;
-  margin: 1.4rem 0 2rem;
-}
-.flow-strip .step {
-  border: 1px solid var(--line);
-  border-top: 4px solid var(--accent);
-  border-radius: 10px;
-  padding: .6rem .75rem;
-  background: #fff;
-  font-size: .9rem;
-  line-height: 1.5;
-}
-.flow-strip .step strong { display: block; color: var(--accent); font-size: .78rem; letter-spacing: .08em; }
-.flow-strip .step.ask { border-top-color: var(--amber); }
-
 /* 表格 */
 main table {
   display: block;

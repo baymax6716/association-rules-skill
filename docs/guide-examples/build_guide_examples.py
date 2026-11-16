@@ -400,19 +400,30 @@ def sensitivity():
     baskets, log = prep_shopping_long(g, "transaction_id", "item")
     n = len(baskets)
     X = binary_matrix(baskets).set_index("編號").astype(bool)
-    rows = []
+    rows, keys = [], []
     for s in [0.005, 0.01, 0.02, 0.05]:
         fi = fpgrowth(X, min_support=s, use_colnames=True, max_len=3)
-        ar = association_rules(fi, num_itemsets=n, metric="confidence", min_threshold=0.3) if len(fi) else pd.DataFrame()
-        ar = ar[(ar["consequents"].map(len) == 1) & (ar["lift"] > 1)] if len(ar) else ar
-        rows.append([s, math.ceil(s * n - 1e-9), len(fi), int((fi["itemsets"].map(len) >= 2).sum()), len(ar)])
-    df = pd.DataFrame(rows, columns=["最低支持度", "對應最低筆數", "頻繁項目集數", "其中 ≥ 2 項", "規則數（confidence ≥ 0.3、lift > 1）"])
+        sizes = fi["itemsets"].map(len)
+        multi = fi[sizes >= 2]
+        # 每個 k 項的頻繁項目集，後件限定 1 項時可拆成 k 條規則
+        cand = int(multi["itemsets"].map(len).sum())
+        ar = association_rules(fi, num_itemsets=n, metric="confidence", min_threshold=0) if len(multi) else pd.DataFrame()
+        ar = ar[ar["consequents"].map(len) == 1] if len(ar) else ar
+        assert len(ar) == cand, "候選規則數應等於 mlxtend 產生的後件 1 項規則數"
+        kept = ar[(ar["confidence"] >= 0.3) & (ar["lift"] > 1)] if len(ar) else ar
+        row = dict(minsup=s, min_count=math.ceil(s * n - 1e-9), itemsets=len(fi), single=int((sizes == 1).sum()),
+                   multi=len(multi), candidates=cand, rules=len(kept))
+        keys.append(row)
+        rows.append(list(row.values()))
+    df = pd.DataFrame(rows, columns=["最低支持度", "對應最低筆數", "頻繁項目集（全部）", "只有 1 個商品",
+                                     "含 2–3 個商品（可拆成規則）", "可拆出的規則（後件 1 項）",
+                                     "篩選後的規則（confidence ≥ 0.3、lift > 1）"])
     write("groceries_sensitivity.md", md_table(df))
     write("groceries_log.md", md_table(pd.DataFrame(log, columns=["類別", "處理或檢查", "影響筆數"])))
     top = X.mean().sort_values(ascending=False).head(5)
     write("groceries_top_items.md", md_table(pd.DataFrame({"商品": top.index, "出現筆數": (top * n).round().astype(int).values,
                                                             "support": top.values})))
-    RESULTS["groceries"] = {"N": n, "items": X.shape[1], "sensitivity": df.to_dict("records")}
+    RESULTS["groceries"] = {"N": n, "items": X.shape[1], "sensitivity": keys}
 
 
 # ----------------------------------------------------------------------------- 5. Apriori 逐層示範
@@ -612,7 +623,11 @@ def check_prose():
         "FP-tree 11 個節點（原始 19 列）、頻繁項目集 11 個、與 Apriori 相同": (RESULTS["fpgrowth"]["nodes"], RESULTS["fpgrowth"]["rows"],
             RESULTS["fpgrowth"]["frequent"], RESULTS["fpgrowth"]["same_as_apriori"]) == (11, 19, 11, True),
         "Groceries 兩種演算法結果相同": RESULTS["algorithm_compare"]["same"],
-        "Groceries 規則數 3 → 442": [r["規則數（confidence ≥ 0.3、lift > 1）"] for r in g["sensitivity"]][::3] == [442, 3],
+        "Groceries 規則數 3 → 442": [r["rules"] for r in g["sensitivity"]][::3] == [442, 3],
+        "Groceries 0.005：989 個頻繁項目集＝120 單一＋869 多項": (g["sensitivity"][0]["itemsets"], g["sensitivity"][0]["single"],
+                                                       g["sensitivity"][0]["multi"]) == (989, 120, 869),
+        "Groceries 0.005 可拆出 2,002 條；0.05 列為 31、3、3": g["sensitivity"][0]["candidates"] == 2002
+            and (g["sensitivity"][3]["itemsets"], g["sensitivity"][3]["multi"], g["sensitivity"][3]["rules"]) == (31, 3, 3),
     }
     bad = [k for k, ok in checks.items() if not ok]
     if bad:

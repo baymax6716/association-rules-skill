@@ -7261,19 +7261,23 @@ window.Quarto = {
 <p>以 Groceries 練習資料（<span class="math inline">\(N\)</span> = 9,835 筆交易、169 種商品）為例，只改變最低支持度（其他條件：前件 + 後件 ≤ 3 項、後件 1 項、confidence ≥ 0.3、lift &gt; 1）：</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 14%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">最低支持度</th>
 <th style="text-align: left;">對應最低筆數</th>
-<th style="text-align: left;">頻繁項目集數</th>
-<th style="text-align: left;">其中 ≥ 2 項</th>
-<th style="text-align: left;">規則數（confidence ≥ 0.3、lift &gt; 1）</th>
+<th style="text-align: left;">頻繁項目集（全部）</th>
+<th style="text-align: left;">只有 1 個商品</th>
+<th style="text-align: left;">含 2–3 個商品（可拆成規則）</th>
+<th style="text-align: left;">可拆出的規則（後件 1 項）</th>
+<th style="text-align: left;">篩選後的規則（confidence ≥ 0.3、lift &gt; 1）</th>
 </tr>
 </thead>
 <tbody>
@@ -7281,32 +7285,80 @@ window.Quarto = {
 <td style="text-align: left;">0.005</td>
 <td style="text-align: left;">50</td>
 <td style="text-align: left;">989</td>
+<td style="text-align: left;">120</td>
 <td style="text-align: left;">869</td>
+<td style="text-align: left;">2,002</td>
 <td style="text-align: left;">442</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">0.01</td>
 <td style="text-align: left;">99</td>
 <td style="text-align: left;">333</td>
+<td style="text-align: left;">88</td>
 <td style="text-align: left;">245</td>
+<td style="text-align: left;">522</td>
 <td style="text-align: left;">125</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">0.02</td>
 <td style="text-align: left;">197</td>
 <td style="text-align: left;">122</td>
+<td style="text-align: left;">59</td>
 <td style="text-align: left;">63</td>
+<td style="text-align: left;">128</td>
 <td style="text-align: left;">37</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">0.05</td>
 <td style="text-align: left;">492</td>
 <td style="text-align: left;">31</td>
+<td style="text-align: left;">28</td>
 <td style="text-align: left;">3</td>
+<td style="text-align: left;">6</td>
 <td style="text-align: left;">3</td>
 </tr>
 </tbody>
 </table>
+<p><strong>各欄的意思</strong>：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">欄位</th>
+<th style="text-align: left;">說明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">對應最低筆數</td>
+<td style="text-align: left;">最低支持度 × N 後無條件進位：一個組合至少要在這麼多筆交易中一起出現</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">頻繁項目集（全部）</td>
+<td style="text-align: left;">出現筆數達到門檻的項目集，包含只有 1 個商品的</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">只有 1 個商品</td>
+<td style="text-align: left;">例如 {whole milk}：只代表這個商品本身常見，<strong>無法產生規則</strong>，因為規則至少要有 1 個前件和 1 個後件</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">含 2–3 個商品（可拆成規則）</td>
+<td style="text-align: left;">例如 {whole milk, yogurt}：前件與後件合起來就是這個項目集，是規則的來源；本表限定前件 + 後件 ≤ 3 項，所以只有 2 項和 3 項兩種</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">可拆出的規則（後件 1 項）</td>
+<td style="text-align: left;">把每個項目集拆成「前件 → 後件」：2 項的可拆成 2 條（例如 whole milk → yogurt、yogurt → whole milk），3 項的可拆成 3 條（後件輪流是其中一個商品）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">篩選後的規則</td>
+<td style="text-align: left;">可拆出的規則中，confidence ≥ 0.3 且 lift &gt; 1 的條數</td>
+</tr>
+</tbody>
+</table>
+<p>以最低支持度 0.005 那列為例：989 個頻繁項目集中，120 個只有 1 個商品，869 個含 2–3 個商品；這 869 個項目集可拆成 2,002 條規則，篩選後剩 442 條。到了 0.05，31 個頻繁項目集幾乎都是單一商品，只有 3 個能拆成規則，最後也只剩 3 條。</p>
 <p>最低支持度從 0.05 降到 0.005，規則數從 3 條變成 442 條。沒有哪一個值是「正確」的：要依分析目的、可以閱讀的規則數、每條規則至少要幾筆支持來決定，並在報告中寫出理由。Groceries 中最常見的商品如下；whole milk 出現在約四分之一的交易中，以它為後件的規則 confidence 容易偏高：</p>
 <table class="caption-top table">
 <thead>
@@ -7828,7 +7880,7 @@ window.Quarto = {
 <td style="text-align: left;">99</td>
 <td style="text-align: left;">Apriori</td>
 <td style="text-align: left;">333</td>
-<td style="text-align: left;">0.07 秒</td>
+<td style="text-align: left;">0.06 秒</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">0.01</td>
@@ -7849,7 +7901,7 @@ window.Quarto = {
 <td style="text-align: left;">50</td>
 <td style="text-align: left;">FP-growth</td>
 <td style="text-align: left;">989</td>
-<td style="text-align: left;">0.10 秒</td>
+<td style="text-align: left;">0.13 秒</td>
 </tr>
 </tbody>
 </table>

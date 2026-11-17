@@ -195,31 +195,6 @@ $$
 | 交易 ID 空白 | 詢問 | 無法判斷這一列屬於哪一筆交易；併到相鄰交易或自成一筆都是猜測，所以建議排除，經使用者同意才排除並記錄列數 |
 | 商品名稱空白、疑似同義名稱、數量 ≤ 0 | 詢問 | 涉及資料意義，不能自行決定 |
 
-### 逐步展示 [已執行]{.badge-run}
-
-**步驟 1：原始資料**：上一章的交易明細長表或購物清單。兩者整理後的 basket 完全相同（程式中有檢查）。
-
-**步驟 2：套用轉換規則，記錄每一步的筆數。**
-
-{{< include guide-examples/generated-tables/shop_log.md >}}
-
-`T02` 的「吐司␣」去除空白後與其他「吐司」相同；`T08` 的兩列牛奶合併為一次；`T05` 只有咖啡，保留；`T02` 與 `T07` 內容相同，兩筆都保留。
-
-**步驟 3：basket**（support 的分母 $N = 8$ 筆交易）。
-
-{{< include guide-examples/generated-tables/shop_baskets.md >}}
-
-**步驟 4：編碼結果**（0/1 矩陣；0 只代表「沒有出現」，不是一個項目）。
-
-{{< include guide-examples/generated-tables/shop_binary.md >}}
-
-<details class="code-fold">
-<summary>顯示程式碼：購物資料前處理（即產生上表的程式）</summary>
-
-{{< include guide-examples/generated-tables/code_shopping.md >}}
-
-</details>
-
 ## 類別問卷
 
 ### 轉換規則
@@ -238,41 +213,6 @@ $$
 | 未回答、不知道、不適用、拒答依資料字典區分 | 依字典 | 不自動當成「否」，也不當成一般答案 |
 | 完整案例分析只看選定的分析欄位 | 詢問 | 執行前說明排除筆數與可能影響 |
 | 未加權的樣本描述 | 自動 | 不宣稱代表整體人口 |
-
-### 逐步展示 [已執行]{.badge-run}
-
-**步驟 1：原始資料與資料字典。**
-
-{{< include guide-examples/generated-tables/survey_dictionary.md >}}
-
-**步驟 2：依資料字典解碼。** `網購` 的 1/0 換成「是／否」；`運動頻率` 的 8（不知道）、9（拒答）與 `居住地` 的空白設為缺失。
-
-{{< include guide-examples/generated-tables/survey_decoded.md >}}
-
-**步驟 3：選擇分析欄位、完整案例分析，並記錄每一步的筆數。** 本例使用者選擇 `年齡層`、`網購`、`運動頻率`。`R06` 的居住地缺失，但居住地不在分析欄位中，所以 `R06` 保留；`R08`、`R11` 的運動頻率缺失，排除。`R07` 與 `R12` 答案完全相同，兩人都保留。
-
-{{< include guide-examples/generated-tables/survey_log.md >}}
-
-**步驟 4：basket（「欄位=類別」）**，support 的分母是完整案例分析後的 $N = 10$ 人，不是原始的 12 人。
-
-{{< include guide-examples/generated-tables/survey_baskets.md >}}
-
-**步驟 5：編碼結果。** `網購=否` 是一個獨立的項目，不是「沒有 `網購=是`」。
-
-{{< include guide-examples/generated-tables/survey_binary.md >}}
-
-::: {.callout-important}
-## 完整案例分析的可能影響
-
-本例排除了 2 位運動頻率回答「不知道」或「拒答」的受訪者，分母從 12 人變成 10 人。如果不回答運動頻率的人有某種共同特徵（例如較少運動），排除他們會讓規則偏向回答者的樣貌。報告中要寫明排除人數與這個限制。
-:::
-
-<details class="code-fold">
-<summary>顯示程式碼：問卷前處理（即產生上表的程式）</summary>
-
-{{< include guide-examples/generated-tables/code_survey.md >}}
-
-</details>
 
 # 分析目標與參數設定
 
@@ -299,32 +239,6 @@ $$
 | 規則長度 | 前件最多幾項、後件幾項 | 規則變多、較難解讀 | 規則較少、較好解讀 | 本指南示範：前件 ≤ 2、後件 1 |
 | 最低前件出現筆數 | 前件本身至少要出現幾次 | confidence 較穩定 | 會出現「1 筆中 1 筆」的 100% | 這是實務上的補充設定，不是教科書定義的指標 |
 
-## 示範設定 [示意]{.badge-demo}
-
-下面的值**只是示範**，用來說明如何寫設定與理由；不是通用標準，換一份資料就要重新決定。
-
-```yaml
-# 第 7 章購物小案例（N = 8）
-目標: 自由探索
-演算法: FP-growth        # 或 Apriori；結果相同
-最低支持度: 0.25        # = 至少 2 筆交易；只有 8 筆，1 筆的組合太容易是巧合
-最低信賴度: 0.6
-lift: "> 1"
-規則長度: 前件 ≤ 2 項、後件 1 項
-最低前件筆數: 3          # 避免「1 筆中 1 筆」的 confidence = 1
-
-# 第 7 章問卷小案例（N = 10）
-最低支持度: 0.2         # = 至少 2 人；其餘同上
-```
-
-| 設定 | 推薦理由 | 限制 |
-|:--|:--|:--|
-| 最低支持度換算成「至少 2 筆」 | 讓每條規則至少有兩筆觀測支持 | 小樣本下 2 筆仍然很少，結果只能當示範 |
-| confidence ≥ 0.6 | 讓規則有一定的可靠度 | 需搭配後件比例與 lift 一起看 |
-| lift > 1 | 排除沒有正相關的規則 | lift 稍大於 1 的規則（如 1.0667）意義有限 |
-| 前件 ≤ 2、後件 1 | 容易解讀 | 會漏掉更長的組合 |
-| 前件筆數 ≥ 3 | 避免極少數觀測造成的極端 confidence | 門檻本身也是主觀選擇 |
-
 ## 門檻沒有通用標準 [已執行]{.badge-run}
 
 以 Groceries 練習資料（$N$ = 9,835 筆交易、169 種商品）為例，只改變最低支持度（其他條件：前件 + 後件 ≤ 3 項、後件 1 項、confidence ≥ 0.3、lift > 1）：
@@ -347,10 +261,6 @@ lift: "> 1"
 最低支持度從 0.05 降到 0.005，規則數從 3 條變成 442 條。沒有哪一個值是「正確」的：要依分析目的、可以閱讀的規則數、每條規則至少要幾筆支持來決定，並在報告中寫出理由。Groceries 中最常見的商品如下；whole milk 出現在約四分之一的交易中，以它為後件的規則 confidence 容易偏高：
 
 {{< include guide-examples/generated-tables/groceries_top_items.md >}}
-
-Groceries 的前處理紀錄（原始標籤中 `cream cheese `、`roll products ` 結尾有空白）：
-
-{{< include guide-examples/generated-tables/groceries_log.md >}}
 
 # 規則產生、篩選與解讀
 
@@ -506,7 +416,7 @@ Apriori 每一層都要產生候選、再掃描一次資料計數。FP-growth �
 
 {{< include guide-examples/generated-tables/shop_item_freq.md >}}
 
-**設定**：第 5 章的示範設定（最低支持度 0.25 = 至少 2 筆、confidence ≥ 0.6、lift > 1、前件 ≤ 2 項、前件筆數 ≥ 3）。
+**設定**：最低支持度 0.25（至少 2 筆）、confidence ≥ 0.6、lift > 1、前件 ≤ 2 項、前件筆數 ≥ 3。
 
 **輸出**：保留的規則。
 

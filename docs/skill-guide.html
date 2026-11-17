@@ -5480,8 +5480,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#三種分析目標" id="toc-三種分析目標" class="nav-link" data-scroll-target="#三種分析目標"><span class="header-section-number">5.1</span> 三種分析目標</a></li>
   <li><a href="#參數" id="toc-參數" class="nav-link" data-scroll-target="#參數"><span class="header-section-number">5.2</span> 參數</a></li>
-  <li><a href="#示範設定-示意" id="toc-示範設定-示意" class="nav-link" data-scroll-target="#示範設定-示意"><span class="header-section-number">5.3</span> 示範設定 <span class="badge-demo">示意</span></a></li>
-  <li><a href="#門檻沒有通用標準-已執行" id="toc-門檻沒有通用標準-已執行" class="nav-link" data-scroll-target="#門檻沒有通用標準-已執行"><span class="header-section-number">5.4</span> 門檻沒有通用標準 <span class="badge-run">已執行</span></a></li>
+  <li><a href="#門檻沒有通用標準-已執行" id="toc-門檻沒有通用標準-已執行" class="nav-link" data-scroll-target="#門檻沒有通用標準-已執行"><span class="header-section-number">5.3</span> 門檻沒有通用標準 <span class="badge-run">已執行</span></a></li>
   </ul></li>
   <li><a href="#規則產生篩選與解讀" id="toc-規則產生篩選與解讀" class="nav-link" data-scroll-target="#規則產生篩選與解讀"><span class="header-section-number">6</span> 規則產生、篩選與解讀</a>
   <ul class="collapse">
@@ -6226,220 +6225,6 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="逐步展示-已執行" class="level3" data-number="4.1.2">
-<h3 data-number="4.1.2" class="anchored" data-anchor-id="逐步展示-已執行"><span class="header-section-number">4.1.2</span> 逐步展示 <span class="badge-run">已執行</span></h3>
-<p><strong>步驟 1：原始資料</strong>：上一章的交易明細長表或購物清單。兩者整理後的 basket 完全相同（程式中有檢查）。</p>
-<p><strong>步驟 2：套用轉換規則，記錄每一步的筆數。</strong></p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">類別</th>
-<th style="text-align: left;">處理或檢查</th>
-<th style="text-align: left;">影響筆數</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">讀入</td>
-<td style="text-align: left;">原始資料列數</td>
-<td style="text-align: left;">20</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">固定規則</td>
-<td style="text-align: left;">去除商品名稱前後空白</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">檢查</td>
-<td style="text-align: left;">商品名稱空白的列（有的話要詢問使用者）</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">固定規則</td>
-<td style="text-align: left;">同一筆交易中的同一商品只算一次（合併的列數）</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">結果</td>
-<td style="text-align: left;">交易筆數 N（support 的分母）</td>
-<td style="text-align: left;">8</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">結果</td>
-<td style="text-align: left;">只有一種商品的有效交易（保留）</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">結果</td>
-<td style="text-align: left;">與其他交易內容完全相同的交易（全部保留，不刪除）</td>
-<td style="text-align: left;">2</td>
-</tr>
-</tbody>
-</table>
-<p><code>T02</code> 的「吐司␣」去除空白後與其他「吐司」相同；<code>T08</code> 的兩列牛奶合併為一次；<code>T05</code> 只有咖啡，保留；<code>T02</code> 與 <code>T07</code> 內容相同，兩筆都保留。</p>
-<p><strong>步驟 3：basket</strong>（support 的分母 <span class="math inline">\(N = 8\)</span> 筆交易）。</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">交易編號</th>
-<th style="text-align: left;">basket</th>
-<th style="text-align: left;">商品數</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">T01</td>
-<td style="text-align: left;">{吐司, 牛奶, 雞蛋}</td>
-<td style="text-align: left;">3</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T02</td>
-<td style="text-align: left;">{吐司, 牛奶}</td>
-<td style="text-align: left;">2</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">T03</td>
-<td style="text-align: left;">{咖啡, 牛奶, 餅乾}</td>
-<td style="text-align: left;">3</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T04</td>
-<td style="text-align: left;">{吐司, 咖啡, 牛奶, 雞蛋}</td>
-<td style="text-align: left;">4</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">T05</td>
-<td style="text-align: left;">{咖啡}</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T06</td>
-<td style="text-align: left;">{吐司, 雞蛋}</td>
-<td style="text-align: left;">2</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">T07</td>
-<td style="text-align: left;">{吐司, 牛奶}</td>
-<td style="text-align: left;">2</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T08</td>
-<td style="text-align: left;">{牛奶, 餅乾}</td>
-<td style="text-align: left;">2</td>
-</tr>
-</tbody>
-</table>
-<p><strong>步驟 4：編碼結果</strong>（0/1 矩陣；0 只代表「沒有出現」，不是一個項目）。</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">編號</th>
-<th style="text-align: left;">吐司</th>
-<th style="text-align: left;">咖啡</th>
-<th style="text-align: left;">牛奶</th>
-<th style="text-align: left;">雞蛋</th>
-<th style="text-align: left;">餅乾</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">T01</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T02</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">T03</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T04</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">T05</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T06</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">T07</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">T08</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-</tr>
-</tbody>
-</table>
-<details class="code-fold">
-<summary>
-顯示程式碼：購物資料前處理（即產生上表的程式）
-</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prep_shopping_long(df, tid_col, item_col):</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;交易明細長表 → 每筆交易一個 basket。只做已定義、可重現的機械性操作，並記錄筆數。&quot;&quot;&quot;</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    log <span class="op">=</span> []</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> pd.DataFrame({<span class="st">&quot;tid&quot;</span>: df[tid_col].astype(<span class="bu">str</span>).<span class="bu">str</span>.strip(), <span class="st">&quot;raw&quot;</span>: df[item_col].astype(<span class="bu">str</span>)})</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;讀入&quot;</span>, <span class="st">&quot;原始資料列數&quot;</span>, <span class="bu">len</span>(d)))</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    d[<span class="st">&quot;item&quot;</span>] <span class="op">=</span> d[<span class="st">&quot;raw&quot;</span>].<span class="bu">str</span>.strip()</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;固定規則&quot;</span>, <span class="st">&quot;去除商品名稱前後空白&quot;</span>, <span class="bu">int</span>((d[<span class="st">&quot;item&quot;</span>] <span class="op">!=</span> d[<span class="st">&quot;raw&quot;</span>]).<span class="bu">sum</span>())))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    empty <span class="op">=</span> d[<span class="st">&quot;item&quot;</span>] <span class="op">==</span> <span class="st">&quot;&quot;</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;檢查&quot;</span>, <span class="st">&quot;商品名稱空白的列（有的話要詢問使用者）&quot;</span>, <span class="bu">int</span>(empty.<span class="bu">sum</span>())))</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> d[<span class="op">~</span>empty]</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    dup <span class="op">=</span> d.duplicated([<span class="st">&quot;tid&quot;</span>, <span class="st">&quot;item&quot;</span>])</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;固定規則&quot;</span>, <span class="st">&quot;同一筆交易中的同一商品只算一次（合併的列數）&quot;</span>, <span class="bu">int</span>(dup.<span class="bu">sum</span>())))</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> d[<span class="op">~</span>dup]</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    baskets <span class="op">=</span> d.groupby(<span class="st">&quot;tid&quot;</span>, sort<span class="op">=</span><span class="va">True</span>)[<span class="st">&quot;item&quot;</span>].agg(<span class="kw">lambda</span> s: <span class="bu">frozenset</span>(s)).to_dict()</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;結果&quot;</span>, <span class="st">&quot;交易筆數 N（support 的分母）&quot;</span>, <span class="bu">len</span>(baskets)))</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;結果&quot;</span>, <span class="st">&quot;只有一種商品的有效交易（保留）&quot;</span>, <span class="bu">sum</span>(<span class="bu">len</span>(b) <span class="op">==</span> <span class="dv">1</span> <span class="cf">for</span> b <span class="kw">in</span> baskets.values())))</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    same <span class="op">=</span> pd.Series([<span class="bu">tuple</span>(<span class="bu">sorted</span>(b)) <span class="cf">for</span> b <span class="kw">in</span> baskets.values()]).duplicated(keep<span class="op">=</span><span class="va">False</span>).<span class="bu">sum</span>()</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;結果&quot;</span>, <span class="st">&quot;與其他交易內容完全相同的交易（全部保留，不刪除）&quot;</span>, <span class="bu">int</span>(same)))</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> baskets, log</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prep_shopping_basket(df, tid_col, items_col, sep<span class="op">=</span><span class="st">&quot;,&quot;</span>):</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;購物清單（一列一筆交易，商品寫在同一格）→ 先拆成長表，再走同一套規則。&quot;&quot;&quot;</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> [(r[tid_col], it) <span class="cf">for</span> _, r <span class="kw">in</span> df.iterrows() <span class="cf">for</span> it <span class="kw">in</span> <span class="bu">str</span>(r[items_col]).split(sep)]</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">long</span> <span class="op">=</span> pd.DataFrame(rows, columns<span class="op">=</span>[tid_col, <span class="st">&quot;商品&quot;</span>])</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prep_shopping_long(<span class="bu">long</span>, tid_col, <span class="st">&quot;商品&quot;</span>)</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</section>
 </section>
 <section id="類別問卷" class="level2" data-number="4.2">
 <h2 data-number="4.2" class="anchored" data-anchor-id="類別問卷"><span class="header-section-number">4.2</span> 類別問卷</h2>
@@ -6521,567 +6306,6 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-</section>
-<section id="逐步展示-已執行-1" class="level3" data-number="4.2.2">
-<h3 data-number="4.2.2" class="anchored" data-anchor-id="逐步展示-已執行-1"><span class="header-section-number">4.2.2</span> 逐步展示 <span class="badge-run">已執行</span></h3>
-<p><strong>步驟 1：原始資料與資料字典。</strong></p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">欄位</th>
-<th style="text-align: left;">原始值</th>
-<th style="text-align: left;">標籤</th>
-<th style="text-align: left;">類別</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">受訪者編號</td>
-<td style="text-align: left;">（每人不同）</td>
-<td style="text-align: left;">受訪者識別碼</td>
-<td style="text-align: left;">ID</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">性別</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">性別</td>
-<td style="text-align: left;">男</td>
-<td style="text-align: left;">男</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">年齡層</td>
-<td style="text-align: left;">18-29</td>
-<td style="text-align: left;">18-29 歲</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">年齡層</td>
-<td style="text-align: left;">30-49</td>
-<td style="text-align: left;">30-49 歲</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">年齡層</td>
-<td style="text-align: left;">50以上</td>
-<td style="text-align: left;">50 歲以上</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">網購</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">網購</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">否</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">運動頻率</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">每週運動</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">運動頻率</td>
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">偶爾運動</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">運動頻率</td>
-<td style="text-align: left;">3</td>
-<td style="text-align: left;">幾乎不運動</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">運動頻率</td>
-<td style="text-align: left;">8</td>
-<td style="text-align: left;">不知道</td>
-<td style="text-align: left;">缺失</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">運動頻率</td>
-<td style="text-align: left;">9</td>
-<td style="text-align: left;">拒答</td>
-<td style="text-align: left;">缺失</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">居住地</td>
-<td style="text-align: left;">北部</td>
-<td style="text-align: left;">北部</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">居住地</td>
-<td style="text-align: left;">中部</td>
-<td style="text-align: left;">中部</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">居住地</td>
-<td style="text-align: left;">南部</td>
-<td style="text-align: left;">南部</td>
-<td style="text-align: left;">答案</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">居住地</td>
-<td style="text-align: left;">（空白）</td>
-<td style="text-align: left;">未回答</td>
-<td style="text-align: left;">缺失</td>
-</tr>
-</tbody>
-</table>
-<p><strong>步驟 2：依資料字典解碼。</strong> <code>網購</code> 的 1/0 換成「是／否」；<code>運動頻率</code> 的 8（不知道）、9（拒答）與 <code>居住地</code> 的空白設為缺失。</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">受訪者編號</th>
-<th style="text-align: left;">性別</th>
-<th style="text-align: left;">年齡層</th>
-<th style="text-align: left;">網購</th>
-<th style="text-align: left;">運動頻率</th>
-<th style="text-align: left;">居住地</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">R01</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">18-29 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">每週運動</td>
-<td style="text-align: left;">北部</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R02</td>
-<td style="text-align: left;">男</td>
-<td style="text-align: left;">18-29 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">偶爾運動</td>
-<td style="text-align: left;">北部</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R03</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">30-49 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">每週運動</td>
-<td style="text-align: left;">中部</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R04</td>
-<td style="text-align: left;">男</td>
-<td style="text-align: left;">30-49 歲</td>
-<td style="text-align: left;">否</td>
-<td style="text-align: left;">幾乎不運動</td>
-<td style="text-align: left;">南部</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R05</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">50 歲以上</td>
-<td style="text-align: left;">否</td>
-<td style="text-align: left;">幾乎不運動</td>
-<td style="text-align: left;">南部</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R06</td>
-<td style="text-align: left;">男</td>
-<td style="text-align: left;">50 歲以上</td>
-<td style="text-align: left;">否</td>
-<td style="text-align: left;">偶爾運動</td>
-<td style="text-align: left;">（缺失）</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R07</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">18-29 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">每週運動</td>
-<td style="text-align: left;">北部</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R08</td>
-<td style="text-align: left;">男</td>
-<td style="text-align: left;">30-49 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">（缺失）</td>
-<td style="text-align: left;">中部</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R09</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">50 歲以上</td>
-<td style="text-align: left;">否</td>
-<td style="text-align: left;">幾乎不運動</td>
-<td style="text-align: left;">南部</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R10</td>
-<td style="text-align: left;">男</td>
-<td style="text-align: left;">18-29 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">偶爾運動</td>
-<td style="text-align: left;">北部</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R11</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">30-49 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">（缺失）</td>
-<td style="text-align: left;">北部</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R12</td>
-<td style="text-align: left;">女</td>
-<td style="text-align: left;">18-29 歲</td>
-<td style="text-align: left;">是</td>
-<td style="text-align: left;">每週運動</td>
-<td style="text-align: left;">北部</td>
-</tr>
-</tbody>
-</table>
-<p><strong>步驟 3：選擇分析欄位、完整案例分析，並記錄每一步的筆數。</strong> 本例使用者選擇 <code>年齡層</code>、<code>網購</code>、<code>運動頻率</code>。<code>R06</code> 的居住地缺失，但居住地不在分析欄位中，所以 <code>R06</code> 保留；<code>R08</code>、<code>R11</code> 的運動頻率缺失，排除。<code>R07</code> 與 <code>R12</code> 答案完全相同，兩人都保留。</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">類別</th>
-<th style="text-align: left;">處理或檢查</th>
-<th style="text-align: left;">影響筆數</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">欄位角色</td>
-<td style="text-align: left;"><code>受訪者編號</code> 是 ID，不納入規則</td>
-<td style="text-align: left;">—</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">使用者選擇</td>
-<td style="text-align: left;">分析欄位：年齡層、網購、運動頻率</td>
-<td style="text-align: left;">—</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">使用者選擇</td>
-<td style="text-align: left;">未選入的欄位：<code>性別</code>、<code>居住地</code>（<code>居住地</code> 的缺失不影響本次分析）</td>
-<td style="text-align: left;">—</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">依資料字典</td>
-<td style="text-align: left;"><code>年齡層</code>：原始值換成標籤</td>
-<td style="text-align: left;">12</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">依資料字典</td>
-<td style="text-align: left;"><code>網購</code>：原始值換成標籤</td>
-<td style="text-align: left;">12</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">依資料字典</td>
-<td style="text-align: left;"><code>運動頻率</code>：原始值換成標籤</td>
-<td style="text-align: left;">10</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">依資料字典</td>
-<td style="text-align: left;"><code>運動頻率</code>：8 = 不知道 設為缺失（不當成「否」）</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">依資料字典</td>
-<td style="text-align: left;"><code>運動頻率</code>：9 = 拒答 設為缺失（不當成「否」）</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">依資料字典</td>
-<td style="text-align: left;"><code>居住地</code>：空白（未回答） 設為缺失（不當成「否」）</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">完整案例分析</td>
-<td style="text-align: left;"><code>年齡層</code> 缺失人數</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">完整案例分析</td>
-<td style="text-align: left;"><code>網購</code> 缺失人數</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">完整案例分析</td>
-<td style="text-align: left;"><code>運動頻率</code> 缺失人數</td>
-<td style="text-align: left;">2</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">完整案例分析</td>
-<td style="text-align: left;">排除的受訪者（選定欄位任一缺失）</td>
-<td style="text-align: left;">2</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">結果</td>
-<td style="text-align: left;">分析人數 N（support 的分母）</td>
-<td style="text-align: left;">10</td>
-</tr>
-</tbody>
-</table>
-<p><strong>步驟 4：basket（「欄位=類別」）</strong>，support 的分母是完整案例分析後的 <span class="math inline">\(N = 10\)</span> 人，不是原始的 12 人。</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">受訪者編號</th>
-<th style="text-align: left;">basket（欄位=類別）</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">R01</td>
-<td style="text-align: left;">{年齡層=18-29 歲, 網購=是, 運動頻率=每週運動}</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R02</td>
-<td style="text-align: left;">{年齡層=18-29 歲, 網購=是, 運動頻率=偶爾運動}</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R03</td>
-<td style="text-align: left;">{年齡層=30-49 歲, 網購=是, 運動頻率=每週運動}</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R04</td>
-<td style="text-align: left;">{年齡層=30-49 歲, 網購=否, 運動頻率=幾乎不運動}</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R05</td>
-<td style="text-align: left;">{年齡層=50 歲以上, 網購=否, 運動頻率=幾乎不運動}</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R06</td>
-<td style="text-align: left;">{年齡層=50 歲以上, 網購=否, 運動頻率=偶爾運動}</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R07</td>
-<td style="text-align: left;">{年齡層=18-29 歲, 網購=是, 運動頻率=每週運動}</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R09</td>
-<td style="text-align: left;">{年齡層=50 歲以上, 網購=否, 運動頻率=幾乎不運動}</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R10</td>
-<td style="text-align: left;">{年齡層=18-29 歲, 網購=是, 運動頻率=偶爾運動}</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R12</td>
-<td style="text-align: left;">{年齡層=18-29 歲, 網購=是, 運動頻率=每週運動}</td>
-</tr>
-</tbody>
-</table>
-<p><strong>步驟 5：編碼結果。</strong> <code>網購=否</code> 是一個獨立的項目，不是「沒有 <code>網購=是</code>」。</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 11%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">編號</th>
-<th style="text-align: left;">年齡層=18-29 歲</th>
-<th style="text-align: left;">年齡層=30-49 歲</th>
-<th style="text-align: left;">年齡層=50 歲以上</th>
-<th style="text-align: left;">網購=否</th>
-<th style="text-align: left;">網購=是</th>
-<th style="text-align: left;">運動頻率=偶爾運動</th>
-<th style="text-align: left;">運動頻率=幾乎不運動</th>
-<th style="text-align: left;">運動頻率=每週運動</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">R01</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R02</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R03</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R04</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R05</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R06</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R07</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R09</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">R10</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">R12</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">1</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">重要</span>完整案例分析的可能影響
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>本例排除了 2 位運動頻率回答「不知道」或「拒答」的受訪者，分母從 12 人變成 10 人。如果不回答運動頻率的人有某種共同特徵（例如較少運動），排除他們會讓規則偏向回答者的樣貌。報告中要寫明排除人數與這個限制。</p>
-</div>
-</div>
-<details class="code-fold">
-<summary>
-顯示程式碼：問卷前處理（即產生上表的程式）
-</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> decode_survey(df, dictionary):</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;依資料字典把原始值換成標籤；標示為「缺失」的值與空白一律設為缺失（不是「否」，也不是答案）。&quot;&quot;&quot;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    out, log <span class="op">=</span> df.copy(), []</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> col <span class="kw">in</span> df.columns:</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        rules <span class="op">=</span> dictionary[dictionary[<span class="st">&quot;欄位&quot;</span>] <span class="op">==</span> col]</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (rules[<span class="st">&quot;類別&quot;</span>] <span class="op">==</span> <span class="st">&quot;ID&quot;</span>).<span class="bu">any</span>():</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        lab <span class="op">=</span> <span class="bu">dict</span>(<span class="bu">zip</span>(rules[<span class="st">&quot;原始值&quot;</span>], rules[<span class="st">&quot;標籤&quot;</span>]))</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        kind <span class="op">=</span> <span class="bu">dict</span>(<span class="bu">zip</span>(rules[<span class="st">&quot;原始值&quot;</span>], rules[<span class="st">&quot;類別&quot;</span>]))</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        raw <span class="op">=</span> df[col].astype(<span class="bu">str</span>).<span class="bu">str</span>.strip()</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        miss <span class="op">=</span> (raw <span class="op">==</span> <span class="st">&quot;&quot;</span>) <span class="op">|</span> raw.<span class="bu">map</span>(<span class="kw">lambda</span> v: kind.get(v) <span class="op">==</span> <span class="st">&quot;缺失&quot;</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        unknown <span class="op">=</span> <span class="bu">sorted</span>(<span class="bu">set</span>(raw[<span class="op">~</span>miss]) <span class="op">-</span> <span class="bu">set</span>(lab))</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> unknown:</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f&quot;</span><span class="sc">{</span>col<span class="sc">}</span><span class="ss"> 有資料字典沒有的值 </span><span class="sc">{</span>unknown<span class="sc">}</span><span class="ss">：停止，請使用者補充資料字典&quot;</span>)</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        out[col] <span class="op">=</span> raw.<span class="bu">map</span>(lab).where(<span class="op">~</span>miss, <span class="va">None</span>)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        changed <span class="op">=</span> <span class="bu">int</span>((raw[<span class="op">~</span>miss] <span class="op">!=</span> out.loc[<span class="op">~</span>miss, col]).<span class="bu">sum</span>())</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> changed:</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            log.append((<span class="st">&quot;依資料字典&quot;</span>, <span class="ss">f&quot;`</span><span class="sc">{</span>col<span class="sc">}</span><span class="ss">`：原始值換成標籤&quot;</span>, changed))</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> v <span class="kw">in</span> <span class="bu">sorted</span>(<span class="bu">set</span>(raw[miss])):</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            name <span class="op">=</span> <span class="st">&quot;空白（未回答）&quot;</span> <span class="cf">if</span> v <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="cf">else</span> <span class="ss">f&quot;</span><span class="sc">{</span>v<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>lab<span class="sc">.</span>get(v)<span class="sc">}</span><span class="ss">&quot;</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            log.append((<span class="st">&quot;依資料字典&quot;</span>, <span class="ss">f&quot;`</span><span class="sc">{</span>col<span class="sc">}</span><span class="ss">`：</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss"> 設為缺失（不當成「否」）&quot;</span>, <span class="bu">int</span>((raw <span class="op">==</span> v).<span class="bu">sum</span>())))</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out, log</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> complete_case(df, columns):</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;完整案例分析：只看選定的分析欄位；任一欄缺失的受訪者排除。&quot;&quot;&quot;</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    miss <span class="op">=</span> df[columns].isna()</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    keep <span class="op">=</span> <span class="op">~</span>miss.<span class="bu">any</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    log <span class="op">=</span> [(<span class="st">&quot;完整案例分析&quot;</span>, <span class="ss">f&quot;`</span><span class="sc">{</span>c<span class="sc">}</span><span class="ss">` 缺失人數&quot;</span>, <span class="bu">int</span>(miss[c].<span class="bu">sum</span>())) <span class="cf">for</span> c <span class="kw">in</span> columns]</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;完整案例分析&quot;</span>, <span class="st">&quot;排除的受訪者（選定欄位任一缺失）&quot;</span>, <span class="bu">int</span>((<span class="op">~</span>keep).<span class="bu">sum</span>())))</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    log.append((<span class="st">&quot;結果&quot;</span>, <span class="st">&quot;分析人數 N（support 的分母）&quot;</span>, <span class="bu">int</span>(keep.<span class="bu">sum</span>())))</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df[keep], log</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> encode_items(df, id_col, columns):</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;每位受訪者一個 basket，項目寫成「欄位=類別」；「否」也是一個項目。&quot;&quot;&quot;</span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {r[id_col]: <span class="bu">frozenset</span>(<span class="ss">f&quot;</span><span class="sc">{</span>c<span class="sc">}</span><span class="ss">=</span><span class="sc">{</span>r[c]<span class="sc">}</span><span class="ss">&quot;</span> <span class="cf">for</span> c <span class="kw">in</span> columns) <span class="cf">for</span> _, r <span class="kw">in</span> df.iterrows()}</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 </section>
 </section>
 </section>
@@ -7194,64 +6418,8 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="示範設定-示意" class="level2" data-number="5.3">
-<h2 data-number="5.3" class="anchored" data-anchor-id="示範設定-示意"><span class="header-section-number">5.3</span> 示範設定 <span class="badge-demo">示意</span></h2>
-<p>下面的值<strong>只是示範</strong>，用來說明如何寫設定與理由；不是通用標準，換一份資料就要重新決定。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 第 7 章購物小案例（N = 8）</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">目標</span><span class="kw">:</span><span class="at"> 自由探索</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">演算法</span><span class="kw">:</span><span class="at"> FP-growth</span><span class="co">        # 或 Apriori；結果相同</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">最低支持度</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.25</span><span class="co">        # = 至少 2 筆交易；只有 8 筆，1 筆的組合太容易是巧合</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">最低信賴度</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.6</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">lift</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&gt; 1&quot;</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">規則長度</span><span class="kw">:</span><span class="at"> 前件 ≤ 2 項、後件 1 項</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">最低前件筆數</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="co">          # 避免「1 筆中 1 筆」的 confidence = 1</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 第 7 章問卷小案例（N = 10）</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">最低支持度</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.2</span><span class="co">         # = 至少 2 人；其餘同上</span></span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">設定</th>
-<th style="text-align: left;">推薦理由</th>
-<th style="text-align: left;">限制</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">最低支持度換算成「至少 2 筆」</td>
-<td style="text-align: left;">讓每條規則至少有兩筆觀測支持</td>
-<td style="text-align: left;">小樣本下 2 筆仍然很少，結果只能當示範</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">confidence ≥ 0.6</td>
-<td style="text-align: left;">讓規則有一定的可靠度</td>
-<td style="text-align: left;">需搭配後件比例與 lift 一起看</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">lift &gt; 1</td>
-<td style="text-align: left;">排除沒有正相關的規則</td>
-<td style="text-align: left;">lift 稍大於 1 的規則（如 1.0667）意義有限</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">前件 ≤ 2、後件 1</td>
-<td style="text-align: left;">容易解讀</td>
-<td style="text-align: left;">會漏掉更長的組合</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">前件筆數 ≥ 3</td>
-<td style="text-align: left;">避免極少數觀測造成的極端 confidence</td>
-<td style="text-align: left;">門檻本身也是主觀選擇</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="門檻沒有通用標準-已執行" class="level2" data-number="5.4">
-<h2 data-number="5.4" class="anchored" data-anchor-id="門檻沒有通用標準-已執行"><span class="header-section-number">5.4</span> 門檻沒有通用標準 <span class="badge-run">已執行</span></h2>
+<section id="門檻沒有通用標準-已執行" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="門檻沒有通用標準-已執行"><span class="header-section-number">5.3</span> 門檻沒有通用標準 <span class="badge-run">已執行</span></h2>
 <p>以 Groceries 練習資料（<span class="math inline">\(N\)</span> = 9,835 筆交易、169 種商品）為例，只改變最低支持度（其他條件：前件 + 後件 ≤ 3 項、後件 1 項、confidence ≥ 0.3、lift &gt; 1）：</p>
 <table class="caption-top table">
 <colgroup>
@@ -7387,53 +6555,6 @@ window.Quarto = {
 <td style="text-align: left;">yogurt</td>
 <td style="text-align: left;">1,372</td>
 <td style="text-align: left;">0.1395</td>
-</tr>
-</tbody>
-</table>
-<p>Groceries 的前處理紀錄（原始標籤中 <code>cream cheese</code>、<code>roll products</code> 結尾有空白）：</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">類別</th>
-<th style="text-align: left;">處理或檢查</th>
-<th style="text-align: left;">影響筆數</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">讀入</td>
-<td style="text-align: left;">原始資料列數</td>
-<td style="text-align: left;">43,367</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">固定規則</td>
-<td style="text-align: left;">去除商品名稱前後空白</td>
-<td style="text-align: left;">491</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">檢查</td>
-<td style="text-align: left;">商品名稱空白的列（有的話要詢問使用者）</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">固定規則</td>
-<td style="text-align: left;">同一筆交易中的同一商品只算一次（合併的列數）</td>
-<td style="text-align: left;">0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">結果</td>
-<td style="text-align: left;">交易筆數 N（support 的分母）</td>
-<td style="text-align: left;">9,835</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">結果</td>
-<td style="text-align: left;">只有一種商品的有效交易（保留）</td>
-<td style="text-align: left;">2,159</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">結果</td>
-<td style="text-align: left;">與其他交易內容完全相同的交易（全部保留，不刪除）</td>
-<td style="text-align: left;">3,287</td>
 </tr>
 </tbody>
 </table>
@@ -7855,147 +6976,147 @@ window.Quarto = {
 <summary>
 顯示程式碼：Apriori 與 FP-growth 示範、規則計數與篩選
 </summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> apriori_levels(baskets, min_count):</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Apriori 的逐層搜尋：由頻繁 (k-1)-項目集產生 k-項目集候選，先剪掉「有子集不頻繁」的候選，再掃描資料計數。&quot;&quot;&quot;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    rows, freq <span class="op">=</span> [], {}</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    items <span class="op">=</span> <span class="bu">sorted</span>({i <span class="cf">for</span> b <span class="kw">in</span> baskets.values() <span class="cf">for</span> i <span class="kw">in</span> b})</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    cands <span class="op">=</span> [<span class="bu">frozenset</span>([i]) <span class="cf">for</span> i <span class="kw">in</span> items]</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    k <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> cands:</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        level <span class="op">=</span> {}</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> c <span class="kw">in</span> cands:</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            bad <span class="op">=</span> [s <span class="cf">for</span> s <span class="kw">in</span> combinations(<span class="bu">sorted</span>(c), k <span class="op">-</span> <span class="dv">1</span>) <span class="cf">if</span> k <span class="op">&gt;</span> <span class="dv">1</span> <span class="kw">and</span> <span class="bu">frozenset</span>(s) <span class="kw">not</span> <span class="kw">in</span> freq]</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> bad:</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                rows.append([k, set_text(c), <span class="st">&quot;剪掉：子集 &quot;</span> <span class="op">+</span> set_text(bad[<span class="dv">0</span>]) <span class="op">+</span> <span class="st">&quot; 不頻繁&quot;</span>, <span class="st">&quot;不計數&quot;</span>, <span class="st">&quot;—&quot;</span>])</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>            n <span class="op">=</span> count(baskets, c)</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            ok <span class="op">=</span> n <span class="op">&gt;=</span> min_count</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            rows.append([k, set_text(c), <span class="st">&quot;掃描資料計數&quot;</span>, n, <span class="st">&quot;頻繁&quot;</span> <span class="cf">if</span> ok <span class="cf">else</span> <span class="st">&quot;不頻繁&quot;</span>])</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> ok:</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>                level[c] <span class="op">=</span> n</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        freq.update(level)</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        k <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        prev <span class="op">=</span> <span class="bu">sorted</span>(level, key<span class="op">=</span><span class="kw">lambda</span> s: <span class="bu">sorted</span>(s))</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        cands <span class="op">=</span> <span class="bu">sorted</span>({a <span class="op">|</span> b <span class="cf">for</span> a, b <span class="kw">in</span> combinations(prev, <span class="dv">2</span>) <span class="cf">if</span> <span class="bu">len</span>(a <span class="op">|</span> b) <span class="op">==</span> k}, key<span class="op">=</span><span class="kw">lambda</span> s: <span class="bu">sorted</span>(s))</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rows, freq</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rule_pruning(baskets, itemset, minconf):</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;同一個頻繁項目集產生的規則：前件較大的規則若 confidence 不夠，把前件再縮小的規則一定也不夠，可直接跳過。&quot;&quot;&quot;</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    I, rows <span class="op">=</span> <span class="bu">frozenset</span>(itemset), []</span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    failed <span class="op">=</span> []</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(I) <span class="op">-</span> <span class="dv">1</span>, <span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> lhs <span class="kw">in</span> combinations(<span class="bu">sorted</span>(I), k):</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>            A <span class="op">=</span> <span class="bu">frozenset</span>(lhs)</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="bu">any</span>(A <span class="op">&lt;</span> f <span class="cf">for</span> f <span class="kw">in</span> failed):</span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>                rows.append([set_text(A), set_text(I <span class="op">-</span> A), <span class="st">&quot;—&quot;</span>, <span class="st">&quot;跳過：前件更大的規則已不合格&quot;</span>])</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>            c <span class="op">=</span> count(baskets, I) <span class="op">/</span> count(baskets, A)</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>            ok <span class="op">=</span> c <span class="op">&gt;=</span> minconf <span class="op">-</span> <span class="fl">1e-12</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>            rows.append([set_text(A), set_text(I <span class="op">-</span> A), c, <span class="st">&quot;合格&quot;</span> <span class="cf">if</span> ok <span class="cf">else</span> <span class="st">&quot;不合格&quot;</span>])</span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> ok:</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>                failed.append(A)</span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rows</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fp_order(baskets, min_count):</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;第一次掃描：計算每個項目的出現筆數，去掉不頻繁項目，其餘依出現筆數由多到少排序（同數依名稱）。&quot;&quot;&quot;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    cnt <span class="op">=</span> {}</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> b <span class="kw">in</span> baskets.values():</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> b:</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            cnt[i] <span class="op">=</span> cnt.get(i, <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    order <span class="op">=</span> <span class="bu">sorted</span>((i <span class="cf">for</span> i <span class="kw">in</span> cnt <span class="cf">if</span> cnt[i] <span class="op">&gt;=</span> min_count), key<span class="op">=</span><span class="kw">lambda</span> i: (<span class="op">-</span>cnt[i], i))</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> order, cnt</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fp_tree(paths, order):</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;第二次掃描：把每筆排序後的交易放進前綴樹；共用前綴的交易共用節點，節點上記錄經過的交易數。&quot;&quot;&quot;</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    root <span class="op">=</span> {<span class="st">&quot;item&quot;</span>: <span class="va">None</span>, <span class="st">&quot;count&quot;</span>: <span class="dv">0</span>, <span class="st">&quot;children&quot;</span>: {}}</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    rank <span class="op">=</span> {i: k <span class="cf">for</span> k, i <span class="kw">in</span> <span class="bu">enumerate</span>(order)}</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> items, c <span class="kw">in</span> paths:</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        node <span class="op">=</span> root</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">sorted</span>((x <span class="cf">for</span> x <span class="kw">in</span> items <span class="cf">if</span> x <span class="kw">in</span> rank), key<span class="op">=</span>rank.get):</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            node <span class="op">=</span> node[<span class="st">&quot;children&quot;</span>].setdefault(i, {<span class="st">&quot;item&quot;</span>: i, <span class="st">&quot;count&quot;</span>: <span class="dv">0</span>, <span class="st">&quot;children&quot;</span>: {}})</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            node[<span class="st">&quot;count&quot;</span>] <span class="op">+=</span> c</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> root</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prefix_paths(root, item):</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;找出某項目在樹中的每個節點，往上收集它的前綴路徑；路徑次數取該節點的次數。&quot;&quot;&quot;</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> []</span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> walk(node, path):</span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> ch <span class="kw">in</span> node[<span class="st">&quot;children&quot;</span>].values():</span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> ch[<span class="st">&quot;item&quot;</span>] <span class="op">==</span> item:</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>                out.append((<span class="bu">tuple</span>(path), ch[<span class="st">&quot;count&quot;</span>]))</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>            walk(ch, path <span class="op">+</span> [ch[<span class="st">&quot;item&quot;</span>]])</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    walk(root, [])</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fp_growth(paths, min_count, suffix<span class="op">=</span>()):</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;由出現次數最少的項目開始，對每個項目建立條件 FP-tree（只看包含它的交易）並遞迴，找出所有頻繁項目集。&quot;&quot;&quot;</span></span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    cnt <span class="op">=</span> {}</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> items, c <span class="kw">in</span> paths:</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> items:</span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>            cnt[i] <span class="op">=</span> cnt.get(i, <span class="dv">0</span>) <span class="op">+</span> c</span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> {}</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> item <span class="kw">in</span> <span class="bu">sorted</span>((i <span class="cf">for</span> i <span class="kw">in</span> cnt <span class="cf">if</span> cnt[i] <span class="op">&gt;=</span> min_count), key<span class="op">=</span><span class="kw">lambda</span> i: (cnt[i], i)):</span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        itemset <span class="op">=</span> <span class="bu">frozenset</span>((item,) <span class="op">+</span> suffix)</span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        result[itemset] <span class="op">=</span> cnt[item]</span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>        order <span class="op">=</span> <span class="bu">sorted</span>(cnt, key<span class="op">=</span><span class="kw">lambda</span> i: (<span class="op">-</span>cnt[i], i))</span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>        cond <span class="op">=</span> prefix_paths(fp_tree(paths, order), item)</span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>        result.update(fp_growth(cond, min_count, (item,) <span class="op">+</span> suffix))</span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> count(baskets, itemset):</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> b <span class="kw">in</span> baskets.values() <span class="cf">if</span> itemset <span class="op">&lt;=</span> b)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> enumerate_rules(baskets, max_lhs<span class="op">=</span><span class="dv">2</span>):</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;列出所有前件 ≤ max_lhs 項、後件 1 項、且至少在 1 筆中同時出現的規則（直接逐筆計數）。&quot;&quot;&quot;</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(baskets)</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    items <span class="op">=</span> <span class="bu">sorted</span>({i <span class="cf">for</span> b <span class="kw">in</span> baskets.values() <span class="cf">for</span> i <span class="kw">in</span> b})</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> []</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, max_lhs <span class="op">+</span> <span class="dv">1</span>):</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> lhs <span class="kw">in</span> combinations(items, k):</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>            A <span class="op">=</span> <span class="bu">frozenset</span>(lhs)</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>            cA <span class="op">=</span> count(baskets, A)</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cA <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> b <span class="kw">in</span> items:</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> b <span class="kw">in</span> A <span class="kw">or</span> (<span class="bu">any</span>(<span class="st">&quot;=&quot;</span> <span class="kw">in</span> x <span class="cf">for</span> x <span class="kw">in</span> A) <span class="kw">and</span> b.split(<span class="st">&quot;=&quot;</span>)[<span class="dv">0</span>] <span class="kw">in</span> {x.split(<span class="st">&quot;=&quot;</span>)[<span class="dv">0</span>] <span class="cf">for</span> x <span class="kw">in</span> A}):</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>                B <span class="op">=</span> <span class="bu">frozenset</span>([b])</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                cAB <span class="op">=</span> count(baskets, A <span class="op">|</span> B)</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> cAB <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                cB <span class="op">=</span> count(baskets, B)</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                rows.append({<span class="st">&quot;前件&quot;</span>: set_text(A), <span class="st">&quot;後件&quot;</span>: set_text(B), <span class="st">&quot;前件筆數&quot;</span>: cA, <span class="st">&quot;後件筆數&quot;</span>: cB,</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;共同筆數&quot;</span>: cAB, <span class="st">&quot;support&quot;</span>: cAB <span class="op">/</span> n, <span class="st">&quot;confidence&quot;</span>: cAB <span class="op">/</span> cA,</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;後件比例&quot;</span>: cB <span class="op">/</span> n, <span class="st">&quot;lift&quot;</span>: (cAB <span class="op">/</span> cA) <span class="op">/</span> (cB <span class="op">/</span> n)})</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame(rows)</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> apply_filters(rules, n, minsup, minconf, minlift, min_lhs_count, max_lhs):</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;依設定篩選，並記錄每一步剩下幾條（不偷偷調整門檻）。&quot;&quot;&quot;</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    steps <span class="op">=</span> [(<span class="st">&quot;全部候選規則（前件 ≤ </span><span class="sc">{}</span><span class="st"> 項、後件 1 項）&quot;</span>.<span class="bu">format</span>(max_lhs), <span class="bu">len</span>(rules))]</span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    min_count <span class="op">=</span> math.ceil(minsup <span class="op">*</span> n <span class="op">-</span> <span class="fl">1e-9</span>)</span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> rules[rules[<span class="st">&quot;共同筆數&quot;</span>] <span class="op">&gt;=</span> min_count]</span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;support ≥ </span><span class="sc">{</span>minsup<span class="sc">}</span><span class="ss">（共同筆數 ≥ </span><span class="sc">{</span>min_count<span class="sc">}</span><span class="ss">）&quot;</span>, <span class="bu">len</span>(r)))</span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[r[<span class="st">&quot;前件筆數&quot;</span>] <span class="op">&gt;=</span> min_lhs_count]</span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;前件筆數 ≥ </span><span class="sc">{</span>min_lhs_count<span class="sc">}</span><span class="ss">&quot;</span>, <span class="bu">len</span>(r)))</span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[r[<span class="st">&quot;confidence&quot;</span>] <span class="op">&gt;=</span> minconf <span class="op">-</span> <span class="fl">1e-12</span>]</span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;confidence ≥ </span><span class="sc">{</span>minconf<span class="sc">}</span><span class="ss">&quot;</span>, <span class="bu">len</span>(r)))</span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[r[<span class="st">&quot;lift&quot;</span>] <span class="op">&gt;</span> minlift]</span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;lift &gt; </span><span class="sc">{</span>minlift<span class="sc">}</span><span class="ss">&quot;</span>, <span class="bu">len</span>(r)))</span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 冗餘：前件 2 項的規則，若拿掉其中一項後（同一後件）confidence 已相同或更高，多出的那一項沒有提供資訊</span></span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>    conf <span class="op">=</span> {(a, b): c <span class="cf">for</span> a, b, c <span class="kw">in</span> <span class="bu">zip</span>(rules[<span class="st">&quot;前件&quot;</span>], rules[<span class="st">&quot;後件&quot;</span>], rules[<span class="st">&quot;confidence&quot;</span>])}</span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> redundant(row):</span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>        lhs <span class="op">=</span> row[<span class="st">&quot;前件&quot;</span>].strip(<span class="st">&quot;</span><span class="sc">{}</span><span class="st">&quot;</span>).split(<span class="st">&quot;, &quot;</span>)</span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">len</span>(lhs) <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> <span class="bu">any</span>(conf.get((set_text([x]), row[<span class="st">&quot;後件&quot;</span>]), <span class="op">-</span><span class="dv">1</span>) <span class="op">&gt;=</span> row[<span class="st">&quot;confidence&quot;</span>] <span class="op">-</span> <span class="fl">1e-12</span> <span class="cf">for</span> x <span class="kw">in</span> lhs)</span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    red <span class="op">=</span> r.<span class="bu">apply</span>(redundant, axis<span class="op">=</span><span class="dv">1</span>) <span class="cf">if</span> <span class="bu">len</span>(r) <span class="cf">else</span> pd.Series(dtype<span class="op">=</span><span class="bu">bool</span>)</span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[<span class="op">~</span>red] <span class="cf">if</span> <span class="bu">len</span>(r) <span class="cf">else</span> r</span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="st">&quot;移除冗餘規則（較短前件的 confidence 已相同或更高）&quot;</span>, <span class="bu">len</span>(r)))</span>
-<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r.sort_values([<span class="st">&quot;lift&quot;</span>, <span class="st">&quot;共同筆數&quot;</span>, <span class="st">&quot;前件&quot;</span>, <span class="st">&quot;後件&quot;</span>], ascending<span class="op">=</span>[<span class="va">False</span>, <span class="va">False</span>, <span class="va">True</span>, <span class="va">True</span>]), steps</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> apriori_levels(baskets, min_count):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Apriori 的逐層搜尋：由頻繁 (k-1)-項目集產生 k-項目集候選，先剪掉「有子集不頻繁」的候選，再掃描資料計數。&quot;&quot;&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    rows, freq <span class="op">=</span> [], {}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    items <span class="op">=</span> <span class="bu">sorted</span>({i <span class="cf">for</span> b <span class="kw">in</span> baskets.values() <span class="cf">for</span> i <span class="kw">in</span> b})</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    cands <span class="op">=</span> [<span class="bu">frozenset</span>([i]) <span class="cf">for</span> i <span class="kw">in</span> items]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    k <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> cands:</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        level <span class="op">=</span> {}</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> c <span class="kw">in</span> cands:</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            bad <span class="op">=</span> [s <span class="cf">for</span> s <span class="kw">in</span> combinations(<span class="bu">sorted</span>(c), k <span class="op">-</span> <span class="dv">1</span>) <span class="cf">if</span> k <span class="op">&gt;</span> <span class="dv">1</span> <span class="kw">and</span> <span class="bu">frozenset</span>(s) <span class="kw">not</span> <span class="kw">in</span> freq]</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> bad:</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                rows.append([k, set_text(c), <span class="st">&quot;剪掉：子集 &quot;</span> <span class="op">+</span> set_text(bad[<span class="dv">0</span>]) <span class="op">+</span> <span class="st">&quot; 不頻繁&quot;</span>, <span class="st">&quot;不計數&quot;</span>, <span class="st">&quot;—&quot;</span>])</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            n <span class="op">=</span> count(baskets, c)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            ok <span class="op">=</span> n <span class="op">&gt;=</span> min_count</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            rows.append([k, set_text(c), <span class="st">&quot;掃描資料計數&quot;</span>, n, <span class="st">&quot;頻繁&quot;</span> <span class="cf">if</span> ok <span class="cf">else</span> <span class="st">&quot;不頻繁&quot;</span>])</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> ok:</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                level[c] <span class="op">=</span> n</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        freq.update(level)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        k <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        prev <span class="op">=</span> <span class="bu">sorted</span>(level, key<span class="op">=</span><span class="kw">lambda</span> s: <span class="bu">sorted</span>(s))</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        cands <span class="op">=</span> <span class="bu">sorted</span>({a <span class="op">|</span> b <span class="cf">for</span> a, b <span class="kw">in</span> combinations(prev, <span class="dv">2</span>) <span class="cf">if</span> <span class="bu">len</span>(a <span class="op">|</span> b) <span class="op">==</span> k}, key<span class="op">=</span><span class="kw">lambda</span> s: <span class="bu">sorted</span>(s))</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rows, freq</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rule_pruning(baskets, itemset, minconf):</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;同一個頻繁項目集產生的規則：前件較大的規則若 confidence 不夠，把前件再縮小的規則一定也不夠，可直接跳過。&quot;&quot;&quot;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    I, rows <span class="op">=</span> <span class="bu">frozenset</span>(itemset), []</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    failed <span class="op">=</span> []</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(I) <span class="op">-</span> <span class="dv">1</span>, <span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> lhs <span class="kw">in</span> combinations(<span class="bu">sorted</span>(I), k):</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>            A <span class="op">=</span> <span class="bu">frozenset</span>(lhs)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="bu">any</span>(A <span class="op">&lt;</span> f <span class="cf">for</span> f <span class="kw">in</span> failed):</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>                rows.append([set_text(A), set_text(I <span class="op">-</span> A), <span class="st">&quot;—&quot;</span>, <span class="st">&quot;跳過：前件更大的規則已不合格&quot;</span>])</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>            c <span class="op">=</span> count(baskets, I) <span class="op">/</span> count(baskets, A)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            ok <span class="op">=</span> c <span class="op">&gt;=</span> minconf <span class="op">-</span> <span class="fl">1e-12</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            rows.append([set_text(A), set_text(I <span class="op">-</span> A), c, <span class="st">&quot;合格&quot;</span> <span class="cf">if</span> ok <span class="cf">else</span> <span class="st">&quot;不合格&quot;</span>])</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> ok:</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>                failed.append(A)</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rows</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fp_order(baskets, min_count):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;第一次掃描：計算每個項目的出現筆數，去掉不頻繁項目，其餘依出現筆數由多到少排序（同數依名稱）。&quot;&quot;&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    cnt <span class="op">=</span> {}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> b <span class="kw">in</span> baskets.values():</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> b:</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>            cnt[i] <span class="op">=</span> cnt.get(i, <span class="dv">0</span>) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    order <span class="op">=</span> <span class="bu">sorted</span>((i <span class="cf">for</span> i <span class="kw">in</span> cnt <span class="cf">if</span> cnt[i] <span class="op">&gt;=</span> min_count), key<span class="op">=</span><span class="kw">lambda</span> i: (<span class="op">-</span>cnt[i], i))</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> order, cnt</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fp_tree(paths, order):</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;第二次掃描：把每筆排序後的交易放進前綴樹；共用前綴的交易共用節點，節點上記錄經過的交易數。&quot;&quot;&quot;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    root <span class="op">=</span> {<span class="st">&quot;item&quot;</span>: <span class="va">None</span>, <span class="st">&quot;count&quot;</span>: <span class="dv">0</span>, <span class="st">&quot;children&quot;</span>: {}}</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    rank <span class="op">=</span> {i: k <span class="cf">for</span> k, i <span class="kw">in</span> <span class="bu">enumerate</span>(order)}</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> items, c <span class="kw">in</span> paths:</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        node <span class="op">=</span> root</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">sorted</span>((x <span class="cf">for</span> x <span class="kw">in</span> items <span class="cf">if</span> x <span class="kw">in</span> rank), key<span class="op">=</span>rank.get):</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            node <span class="op">=</span> node[<span class="st">&quot;children&quot;</span>].setdefault(i, {<span class="st">&quot;item&quot;</span>: i, <span class="st">&quot;count&quot;</span>: <span class="dv">0</span>, <span class="st">&quot;children&quot;</span>: {}})</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            node[<span class="st">&quot;count&quot;</span>] <span class="op">+=</span> c</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> root</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prefix_paths(root, item):</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;找出某項目在樹中的每個節點，往上收集它的前綴路徑；路徑次數取該節點的次數。&quot;&quot;&quot;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> []</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> walk(node, path):</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> ch <span class="kw">in</span> node[<span class="st">&quot;children&quot;</span>].values():</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> ch[<span class="st">&quot;item&quot;</span>] <span class="op">==</span> item:</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>                out.append((<span class="bu">tuple</span>(path), ch[<span class="st">&quot;count&quot;</span>]))</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            walk(ch, path <span class="op">+</span> [ch[<span class="st">&quot;item&quot;</span>]])</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    walk(root, [])</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> out</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fp_growth(paths, min_count, suffix<span class="op">=</span>()):</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;由出現次數最少的項目開始，對每個項目建立條件 FP-tree（只看包含它的交易）並遞迴，找出所有頻繁項目集。&quot;&quot;&quot;</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    cnt <span class="op">=</span> {}</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> items, c <span class="kw">in</span> paths:</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> items:</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>            cnt[i] <span class="op">=</span> cnt.get(i, <span class="dv">0</span>) <span class="op">+</span> c</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> {}</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> item <span class="kw">in</span> <span class="bu">sorted</span>((i <span class="cf">for</span> i <span class="kw">in</span> cnt <span class="cf">if</span> cnt[i] <span class="op">&gt;=</span> min_count), key<span class="op">=</span><span class="kw">lambda</span> i: (cnt[i], i)):</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        itemset <span class="op">=</span> <span class="bu">frozenset</span>((item,) <span class="op">+</span> suffix)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        result[itemset] <span class="op">=</span> cnt[item]</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        order <span class="op">=</span> <span class="bu">sorted</span>(cnt, key<span class="op">=</span><span class="kw">lambda</span> i: (<span class="op">-</span>cnt[i], i))</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        cond <span class="op">=</span> prefix_paths(fp_tree(paths, order), item)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        result.update(fp_growth(cond, min_count, (item,) <span class="op">+</span> suffix))</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> count(baskets, itemset):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> b <span class="kw">in</span> baskets.values() <span class="cf">if</span> itemset <span class="op">&lt;=</span> b)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> enumerate_rules(baskets, max_lhs<span class="op">=</span><span class="dv">2</span>):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;列出所有前件 ≤ max_lhs 項、後件 1 項、且至少在 1 筆中同時出現的規則（直接逐筆計數）。&quot;&quot;&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(baskets)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    items <span class="op">=</span> <span class="bu">sorted</span>({i <span class="cf">for</span> b <span class="kw">in</span> baskets.values() <span class="cf">for</span> i <span class="kw">in</span> b})</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> []</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, max_lhs <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> lhs <span class="kw">in</span> combinations(items, k):</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            A <span class="op">=</span> <span class="bu">frozenset</span>(lhs)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            cA <span class="op">=</span> count(baskets, A)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cA <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> b <span class="kw">in</span> items:</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> b <span class="kw">in</span> A <span class="kw">or</span> (<span class="bu">any</span>(<span class="st">&quot;=&quot;</span> <span class="kw">in</span> x <span class="cf">for</span> x <span class="kw">in</span> A) <span class="kw">and</span> b.split(<span class="st">&quot;=&quot;</span>)[<span class="dv">0</span>] <span class="kw">in</span> {x.split(<span class="st">&quot;=&quot;</span>)[<span class="dv">0</span>] <span class="cf">for</span> x <span class="kw">in</span> A}):</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>                B <span class="op">=</span> <span class="bu">frozenset</span>([b])</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>                cAB <span class="op">=</span> count(baskets, A <span class="op">|</span> B)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> cAB <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>                cB <span class="op">=</span> count(baskets, B)</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>                rows.append({<span class="st">&quot;前件&quot;</span>: set_text(A), <span class="st">&quot;後件&quot;</span>: set_text(B), <span class="st">&quot;前件筆數&quot;</span>: cA, <span class="st">&quot;後件筆數&quot;</span>: cB,</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;共同筆數&quot;</span>: cAB, <span class="st">&quot;support&quot;</span>: cAB <span class="op">/</span> n, <span class="st">&quot;confidence&quot;</span>: cAB <span class="op">/</span> cA,</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;後件比例&quot;</span>: cB <span class="op">/</span> n, <span class="st">&quot;lift&quot;</span>: (cAB <span class="op">/</span> cA) <span class="op">/</span> (cB <span class="op">/</span> n)})</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame(rows)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> apply_filters(rules, n, minsup, minconf, minlift, min_lhs_count, max_lhs):</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;依設定篩選，並記錄每一步剩下幾條（不偷偷調整門檻）。&quot;&quot;&quot;</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    steps <span class="op">=</span> [(<span class="st">&quot;全部候選規則（前件 ≤ </span><span class="sc">{}</span><span class="st"> 項、後件 1 項）&quot;</span>.<span class="bu">format</span>(max_lhs), <span class="bu">len</span>(rules))]</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    min_count <span class="op">=</span> math.ceil(minsup <span class="op">*</span> n <span class="op">-</span> <span class="fl">1e-9</span>)</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> rules[rules[<span class="st">&quot;共同筆數&quot;</span>] <span class="op">&gt;=</span> min_count]</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;support ≥ </span><span class="sc">{</span>minsup<span class="sc">}</span><span class="ss">（共同筆數 ≥ </span><span class="sc">{</span>min_count<span class="sc">}</span><span class="ss">）&quot;</span>, <span class="bu">len</span>(r)))</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[r[<span class="st">&quot;前件筆數&quot;</span>] <span class="op">&gt;=</span> min_lhs_count]</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;前件筆數 ≥ </span><span class="sc">{</span>min_lhs_count<span class="sc">}</span><span class="ss">&quot;</span>, <span class="bu">len</span>(r)))</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[r[<span class="st">&quot;confidence&quot;</span>] <span class="op">&gt;=</span> minconf <span class="op">-</span> <span class="fl">1e-12</span>]</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;confidence ≥ </span><span class="sc">{</span>minconf<span class="sc">}</span><span class="ss">&quot;</span>, <span class="bu">len</span>(r)))</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[r[<span class="st">&quot;lift&quot;</span>] <span class="op">&gt;</span> minlift]</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="ss">f&quot;lift &gt; </span><span class="sc">{</span>minlift<span class="sc">}</span><span class="ss">&quot;</span>, <span class="bu">len</span>(r)))</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 冗餘：前件 2 項的規則，若拿掉其中一項後（同一後件）confidence 已相同或更高，多出的那一項沒有提供資訊</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    conf <span class="op">=</span> {(a, b): c <span class="cf">for</span> a, b, c <span class="kw">in</span> <span class="bu">zip</span>(rules[<span class="st">&quot;前件&quot;</span>], rules[<span class="st">&quot;後件&quot;</span>], rules[<span class="st">&quot;confidence&quot;</span>])}</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> redundant(row):</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>        lhs <span class="op">=</span> row[<span class="st">&quot;前件&quot;</span>].strip(<span class="st">&quot;</span><span class="sc">{}</span><span class="st">&quot;</span>).split(<span class="st">&quot;, &quot;</span>)</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">len</span>(lhs) <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> <span class="bu">any</span>(conf.get((set_text([x]), row[<span class="st">&quot;後件&quot;</span>]), <span class="op">-</span><span class="dv">1</span>) <span class="op">&gt;=</span> row[<span class="st">&quot;confidence&quot;</span>] <span class="op">-</span> <span class="fl">1e-12</span> <span class="cf">for</span> x <span class="kw">in</span> lhs)</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    red <span class="op">=</span> r.<span class="bu">apply</span>(redundant, axis<span class="op">=</span><span class="dv">1</span>) <span class="cf">if</span> <span class="bu">len</span>(r) <span class="cf">else</span> pd.Series(dtype<span class="op">=</span><span class="bu">bool</span>)</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> r[<span class="op">~</span>red] <span class="cf">if</span> <span class="bu">len</span>(r) <span class="cf">else</span> r</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    steps.append((<span class="st">&quot;移除冗餘規則（較短前件的 confidence 已相同或更高）&quot;</span>, <span class="bu">len</span>(r)))</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r.sort_values([<span class="st">&quot;lift&quot;</span>, <span class="st">&quot;共同筆數&quot;</span>, <span class="st">&quot;前件&quot;</span>, <span class="st">&quot;後件&quot;</span>], ascending<span class="op">=</span>[<span class="va">False</span>, <span class="va">False</span>, <span class="va">True</span>, <span class="va">True</span>]), steps</span></code></pre></div><button title="複製到剪貼簿" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </section>
 <section id="篩選要依序要記錄" class="level2" data-number="6.6">
@@ -8199,7 +7320,7 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p><strong>設定</strong>：第 5 章的示範設定（最低支持度 0.25 = 至少 2 筆、confidence ≥ 0.6、lift &gt; 1、前件 ≤ 2 項、前件筆數 ≥ 3）。</p>
+<p><strong>設定</strong>：最低支持度 0.25（至少 2 筆）、confidence ≥ 0.6、lift &gt; 1、前件 ≤ 2 項、前件筆數 ≥ 3。</p>
 <p><strong>輸出</strong>：保留的規則。</p>
 <table class="caption-top table">
 <colgroup>

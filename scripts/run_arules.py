@@ -260,7 +260,8 @@ def config_template(args, det, prof, df):
            "shopping": None, "survey": None,
            "question": {"goal": None, "items": [], "label": None},
            "params": {"algorithm": None, "min_support": None, "min_confidence": None, "min_lift": None, "max_lhs": None,
-                      "min_lhs_count": None, "confirmed": False, "reason": None},
+                      "min_lhs_count": None, "try_support": None, "try_confidence": None,
+                      "confirmed": False, "reason": None},
            "report": {"title": "關聯規則分析報告", "background": None, "goal": None},
            "confirmations": []}
     t = det["type"]
@@ -925,19 +926,84 @@ def stop(code, title, items, out_dir, kind, extra=""):
     sys.exit(code)
 
 
+def max_cooccur(goal, B, target):
+    """依分析目標，任何一條候選規則最多能有幾筆共同出現（= 規則的 support count 上限）。"""
+    if goal == "lhs":
+        A = [B.idx[i] for i in target]
+        co = B.X[B.X[:, A].all(axis=1)].sum(axis=0)
+        co[A] = 0
+        return int(co.max()) if len(co) else 0
+    X = B.X.astype(np.int32)
+    M = X.T @ X
+    np.fill_diagonal(M, 0)
+    if goal == "rhs":
+        return int(M[:, B.idx[target[0]]].max()) if M.size else 0
+    return int(M.max()) if M.size else 0
+
+
+def support_of_count(c, n):
+    """最低筆數 c 對應的最低支持度：取到小數第 6 位並確保換算回來仍是 c 筆。"""
+    s = math.floor(c / n * 1e6) / 1e6
+    return s if s > 0 and min_count_of(s, n) == c else c / n
+
+
+def source_text(tags):
+    order = ["目前設定", "預設候選"]
+    return "、".join(sorted(tags, key=lambda x: (order.index(x) if x in order else 2, x)))
+
+
 def param_reference(goal, B, units, P, target, survey):
-    """只改一個參數（最低支持度乘上 0.5、1、2、4 倍；或 confidence 門檻），列出保留規則數，協助使用者決定（不自動選擇）。"""
-    rows = []
-    for f in (0.5, 1, 2, 4):
-        s = round(P["min_support"] * f, 6)
-        q = dict(P, min_support=s)
-        r, _ = mine(goal, B, units, q, target, survey)
-        rows.append({"最低支持度": s, "對應最低筆數": min_count_of(s, B.n), "保留規則數": len(r)})
-    rows2 = []
-    for c in (0.1, 0.2, 0.3, 0.5):
-        r, _ = mine(goal, B, units, dict(P, min_confidence=c), target, survey)
-        rows2.append({"confidence 門檻": c, "保留規則數": len(r)})
-    return rows, rows2
+    """參數參考表（協助使用者決定，不自動選擇；一次只改一個參數，其他維持目前設定）。
+
+    最低筆數：預設候選 2、5、10、20、50、100…（1-2-5 數列，約每次加倍），只列 2 筆到「資料中最大共同筆數」之間，
+    再加上目前設定與使用者指定的值（params.try_support）。
+    confidence：預設候選 0.1、0.2、…、0.9，再加上目前設定與使用者指定的值（params.try_confidence）。
+    只探勘一次（取所有候選中最小的最低筆數、不設 confidence 門檻），再依各候選值篩選，所以結果和逐一執行相同。
+    """
+    n = B.n
+    top = max_cooccur(goal, B, target)
+    cur_c = min_count_of(P["min_support"], n)
+    src = {}
+    k, base = 0, (2, 5, 10)
+    while base[k % 3] * 10 ** (k // 3) <= top:
+        src.setdefault(base[k % 3] * 10 ** (k // 3), set()).add("預設候選")
+        k += 1
+    src.setdefault(cur_c, set()).add("目前設定")
+    for s in P.get("try_support") or []:
+        src.setdefault(min_count_of(float(s), n), set()).add(f"使用者指定（{s}）")
+    lo = min(src)
+    rows, _ = mine(goal, B, units, dict(P, min_support=support_of_count(lo, n), min_confidence=None), target, survey)
+    conf = P.get("min_confidence")
+    ok_conf = (lambda r: True) if conf is None else (lambda r: r["confidence"] >= conf - 1e-12)
+    t1 = [{"最低筆數": c, "最低支持度": fmt(support_of_count(c, n), 6),
+           "保留規則數": sum(1 for r in rows if r["count"] >= c and ok_conf(r)),
+           "來源": source_text(src[c])} for c in sorted(src)]
+    csrc = {}
+    for x in range(1, 10):
+        csrc.setdefault(round(x / 10, 1), set()).add("預設候選")
+    if conf is not None:
+        csrc.setdefault(float(conf), set()).add("目前設定")
+    for x in P.get("try_confidence") or []:
+        csrc.setdefault(float(x), set()).add("使用者指定")
+    t2 = [{"confidence 門檻": x, "保留規則數": sum(1 for r in rows if r["count"] >= cur_c and r["confidence"] >= x - 1e-12),
+           "來源": source_text(csrc[x])} for x in sorted(csrc)]
+    return t1, t2, top
+
+
+def check_try(P):
+    """使用者指定的參考值必須是 0 到 1 之間（不含 0）的數字。"""
+    bad = []
+    for k in ("try_support", "try_confidence"):
+        v = P.get(k)
+        if v is None:
+            continue
+        if not isinstance(v, list):
+            bad.append(f"params.{k} 必須是數字清單，例如 [0.02, 0.05]")
+            continue
+        for x in v:
+            if isinstance(x, bool) or not isinstance(x, (int, float)) or not 0 < x <= 1:
+                bad.append(f"params.{k} 的 {x!r} 不是 0 到 1 之間（不含 0）的數字")
+    return bad
 
 
 def settings_text(P, n):
@@ -966,10 +1032,15 @@ def cmd_run(args):
     B = Binary(mine_units)
 
     P = dict(cfg.get("params") or {})
+    bad = check_try(P)
+    if bad:
+        stop(1, "參數不正確", bad, out, "params")
     if not P.get("confirmed"):
         demo = propose_params(B.n)
         demo.update({k: v for k, v in P.items() if v is not None and k in demo})
-        ref, ref2 = param_reference(goal, B, mine_units, demo, target, survey)
+        ref, ref2, top = param_reference(goal, B, mine_units, dict(demo, try_support=P.get("try_support"),
+                                                                     try_confidence=P.get("try_confidence")),
+                                         target, survey)
         extra = ("### 示範設定（起點，不是通用標準）\n" + settings_text(demo, B.n) +
                  f"\n- 分母 N = {B.n:,}；理由：最低支持度 1%（至少 2 筆）避免只出現一兩次的巧合組合；"
                  f"confidence {demo['min_confidence']} 只排除較弱的規則，判斷強弱仍要對照後件比例與 lift；前件 ≤ 2 項較容易解讀；"
@@ -977,10 +1048,17 @@ def cmd_run(args):
                  "- 演算法：Apriori（逐層產生候選、用 Apriori 原理剪枝）與 FP-growth（先壓成 FP-tree 再分治）"
                  "找到的頻繁項目集完全相同，只差速度；FP-growth 通常較快，資料小時差異不大。請使用者選擇 apriori 或 fpgrowth。"
                  + ("指定前件時程式直接計數包含前件的交易，演算法選項不影響結果。" if goal == "lhs" else "") +
-                 "\n\n### 只改最低支持度時的規則數\n" +
-                 md_table(ref, list(ref[0])) + "\n\n### 只改 confidence 門檻時的規則數\n" +
+                 f"\n\n### 參數參考表（協助決定，不自動選擇）\n"
+                 f"資料中共同出現最多的組合有 {top:,} 筆（任何規則的共同筆數都不會超過這個數字）。"
+                 "兩張表都是一次只改一個參數，其他維持目前設定；例如最低前件筆數維持 "
+                 f"{demo['min_lhs_count']}，所以最低筆數低於它時，規則數可能不變。\n\n"
+                 "#### 只改最低筆數（最低支持度）時的規則數\n"
+                 "預設候選為 2、5、10、20、50、100…筆，只列到上述最大共同筆數為止。\n\n" +
+                 md_table(ref, list(ref[0])) + "\n\n#### 只改 confidence 門檻時的規則數\n" +
                  md_table(ref2, list(ref2[0])) +
-                 "\n\n使用者確認或修改後，把值寫入 params，並設定 \"confirmed\": true、\"reason\": 使用者的理由。")
+                 "\n\n使用者想比較其他值時，把支持度寫入 params.try_support、confidence 寫入 params.try_confidence"
+                 "（數字清單），重跑即會加入上表。使用者確認或修改後，把值寫入 params，並設定 \"confirmed\": true、"
+                 "\"reason\": 使用者的理由。")
         stop(2, "需要使用者確認分析參數", [{"key": "params", "count": 1, "options": ["confirm"],
                                          "question": "請確認或修改示範設定"}], out, "params", extra)
     for k in ("min_support", "min_lhs_count"):

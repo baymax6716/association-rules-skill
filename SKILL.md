@@ -126,10 +126,11 @@ python scripts/run_arules.py inspect --data <資料檔> --out arules_output [--t
 `run` 第一次走到這裡會停下，列出三樣東西：
 
 - 示範設定與理由：演算法、最低支持度與對應筆數、confidence、lift、前件長度、最低前件筆數。
-- 只改最低支持度時的規則數表。
-- 只改 confidence 時的規則數表。
+- 資料中最大共同筆數，以及只改最低筆數時的規則數表（預設候選 2、5、10、20、50…筆，只列到最大共同筆數）。
+- 只改 confidence 時的規則數表（預設候選 0.1–0.9）。
 
-把這些給使用者看，強調**示範設定不是通用標準**。演算法請使用者選 Apriori 或 FP-growth（`params.algorithm` = `apriori`／`fpgrowth`），並說明兩者找到的頻繁項目集完全相同、只差速度（指定前件時不影響結果）。使用者確認或修改後，把值寫入 `params`，並設：
+把這些給使用者看，強調**示範設定不是通用標準**、參考表只供比較。使用者想看其他值時，
+把支持度寫入 `params.try_support`、confidence 寫入 `params.try_confidence`（數字清單），重跑後會加入參考表。演算法請使用者選 Apriori 或 FP-growth（`params.algorithm` = `apriori`／`fpgrowth`），並說明兩者找到的頻繁項目集完全相同、只差速度（指定前件時不影響結果）。使用者確認或修改後，把值寫入 `params`，並設：
 - `"confirmed": true`
 - `"reason"`：使用者的理由
 
@@ -178,5 +179,5 @@ python scripts/run_arules.py finalize --config config.json --report arules_outpu
 | `survey.categorical_as_is` | 使用者確認「數字本身就是答案」的欄位 |
 | `survey.complete_case_confirmed` | 使用者同意的完整案例分析人數 `{"excluded": n, "remaining": m}` |
 | `question` | `goal`（`free`／`lhs`／`rhs`）、`items`、`label`（使用者的原始問題） |
-| `params` | `algorithm`（`apriori`／`fpgrowth`）、`min_support`、`min_confidence`、`min_lift`、`max_lhs`、`min_lhs_count`、`confirmed`、`reason` |
+| `params` | `algorithm`（`apriori`／`fpgrowth`）、`min_support`、`min_confidence`、`min_lift`、`max_lhs`、`min_lhs_count`、`confirmed`、`reason`；`try_support`、`try_confidence`：使用者想在參數參考表中比較的值（數字清單，0 到 1 之間、不含 0） |
 | `report` | `title`、`background` |

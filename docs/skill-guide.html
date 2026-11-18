@@ -5467,9 +5467,8 @@ window.Quarto = {
   <li><a href="#資料輸入與適用性檢查" id="toc-資料輸入與適用性檢查" class="nav-link" data-scroll-target="#資料輸入與適用性檢查"><span class="header-section-number">3</span> 資料輸入與適用性檢查</a>
   <ul class="collapse">
   <li><a href="#三種原始格式" id="toc-三種原始格式" class="nav-link" data-scroll-target="#三種原始格式"><span class="header-section-number">3.1</span> 三種原始格式</a></li>
-  <li><a href="#如何辨識格式" id="toc-如何辨識格式" class="nav-link" data-scroll-target="#如何辨識格式"><span class="header-section-number">3.2</span> 如何辨識格式</a></li>
-  <li><a href="#分析前必須知道的資訊" id="toc-分析前必須知道的資訊" class="nav-link" data-scroll-target="#分析前必須知道的資訊"><span class="header-section-number">3.3</span> 分析前必須知道的資訊</a></li>
-  <li><a href="#不支援的資料" id="toc-不支援的資料" class="nav-link" data-scroll-target="#不支援的資料"><span class="header-section-number">3.4</span> 不支援的資料</a></li>
+  <li><a href="#分析前必須知道的資訊" id="toc-分析前必須知道的資訊" class="nav-link" data-scroll-target="#分析前必須知道的資訊"><span class="header-section-number">3.2</span> 分析前必須知道的資訊</a></li>
+  <li><a href="#不支援的資料" id="toc-不支援的資料" class="nav-link" data-scroll-target="#不支援的資料"><span class="header-section-number">3.3</span> 不支援的資料</a></li>
   </ul></li>
   <li><a href="#兩種資料各自的前處理流程" id="toc-兩種資料各自的前處理流程" class="nav-link" data-scroll-target="#兩種資料各自的前處理流程"><span class="header-section-number">4</span> 兩種資料各自的前處理流程</a>
   <ul class="collapse">
@@ -6053,54 +6052,8 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="如何辨識格式" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="如何辨識格式"><span class="header-section-number">3.2</span> 如何辨識格式</h2>
-<p>辨識看的是<strong>資料結構</strong>，欄位名稱只能當輔助線索；判斷結果是「提議」，涉及資料意義的部分要由使用者確認。</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">結構特徵</th>
-<th style="text-align: left;">可能的格式</th>
-<th style="text-align: left;">一筆觀測</th>
-<th style="text-align: left;">需要確認的事</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">某一欄的值重複出現，每個值對應多個不同的商品</td>
-<td style="text-align: left;">交易明細長表</td>
-<td style="text-align: left;">該欄的一個值</td>
-<td style="text-align: left;">這個 ID 代表一張發票、一位顧客，還是一位顧客的一天</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">某一欄大多含有分隔符號，一格寫了多個值</td>
-<td style="text-align: left;">購物清單</td>
-<td style="text-align: left;">一列</td>
-<td style="text-align: left;">分隔符號；空白格代表什麼</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">多個欄位只有 0/1</td>
-<td style="text-align: left;">已編碼的交易矩陣，或是非題問卷</td>
-<td style="text-align: left;">一列</td>
-<td style="text-align: left;">0/1 的意義（有買／沒買，或 否／是），需要資料字典</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">一列一人、多欄是文字或代碼</td>
-<td style="text-align: left;">類別問卷寬表</td>
-<td style="text-align: left;">一列</td>
-<td style="text-align: left;">哪些欄位是 ID、權重、開放題；數字是代碼還是數值</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="分析前必須知道的資訊" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="分析前必須知道的資訊"><span class="header-section-number">3.3</span> 分析前必須知道的資訊</h2>
+<section id="分析前必須知道的資訊" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="分析前必須知道的資訊"><span class="header-section-number">3.2</span> 分析前必須知道的資訊</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -6143,8 +6096,8 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="不支援的資料" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="不支援的資料"><span class="header-section-number">3.4</span> 不支援的資料</h2>
+<section id="不支援的資料" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="不支援的資料"><span class="header-section-number">3.3</span> 不支援的資料</h2>
 <p>遇到下列情況時，說明需要的調整並停止，不自行猜測完成：</p>
 <ul>
 <li>無法判斷一筆觀測的定義。</li>

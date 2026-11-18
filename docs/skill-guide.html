@@ -8018,9 +8018,10 @@ flowchart TD
  U1 --&gt; D2{使用者能說明?}
  D2 -- 是 --&gt; E
  D2 -- 否 --&gt; X2[該欄不納入；&lt;br/&gt;全部欄位都無法說明時停止]
- D -- 否 --&gt; E
- C -- 是 --&gt; E[依資料字典解碼；未回答、不知道、&lt;br/&gt;不適用、拒答設為缺失]
- E --&gt; F[ID、權重、開放題不成為項目，列出原因]
+ D -- 否 --&gt; M
+ C -- 是 --&gt; E[依資料字典或使用者的說明解碼]
+ E --&gt; M[未回答、不知道、不適用、&lt;br/&gt;拒答與空白設為缺失]
+ M --&gt; F[ID、權重、開放題不成為項目，列出原因]
  F --&gt; G{分析欄位已指定?}
  G -- 否 --&gt; U2[詢問要分析的欄位]
  U2 --&gt; H
@@ -8034,7 +8035,7 @@ flowchart TD
  J --&gt; K
  I -- 否 --&gt; K[每人一個 basket；項目為「欄位=類別」&lt;br/&gt;「否」也是項目；序位變數當類別&lt;br/&gt;答案相同的人都保留；不合併類別]
  K --&gt; L([輸出：basket、編碼對照、&lt;br/&gt;前處理紀錄、分析前後人數])
- class E,F,J,K proc
+ class E,M,F,J,K proc
  class B,C,D,D2,G,H,I dec
  class U1,U2,U3 user
  class A,L out

@@ -31,7 +31,7 @@ format:
 找出「經常一起出現」的項目，而不是預測或解釋因果
 :::
 
-關聯分析（association analysis）從大量交易中找出經常一起出現的項目集合（frequent itemsets），並以關聯規則（association rule）$X \rightarrow Y$ 表示兩組項目之間的關係。它不需要「正確答案」欄位，屬於非監督式學習。
+關聯分析（association analysis）從大量交易中找出經常一起出現的項目集合（frequent itemsets），並以關聯規則（association rule）$X \rightarrow Y$ 表示兩組項目之間的關係。
 
 ## 可以問的問題
 

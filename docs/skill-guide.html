@@ -6923,7 +6923,7 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p><strong>在 skill 中</strong>：演算法是一個由使用者選擇的參數（<code>params.algorithm</code> = <code>apriori</code> 或 <code>fpgrowth</code>），在確認參數時一起詢問。示範設定預設 FP-growth，並說明兩者結果相同。實作上使用 Python mlxtend 套件的 <code>apriori</code> 與 <code>fpgrowth</code>。指定前件時，程式直接計數包含前件的交易，不需要找全部頻繁項目集，因此演算法選項不影響結果。</p>
+<p><strong>在 skill 中</strong>：演算法是一個由使用者選擇的參數（<code>params.algorithm</code> = <code>apriori</code> 或 <code>fpgrowth</code>），在確認參數時一起詢問。示範設定預設 FP-growth，並說明兩者結果相同。實作上使用 Python mlxtend 套件的 <code>apriori</code> 與 <code>fpgrowth</code>。指定前件時不使用演算法，程式直接計數包含前件的交易，因此演算法選項不影響結果。</p>
 <details class="code-fold">
 <summary>
 顯示程式碼：Apriori 與 FP-growth 示範、規則計數與篩選

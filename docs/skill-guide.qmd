@@ -332,7 +332,7 @@ Apriori 每一層都要產生候選、再掃描一次資料計數。FP-growth �
 | 適合 | 資料不大、想逐層理解過程或對照教科書 | 交易多、項目多、門檻低時通常較快 |
 | 限制 | 門檻低時候選很多，計算慢 | 交易之間共同項目少時，樹壓縮不了，優勢變小 |
 
-**在 skill 中**：演算法是一個由使用者選擇的參數（`params.algorithm` = `apriori` 或 `fpgrowth`），在確認參數時一起詢問。示範設定預設 FP-growth，並說明兩者結果相同。實作上使用 Python mlxtend 套件的 `apriori` 與 `fpgrowth`。指定前件時，程式直接計數包含前件的交易，不需要找全部頻繁項目集，因此演算法選項不影響結果。
+**在 skill 中**：演算法是一個由使用者選擇的參數（`params.algorithm` = `apriori` 或 `fpgrowth`），在確認參數時一起詢問。示範設定預設 FP-growth，並說明兩者結果相同。實作上使用 Python mlxtend 套件的 `apriori` 與 `fpgrowth`。指定前件時不使用演算法，程式直接計數包含前件的交易，因此演算法選項不影響結果。
 
 <details class="code-fold">
 <summary>顯示程式碼：Apriori 與 FP-growth 示範、規則計數與篩選</summary>

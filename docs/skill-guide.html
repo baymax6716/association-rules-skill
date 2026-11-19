@@ -5751,7 +5751,7 @@ window.Quarto = {
 <h2 data-number="2.3" class="anchored" data-anchor-id="容易誤解之處"><span class="header-section-number">2.3</span> 容易誤解之處</h2>
 <p><strong>高 confidence 可能只是後件本來就常見。</strong> 教科書中的茶與咖啡例子：1,000 人中 200 人喝茶、800 人喝咖啡、150 人兩者都喝。{茶} → {咖啡} 的 confidence 是 75%，看起來很高；但所有人中喝咖啡的比例是 80%，知道一個人喝茶，反而讓他喝咖啡的機率從 80% 降到 75%，lift = 0.15 / (0.2 × 0.8) = 0.9375 &lt; 1。</p>
 <p><strong>因此，報告 confidence 時一定要同時列出後件比例。</strong></p>
-<p><strong>lift &gt; 1 不等於統計顯著，也不等於因果。</strong> lift 只是樣本中的比例比較。第 7 章 {雞蛋} → {吐司} 的 lift = 1.6，但只建立在 3 筆交易上，換一批資料可能就不成立。第一版不做統計檢定，結果只描述這份資料；是否有因果則需要實驗設計。</p>
+<p><strong>lift &gt; 1 不等於統計顯著，也不等於因果。</strong> lift 只是樣本中的比例比較。第一版不做統計檢定，結果只描述這份資料；是否有因果則需要實驗設計。</p>
 <p><strong>lift 是對稱的。</strong> <span class="math inline">\(\text{lift}(X \rightarrow Y) = \text{lift}(Y \rightarrow X)\)</span>，但 confidence 不對稱。所以規則表常會成對出現 lift 相同、confidence 不同的兩條規則（例如第 7 章的 {網購=否} → {運動頻率=幾乎不運動} 與反方向）。</p>
 </section>
 </section>

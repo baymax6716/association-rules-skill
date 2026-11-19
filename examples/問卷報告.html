@@ -2258,12 +2258,12 @@ vertical-align: -.125em;
 <section id="分析目的與資料" class="level2">
 <h2 class="anchored" data-anchor-id="分析目的與資料">1. 分析目的與資料</h2>
 <ul>
-<li>背景：未提供</li>
-<li>分析問題：哪些受訪者特徵與高所得（income=75+）一起出現？</li>
+<li>背景：所得問卷（income_esl），8,993 位受訪者、14 個人口特徵欄位，想了解哪些特徵與高所得（income=75+）一起出現。</li>
+<li>分析問題：哪些特徵與高所得（income=75+）一起出現</li>
 <li>分析目標：<strong>指定後件</strong>（income=75+）</li>
 <li>資料：<code>C:/Users/win11/Desktop/skill output/問卷/income_esl.csv</code>，8,993 列、14 個欄位；類別問卷（格式 <code>wide</code>，經使用者確認）</li>
 <li>一筆觀測：一位受訪者</li>
-<li><strong>support 的分母 N = 7,806</strong></li>
+<li><strong>support 的分母 N = 6,876</strong></li>
 </ul>
 <blockquote class="blockquote">
 <p>關聯規則描述的是共同出現，不代表因果。</p>
@@ -2289,86 +2289,92 @@ vertical-align: -.125em;
 </thead>
 <tbody>
 <tr class="odd">
-<td>欄位角色</td>
-<td><code>number in household</code> 不納入規則</td>
-<td>數字欄位、無資料字典，使用者決定不納入</td>
-<td>—</td>
-</tr>
-<tr class="even">
-<td>欄位角色</td>
-<td><code>number of children</code> 不納入規則</td>
-<td>數字欄位、無資料字典，使用者決定不納入</td>
-<td>—</td>
-</tr>
-<tr class="odd">
-<td>欄位角色</td>
-<td><code>years in bay area</code> 不納入規則</td>
-<td>缺失最多（913），使用者決定排除</td>
-<td>—</td>
-</tr>
-<tr class="even">
 <td>缺失</td>
 <td><code>marital status</code>：空白設為缺失</td>
 <td>未回答不是任何答案，也不是「否」</td>
 <td>160 列</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>缺失</td>
 <td><code>education</code>：空白設為缺失</td>
 <td>未回答不是任何答案，也不是「否」</td>
 <td>86 列</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>缺失</td>
 <td><code>occupation</code>：空白設為缺失</td>
 <td>未回答不是任何答案，也不是「否」</td>
 <td>136 列</td>
 </tr>
+<tr class="even">
+<td>缺失</td>
+<td><code>years in bay area</code>：空白設為缺失</td>
+<td>未回答不是任何答案，也不是「否」</td>
+<td>913 列</td>
+</tr>
 <tr class="odd">
+<td>缺失</td>
+<td><code>number in household</code>：空白設為缺失</td>
+<td>未回答不是任何答案，也不是「否」</td>
+<td>375 列</td>
+</tr>
+<tr class="even">
+<td>使用者確認</td>
+<td><code>number in household</code>：數字本身就是答案，照原值當成類別</td>
+<td>使用者說明</td>
+<td>8,618 列</td>
+</tr>
+<tr class="odd">
+<td>使用者確認</td>
+<td><code>number of children</code>：數字本身就是答案，照原值當成類別</td>
+<td>使用者說明</td>
+<td>8,993 列</td>
+</tr>
+<tr class="even">
 <td>缺失</td>
 <td><code>householder status</code>：空白設為缺失</td>
 <td>未回答不是任何答案，也不是「否」</td>
 <td>240 列</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>缺失</td>
 <td><code>type of home</code>：空白設為缺失</td>
 <td>未回答不是任何答案，也不是「否」</td>
 <td>357 列</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>缺失</td>
 <td><code>ethnic classification</code>：空白設為缺失</td>
 <td>未回答不是任何答案，也不是「否」</td>
 <td>68 列</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>缺失</td>
 <td><code>language in home</code>：空白設為缺失</td>
 <td>未回答不是任何答案，也不是「否」</td>
 <td>359 列</td>
 </tr>
-<tr class="odd">
-<td>完整案例分析</td>
-<td>只看選定欄位，任一缺失者排除（各欄缺失：marital status 160、education 86、occupation 136、householder status 240、type of home 357、ethnic classification 68、language in home 359）</td>
-<td>缺失、拒答、不適用不能當成任何答案</td>
-<td>排除 1,187 人，剩 7,806 人</td>
-</tr>
 <tr class="even">
+<td>完整案例分析</td>
+<td>只看選定欄位，任一缺失者排除（各欄缺失：marital status 160、education 86、occupation 136、years in bay area 913、number in household 375、householder status 240、type of home 357、ethnic classification 68、language in home 359）</td>
+<td>缺失、拒答、不適用不能當成任何答案</td>
+<td>排除 2,117 人，剩 6,876 人</td>
+</tr>
+<tr class="odd">
 <td>固定規則</td>
 <td>答案完全相同的受訪者全部保留</td>
 <td>不同的人是不同的觀測</td>
-<td>2,159 人與其他人相同</td>
+<td>625 人與其他人相同</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>固定規則</td>
 <td>每人一個 basket，項目為「欄位=類別」；「否」也是項目；序位變數當類別</td>
 <td>每個「欄位=類別」組合成為一個項目；不使用順序或距離資訊</td>
-<td>7,806 人</td>
+<td>6,876 人</td>
 </tr>
 </tbody>
 </table>
-<p>分析前後筆數：原始資料 8,993 列 → 7,806 個觀測（一位受訪者）、60 種項目。</p>
+<p>分析前後筆數：原始資料 8,993 列 → 6,876 個觀測（一位受訪者）、84 種項目。</p>
 <p>編碼對照（各分析欄位的類別與人數，完整案例分析之後）：</p>
 <table class="caption-top table">
 <colgroup>
@@ -2384,47 +2390,59 @@ vertical-align: -.125em;
 <tbody>
 <tr class="odd">
 <td>income</td>
-<td>income=[0,10)（1,472）、income=[50,75)（1,182）、income=[30,40)（979）、income=[40,50)（856）、income=75+（801）、income=[20,25)（695）、income=[10,15)（638）、income=[25,30)（609）、income=[15,20)（574）</td>
+<td>income=[0,10)（1,255）、income=[50,75)（1,069）、income=[30,40)（846）、income=[40,50)（784）、income=75+（743）、income=[20,25)（618）、income=[10,15)（529）、income=[25,30)（527）、income=[15,20)（505）</td>
 </tr>
 <tr class="even">
 <td>sex</td>
-<td>sex=female（4,313）、sex=male（3,493）</td>
+<td>sex=female（3,809）、sex=male（3,067）</td>
 </tr>
 <tr class="odd">
 <td>marital status</td>
-<td>marital status=single（3,226）、marital status=married（2,994）、marital status=divorced（749）、marital status=cohabitation（588）、marital status=widowed（249）</td>
+<td>marital status=single（2,813）、marital status=married（2,652）、marital status=divorced（673）、marital status=cohabitation（536）、marital status=widowed（202）</td>
 </tr>
 <tr class="even">
 <td>age</td>
-<td>age=25-34（1,995）、age=18-24（1,855）、age=35-44（1,404）、age=45-54（789）、age=14-17（742）、age=55-64（554）、age=65+（467）</td>
+<td>age=25-34（1,768）、age=18-24（1,610）、age=35-44（1,267）、age=45-54（703）、age=14-17（647）、age=55-64（488）、age=65+（393）</td>
 </tr>
 <tr class="odd">
 <td>education</td>
-<td>education=college (1-3 years)（2,727）、education=high school graduate（1,737）、education=college graduate（1,347）、education=graduate study（890）、education=grades 9-11（887）、education=grade &lt;9（218）</td>
+<td>education=college (1-3 years)（2,407）、education=high school graduate（1,479）、education=college graduate（1,207）、education=graduate study（820）、education=grades 9-11（787）、education=grade &lt;9（176）</td>
 </tr>
 <tr class="even">
 <td>occupation</td>
-<td>occupation=professional/managerial（2,580）、occupation=student（1,307）、occupation=clerical/service（935）、occupation=sales（690）、occupation=laborer（679）、occupation=retired（587）、occupation=homemaker（570）、occupation=unemployed（284）、occupation=military（174）</td>
+<td>occupation=professional/managerial（2,333）、occupation=student（1,128）、occupation=clerical/service（834）、occupation=sales（617）、occupation=laborer（590）、occupation=homemaker（504）、occupation=retired（488）、occupation=unemployed（242）、occupation=military（140）</td>
 </tr>
 <tr class="odd">
+<td>years in bay area</td>
+<td>years in bay area=&gt;10（4,446）、years in bay area=1-3（850）、years in bay area=7-10（758）、years in bay area=4-6（594）、years in bay area=&lt;1（228）</td>
+</tr>
+<tr class="even">
 <td>dual incomes</td>
-<td>dual incomes=not married（4,689）、dual incomes=yes（1,956）、dual incomes=no（1,161）</td>
+<td>dual incomes=not married（4,114）、dual incomes=yes（1,742）、dual incomes=no（1,020）</td>
+</tr>
+<tr class="odd">
+<td>number in household</td>
+<td>number in household=2（2,156）、number in household=3（1,357）、number in household=1（1,244）、number in household=4（1,208）、number in household=5（549）、number in household=6（193）、number in household=7（81）、number in household=8（46）、number in household=9+（42）</td>
 </tr>
 <tr class="even">
+<td>number of children</td>
+<td>number of children=0（4,276）、number of children=1（1,215）、number of children=2（908）、number of children=3（321）、number of children=4（91）、number of children=5（37）、number of children=6（21）、number of children=7（4）、number of children=9+（2）、number of children=8（1）</td>
+</tr>
+<tr class="odd">
 <td>householder status</td>
-<td>householder status=rent（3,271）、householder status=own（2,930）、householder status=live with parents/family（1,605）</td>
-</tr>
-<tr class="odd">
-<td>type of home</td>
-<td>type of home=house（4,649）、type of home=apartment（2,155）、type of home=condominium（583）、type of home=other（291）、type of home=mobile Home（128）</td>
+<td>householder status=rent（2,882）、householder status=own（2,584）、householder status=live with parents/family（1,410）</td>
 </tr>
 <tr class="even">
-<td>ethnic classification</td>
-<td>ethnic classification=white（5,185）、ethnic classification=hispanic（1,023）、ethnic classification=black（741）、ethnic classification=asian（418）、ethnic classification=other（199）、ethnic classification=american indian（132）、ethnic classification=pacific islander（95）、ethnic classification=east indian（13）</td>
+<td>type of home</td>
+<td>type of home=house（4,102）、type of home=apartment（1,895）、type of home=condominium（521）、type of home=other（256）、type of home=mobile Home（102）</td>
 </tr>
 <tr class="odd">
+<td>ethnic classification</td>
+<td>ethnic classification=white（4,605）、ethnic classification=hispanic（873）、ethnic classification=black（631）、ethnic classification=asian（379）、ethnic classification=other（176）、ethnic classification=american indian（112）、ethnic classification=pacific islander（88）、ethnic classification=east indian（12）</td>
+</tr>
+<tr class="even">
 <td>language in home</td>
-<td>language in home=english（7,097）、language in home=spanish（477）、language in home=other（232）</td>
+<td>language in home=english（6,277）、language in home=spanish（397）、language in home=other（202）</td>
 </tr>
 </tbody>
 </table>
@@ -2575,13 +2593,13 @@ vertical-align: -.125em;
 <span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>            codebook.setdefault(col, {})[raw] <span class="op">=</span> lab</span>
 <span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> codebook, missing</span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<p>完整案例分析排除了 1,187 人（約占原始 8,993 列的 13%），剩下 7,806 位受訪者，缺失最多的是 <code>language in home</code>（359）與 <code>type of home</code>（357）。若沒填答的人在所得或其他特徵上和有填答的人不同，例如高所得者比較常略過某些題目，規則就會偏向有完整回答的人。<code>years in bay area</code>、<code>number in household</code>、<code>number of children</code> 三欄沒有納入，所以規則完全不涉及居住年資、家戶人數與子女數。</p>
+<p>原始 8,993 位受訪者中，有 2,117 人在 14 個分析欄位裡至少缺一項而被排除，剩 6,876 人進入分析；缺失最多的是 <code>years in bay area</code>（913 人），其次是 <code>number in household</code>（375 人）與 <code>language in home</code>（359 人）。若未回答這些題目的人（例如剛搬來的人、或不願透露家庭資訊的人）在所得上與回答者不同，本報告的規則會偏向有完整回答的人。所有答案都照原值當成類別，沒有合併類別，也沒有刪除答案相同的受訪者。</p>
 </section>
 <section id="分析設定" class="level2">
 <h2 class="anchored" data-anchor-id="分析設定">3. 分析設定</h2>
 <ul>
-<li>本次設定：演算法 FP-growth、最低支持度 0.01（共同筆數 ≥ 79）、confidence ≥ 0.3、lift &gt; 1.0、前件 ≤ 2 項、後件 1 項、前件筆數 ≥ 79（分母 N = 7,806）</li>
-<li>設定理由：使用者接受示範設定：9 條規則可逐條解讀，每條至少 79 人支持；演算法選 FP-growth</li>
+<li>本次設定：演算法 FP-growth、最低支持度 0.01（共同筆數 ≥ 69）、confidence ≥ 0.3、lift &gt; 1.0、前件 ≤ 2 項、後件 1 項、前件筆數 ≥ 69（分母 N = 6,876）</li>
+<li>設定理由：使用者採用示範設定：保留 15 條規則可逐條檢視，每條至少 69 人；演算法選 FP-growth（結果與 Apriori 相同）</li>
 <li>這些門檻是本次分析的選擇，不是通用標準。</li>
 </ul>
 <p>設定紀錄（每一次執行的設定與保留規則數）：</p>
@@ -2604,11 +2622,11 @@ vertical-align: -.125em;
 </thead>
 <tbody>
 <tr class="odd">
-<td>2026-11-19T14:36:14</td>
+<td>2026-11-19T20:33:07</td>
 <td>指定後件</td>
-<td>演算法 FP-growth、最低支持度 0.01（共同筆數 ≥ 79）、confidence ≥ 0.3、lift &gt; 1.0、前件 ≤ 2 項、後件 1 項、前件筆數 ≥ 79</td>
-<td>9</td>
-<td>使用者接受示範設定：9 條規則可逐條解讀，每條至少 79 人支持；演算法選 FP-growth</td>
+<td>演算法 FP-growth、最低支持度 0.01（共同筆數 ≥ 69）、confidence ≥ 0.3、lift &gt; 1.0、前件 ≤ 2 項、後件 1 項、前件筆數 ≥ 69</td>
+<td>15</td>
+<td>使用者採用示範設定：保留 15 條規則可逐條檢視，每條至少 69 人；演算法選 FP-growth（結果與 Apriori 相同）</td>
 </tr>
 </tbody>
 </table>
@@ -2626,24 +2644,24 @@ vertical-align: -.125em;
 </thead>
 <tbody>
 <tr class="odd">
-<td>support ≥ 0.01（共同筆數 ≥ 79）的候選規則（後件 = {income=75+}、前件 ≤ 2 項）</td>
-<td>140</td>
+<td>support ≥ 0.01（共同筆數 ≥ 69）的候選規則（後件 = {income=75+}、前件 ≤ 2 項）</td>
+<td>257</td>
 </tr>
 <tr class="even">
-<td>前件筆數 ≥ 79</td>
-<td>140</td>
+<td>前件筆數 ≥ 69</td>
+<td>257</td>
 </tr>
 <tr class="odd">
 <td>confidence ≥ 0.3</td>
-<td>9</td>
+<td>15</td>
 </tr>
 <tr class="even">
 <td>lift &gt; 1.0</td>
-<td>9</td>
+<td>15</td>
 </tr>
 <tr class="odd">
 <td>移除冗餘規則（較短前件的 confidence 已相同或更高）</td>
-<td>9</td>
+<td>15</td>
 </tr>
 </tbody>
 </table>
@@ -2722,7 +2740,7 @@ vertical-align: -.125em;
 </section>
 <section id="結果與解讀" class="level2">
 <h2 class="anchored" data-anchor-id="結果與解讀">4. 結果與解讀</h2>
-<p>共保留 9 條規則，下表依 lift 排序列出前 9 條（完整結果在 <code>results_full.csv</code>）。</p>
+<p>共保留 15 條規則，下表依 lift 排序列出前 15 條（完整結果在 <code>results_full.csv</code>）。</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 12%">
@@ -2750,120 +2768,190 @@ vertical-align: -.125em;
 <tr class="odd">
 <td>1</td>
 <td>{dual incomes=yes, education=graduate study} → {income=75+}</td>
-<td>319</td>
-<td>159</td>
-<td>0.0204</td>
-<td>0.4984</td>
-<td>0.1026</td>
-<td>4.8574</td>
+<td>297</td>
+<td>152</td>
+<td>0.0221</td>
+<td>0.5118</td>
+<td>0.1081</td>
+<td>4.7362</td>
 </tr>
 <tr class="even">
 <td>2</td>
 <td>{education=graduate study, marital status=married} → {income=75+}</td>
-<td>464</td>
-<td>202</td>
-<td>0.0259</td>
-<td>0.4353</td>
-<td>0.1026</td>
-<td>4.2426</td>
+<td>433</td>
+<td>193</td>
+<td>0.0281</td>
+<td>0.4457</td>
+<td>0.1081</td>
+<td>4.1249</td>
 </tr>
 <tr class="odd">
 <td>3</td>
 <td>{education=graduate study, householder status=own} → {income=75+}</td>
-<td>550</td>
-<td>230</td>
-<td>0.0295</td>
-<td>0.4182</td>
-<td>0.1026</td>
-<td>4.0753</td>
+<td>511</td>
+<td>219</td>
+<td>0.0318</td>
+<td>0.4286</td>
+<td>0.1081</td>
+<td>3.9662</td>
 </tr>
 <tr class="even">
 <td>4</td>
 <td>{education=graduate study, type of home=house} → {income=75+}</td>
-<td>542</td>
-<td>211</td>
-<td>0.027</td>
-<td>0.3893</td>
-<td>0.1026</td>
-<td>3.7938</td>
+<td>500</td>
+<td>200</td>
+<td>0.0291</td>
+<td>0.4</td>
+<td>0.1081</td>
+<td>3.7017</td>
 </tr>
 <tr class="odd">
 <td>5</td>
-<td>{age=35-44, education=graduate study} → {income=75+}</td>
-<td>309</td>
-<td>109</td>
-<td>0.014</td>
-<td>0.3528</td>
-<td>0.1026</td>
-<td>3.4377</td>
+<td>{education=graduate study, number in household=2} → {income=75+}</td>
+<td>315</td>
+<td>119</td>
+<td>0.0173</td>
+<td>0.3778</td>
+<td>0.1081</td>
+<td>3.4961</td>
 </tr>
 <tr class="even">
 <td>6</td>
-<td>{education=graduate study, occupation=professional/managerial} → {income=75+}</td>
-<td>619</td>
-<td>211</td>
-<td>0.027</td>
-<td>0.3409</td>
-<td>0.1026</td>
-<td>3.3219</td>
+<td>{age=35-44, education=graduate study} → {income=75+}</td>
+<td>289</td>
+<td>102</td>
+<td>0.0148</td>
+<td>0.3529</td>
+<td>0.1081</td>
+<td>3.2662</td>
 </tr>
 <tr class="odd">
 <td>7</td>
-<td>{education=graduate study, sex=male} → {income=75+}</td>
-<td>461</td>
-<td>145</td>
-<td>0.0186</td>
-<td>0.3145</td>
-<td>0.1026</td>
-<td>3.0652</td>
+<td>{education=graduate study, occupation=professional/managerial} → {income=75+}</td>
+<td>574</td>
+<td>200</td>
+<td>0.0291</td>
+<td>0.3484</td>
+<td>0.1081</td>
+<td>3.2245</td>
 </tr>
 <tr class="even">
 <td>8</td>
-<td>{householder status=own, occupation=professional/managerial} → {income=75+}</td>
-<td>1,312</td>
-<td>406</td>
-<td>0.052</td>
-<td>0.3095</td>
-<td>0.1026</td>
-<td>3.0157</td>
+<td>{education=graduate study, sex=male} → {income=75+}</td>
+<td>422</td>
+<td>138</td>
+<td>0.0201</td>
+<td>0.327</td>
+<td>0.1081</td>
+<td>3.0263</td>
 </tr>
 <tr class="odd">
 <td>9</td>
+<td>{householder status=own, occupation=professional/managerial} → {income=75+}</td>
+<td>1,179</td>
+<td>378</td>
+<td>0.055</td>
+<td>0.3206</td>
+<td>0.1081</td>
+<td>2.9671</td>
+</tr>
+<tr class="even">
+<td>10</td>
 <td>{dual incomes=yes, occupation=professional/managerial} → {income=75+}</td>
-<td>1,050</td>
-<td>321</td>
-<td>0.0411</td>
-<td>0.3057</td>
-<td>0.1026</td>
-<td>2.9793</td>
+<td>946</td>
+<td>301</td>
+<td>0.0438</td>
+<td>0.3182</td>
+<td>0.1081</td>
+<td>2.9446</td>
+</tr>
+<tr class="odd">
+<td>11</td>
+<td>{education=graduate study, years in bay area=&gt;10} → {income=75+}</td>
+<td>482</td>
+<td>152</td>
+<td>0.0221</td>
+<td>0.3154</td>
+<td>0.1081</td>
+<td>2.9184</td>
+</tr>
+<tr class="even">
+<td>12</td>
+<td>{marital status=married, occupation=professional/managerial} → {income=75+}</td>
+<td>1,109</td>
+<td>338</td>
+<td>0.0492</td>
+<td>0.3048</td>
+<td>0.1081</td>
+<td>2.8205</td>
+</tr>
+<tr class="odd">
+<td>13</td>
+<td>{dual incomes=yes, householder status=own} → {income=75+}</td>
+<td>1,063</td>
+<td>323</td>
+<td>0.047</td>
+<td>0.3039</td>
+<td>0.1081</td>
+<td>2.812</td>
+</tr>
+<tr class="even">
+<td>14</td>
+<td>{education=graduate study, ethnic classification=white} → {income=75+}</td>
+<td>659</td>
+<td>199</td>
+<td>0.0289</td>
+<td>0.302</td>
+<td>0.1081</td>
+<td>2.7946</td>
+</tr>
+<tr class="odd">
+<td>15</td>
+<td>{education=graduate study, language in home=english} → {income=75+}</td>
+<td>791</td>
+<td>238</td>
+<td>0.0346</td>
+<td>0.3009</td>
+<td>0.1081</td>
+<td>2.7845</td>
 </tr>
 </tbody>
 </table>
 <p>support = 共同筆數 / N；confidence = 共同筆數 / 前件筆數；後件比例 = 後件筆數 / N；lift = confidence / 後件比例（1 表示與獨立情況相同）。lift &gt; 1 不等於統計顯著。</p>
-<p>以下都是<strong>在這份樣本中</strong>的描述：分母是 7,806 位在 11 個分析欄位都有回答的受訪者，未加權。這 7,806 人中有 801 人屬於 income=75+，後件比例 0.1026（約一成）。</p>
-<p><strong>主軸：研究所學歷（education=graduate study）搭配另一項特徵。</strong> 9 條規則中有 7 條的前件都含 graduate study（第 1–7 條）。這 7 條描述的是同一群 890 位研究所學歷受訪者裡的不同子群，彼此重疊很多，應該看成同一個發現的幾個側面，不是 7 個獨立的發現。另外，單獨的「education=graduate study → income=75+」沒有出現在結果中，表示它的 confidence 沒有達到 0.3 的門檻（冗餘篩選只會移除「較短前件的 confidence 已相同或更高」的規則）。換句話說，研究所學歷要再加上下列特徵之一，高所得的比例才會超過三成：</p>
+<p>以下的分母都是 6,876 位在 14 個欄位都有回答的受訪者（未加權）。這些人中有 743 人的所得是 75+，後件比例為 0.1081，也就是約每 10 人有 1 人。每條規則的 confidence 都要和這個 0.1081 比較。</p>
+<p><strong>（一）研究所學歷搭配其他特徵（規則 1–8、11、14、15）</strong></p>
+<p>15 條規則中有 11 條的前件包含 <code>education=graduate study</code>。這 11 條都出自同一群研究所學歷的受訪者（共 820 人），所以應該看成同一個發現的不同切面，不是 11 個獨立的發現。</p>
 <ul>
-<li><strong>第 1 條：雙薪（dual incomes=yes）＋研究所學歷。</strong> 符合這兩項的 319 人中，有 159 人屬於 income=75+（confidence 0.4984），全體只有 0.1026，lift 約為 4.86 倍，是所有規則中最高的。dual incomes 欄位把未婚者另外標成「not married」，「yes」表示有配偶或伴侶且雙薪，所以這條和第 2 條（已婚＋研究所學歷）描述的很可能有不少是同一批人。</li>
-<li><strong>第 2 條：已婚＋研究所學歷。</strong> 464 人中有 202 人屬於高所得（confidence 0.4353，全體 0.1026），lift 約 4.24 倍。</li>
-<li><strong>第 3、4 條：自有住宅（householder status=own）或住獨棟房屋（type of home=house）＋研究所學歷。</strong> 分別是 550 人中 230 人（confidence 0.4182，lift 約 4.08 倍），以及 542 人中 211 人（confidence 0.3893，lift 約 3.79 倍）。自有住宅和住獨棟房屋在意義上相近，這兩條描述的可能有不少是同一批人（本報告沒有計算兩者的重疊人數）。</li>
-<li><strong>第 5–7 條：35–44 歲、專業／管理職、男性＋研究所學歷。</strong> confidence 介於 0.3145 到 0.3528（全體 0.1026），lift 約 3.07 到 3.44 倍；共同筆數分別是 109、211、145 人。</li>
+<li><strong>規則 1（lift 最高）</strong>：學歷為研究所、而且是雙薪家庭（<code>dual incomes=yes</code>）的有 297 人，其中 152 人所得為 75+，confidence 0.5118。全部樣本中只有 0.1081 是 75+，lift = 4.7362，約為 4.74 倍。換句話說，這群人中大約一半在最高所得組。</li>
+<li><strong>規則 2</strong>：研究所學歷且已婚的有 433 人，其中 193 人所得為 75+（confidence 0.4457，對照 0.1081），lift = 4.1249。規則 1 和規則 2 很可能大部分是同一批人：在這份資料中，<code>dual incomes</code> 的「yes／no」幾乎只出現在已婚或同居者身上，單身、離婚、喪偶者都標為「not married」。</li>
+<li><strong>規則 3、4</strong>：研究所學歷且自有住宅（<code>householder status=own</code>）的有 511 人，其中 219 人所得為 75+（confidence 0.4286，lift 3.9662）。研究所學歷且住獨棟房屋（<code>type of home=house</code>）的有 500 人，其中 200 人所得為 75+（confidence 0.4，lift 3.7017）。自有住宅和住獨棟房屋常是同一批人，這兩條也應該合在一起看。</li>
+<li><strong>規則 5–8、11、14、15</strong>：研究所學歷再分別搭配「家中 2 人」「35–44 歲」「專業／管理職」「男性」「住灣區超過 10 年」「白人」「家中說英語」，confidence 介於 0.3009 到 0.3778，lift 介於 2.7845 到 3.4961。其中「白人」（4,605 人）和「家中說英語」（6,277 人）在樣本中本來就占多數，加進前件後的 lift 是這 11 條裡最低的兩條（2.7946、2.7845）。比較合理的解讀是：這兩條主要仍反映研究所學歷這個特徵，不是族裔或語言帶來的額外訊號。</li>
 </ul>
-<p><strong>次軸：專業／管理職（occupation=professional/managerial）搭配自有住宅或雙薪。</strong> 這兩條不需要研究所學歷，涵蓋的人數也比較多：</p>
+<p><strong>（二）不需要研究所學歷的組合（規則 9、10、12、13）</strong></p>
+<p>這 4 條的前件筆數都超過 900 人，涵蓋的人比第一組多，但 confidence 較低（約 0.30–0.32）。</p>
 <ul>
-<li><strong>第 8 條：自有住宅＋專業／管理職。</strong> 1,312 人中有 406 人屬於高所得（confidence 0.3095，全體 0.1026），lift 約 3.02 倍。共同筆數 406 是所有規則中最多的（support 0.052）。</li>
-<li><strong>第 9 條：雙薪＋專業／管理職。</strong> 1,050 人中有 321 人屬於高所得（confidence 0.3057，全體 0.1026），lift 約 2.98 倍。</li>
+<li><strong>規則 9（共同筆數最多）</strong>：專業／管理職且自有住宅的有 1,179 人，其中 378 人所得為 75+，confidence 0.3206，對照 0.1081，lift = 2.9671。</li>
+<li><strong>規則 10</strong>：專業／管理職且雙薪的有 946 人，其中 301 人所得為 75+（confidence 0.3182，lift 2.9446）。</li>
+<li><strong>規則 12</strong>：專業／管理職且已婚的有 1,109 人，其中 338 人所得為 75+（confidence 0.3048，lift 2.8205）。</li>
+<li><strong>規則 13</strong>：雙薪且自有住宅的有 1,063 人，其中 323 人所得為 75+（confidence 0.3039，lift 2.812）。</li>
 </ul>
-<p>所有規則的 confidence 都沒有超過 0.5，也就是說，即使在這些子群中，高所得者仍然不到一半。lift 大於 1 只表示這些特徵和高所得一起出現的頻率比兩者獨立時高，不代表統計顯著。</p>
+<p>這 4 條反覆出現的是「專業／管理職」「已婚或雙薪」「自有住宅」三種特徵的兩兩組合，應該看成同一群「已婚、有工作、有房」的受訪者。</p>
+<p><strong>（三）提醒</strong></p>
+<ul>
+<li>沒有任何一條規則的 confidence 超過 0.52。即使在 lift 最高的一群人中，也有大約一半的人不在 75+ 組。</li>
+<li><code>dual incomes=yes</code> 只適用於有伴侶（已婚或同居）的人，所以它和「已婚」的規則有一部分是定義上的重疊，不是兩個獨立的發現。這兩個欄位不是完全一一對應，所以程式沒有把它們標成函數關係。</li>
+</ul>
 </section>
 <section id="結論與建議" class="level2">
 <h2 class="anchored" data-anchor-id="結論與建議">5. 結論與建議</h2>
-<p><strong>回答分析問題：</strong> 在這份 7,806 位受訪者的樣本中（未加權、屬探索性描述），和高所得（income=75+）最常一起出現的特徵組合有兩類：</p>
-<ol type="1">
-<li><strong>研究所學歷，再加上雙薪、已婚、自有住宅、住獨棟房屋、35–44 歲、專業／管理職或男性其中一項。</strong> 這些子群中高所得的比例約 31%–50%，全體只有約 10%（lift 約 3.07–4.86 倍）。</li>
-<li><strong>專業／管理職，再加上自有住宅或雙薪。</strong> 高所得比例約 31%，lift 約 3 倍。這兩條涵蓋的人數最多（共同筆數分別是 406 與 321）。</li>
-</ol>
-<p>這些規則描述的是共同出現，不能解讀成學歷或職業「帶來」高所得；年齡、地區、產業等未納入的變數都可能同時有關。</p>
-<p><strong>可以考慮的後續方向：</strong> - 如果目的是描述高所得族群的輪廓（例如設定行銷或研究的目標族群），可以考慮把「研究所學歷＋雙薪／已婚」和「專業／管理職＋自有住宅」當成候選子群，再用其他資料確認。 - 如果想進一步了解學歷、職業、婚姻狀態各自和所得的關係，可以考慮在有加權與檢定的框架下做分層分析或迴歸，以釐清重疊的子群。 - 如果想看較弱但人數更多的組合，可以考慮把 confidence 放寬到 0.2（參考表顯示會有 47 條），或另外以 income=[0,10) 當後件，比較低所得的輪廓。</p>
+<p><strong>回答分析問題</strong>：在這份樣本（6,876 位完整回答的受訪者，未加權）中，與高所得（income=75+，整體比例 0.1081）一起出現最明顯的特徵是<strong>研究所學歷</strong>。研究所學歷再搭配雙薪、已婚、自有住宅或住獨棟房屋時，75+ 的比例約為 0.40 到 0.51，是整體比例的 3.7 到 4.7 倍（lift 3.7017–4.7362）。第二類特徵是<strong>專業／管理職、已婚或雙薪、自有住宅</strong>的兩兩組合。這類組合涵蓋的人比較多（前件 946–1,179 人），但 75+ 的比例只有約 0.30–0.32（lift 約 2.8–3.0）。</p>
+<p>這些結果是對這份資料的探索性描述，只說明哪些特徵常和高所得一起出現，不說明誰導致誰。例如，自有住宅比較可能是高所得的結果，而不是原因。</p>
+<p><strong>可以考慮的後續方向</strong>：</p>
+<ul>
+<li>若目的是找出高所得族群的輪廓（例如做市場區隔），可以考慮以「研究所學歷」和「已婚／雙薪的專業／管理職、有自有住宅」作為兩個候選輪廓，再用另一份資料或後續調查確認是否仍然成立。</li>
+<li>若想知道學歷與所得的關係是否受年齡、職業影響，可以考慮用分層分析或迴歸模型進一步檢驗。關聯規則無法區分這些影響。</li>
+<li>若想看中間所得區間（例如 [50,75)）或低所得的特徵，可以把後件換成那些類別，重新執行一次。</li>
+</ul>
 </section>
 <section id="限制" class="level2">
 <h2 class="anchored" data-anchor-id="限制">6. 限制</h2>
@@ -2873,11 +2961,10 @@ vertical-align: -.125em;
 <li>結果依賴門檻與前處理；改變設定會改變規則數量與排序。</li>
 <li>完整案例分析排除了選定欄位有缺失的受訪者；若缺失不是隨機發生，結果可能偏誤。</li>
 <li>未使用調查權重，結果是未加權的樣本描述，不代表整體人口。</li>
-<li>9 條規則中有 7 條都含研究所學歷，雙薪與已婚、自有住宅與獨棟房屋在意義上也相近，所以規則之間可能高度重疊，不是 9 個獨立的發現（本報告沒有計算子群之間的重疊人數）。</li>
-<li>income 欄位已預先分組，資料中沒有說明金額單位、幣別或調查年代，「75+」的實際意義要對照原始資料說明。</li>
-<li>年齡層包含 14–17 歲，學生與未成年者的 income 可能指家庭所得而不是個人所得，資料中沒有說明。</li>
-<li>未納入 <code>years in bay area</code>、<code>number in household</code>、<code>number of children</code>，規則沒有涵蓋這些面向。</li>
-<li>有 2,159 位受訪者的答案和其他人完全相同，都保留為不同的觀測；若其中有重複輸入，會讓某些組合的筆數偏高。</li>
+<li>原始資料沒有說明 <code>income</code> 的單位（例如是否以千美元計）、所得是個人還是家戶所得，也沒有說明調查的時間與抽樣方式。從 <code>years in bay area</code> 欄位推測，受訪者可能集中在單一地區，結果不宜推廣到其他地區。</li>
+<li>樣本包含 14–17 歲（647 人）與學生（1,128 人），他們回報的所得可能是家戶所得，與成年在職者的意義不同，會影響後件比例。</li>
+<li><code>dual incomes</code> 與 <code>marital status</code>、<code>householder status</code> 與 <code>type of home</code> 在內容上部分重疊，因此多條規則實際上是在描述同一群人。</li>
+<li>有 2,117 人因任一欄缺失被排除，其中 <code>years in bay area</code> 缺失最多（913 人）。如果移居時間較短的人比較少回答這題，結果會偏向住得較久的居民。</li>
 </ul>
 </section>
 <section id="附錄-a指標定義與出處" class="level2">
@@ -2920,8 +3007,8 @@ vertical-align: -.125em;
 顯示程式碼：執行指令
 </summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py inspect <span class="at">--data</span> C:/Users/win11/Desktop/skill output/問卷/income_esl.csv <span class="at">--out</span> C:/Users/win11/Desktop/關聯規則test/arules_output</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py run <span class="at">--config</span> config.json</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py finalize <span class="at">--config</span> config.json <span class="at">--report</span> arules_output/report.md</span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py run <span class="at">--config</span> C:/Users/win11/Desktop/關聯規則test/config.json</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/run_arules.py finalize <span class="at">--config</span> C:/Users/win11/Desktop/關聯規則test/config.json <span class="at">--report</span> C:/Users/win11/Desktop/關聯規則test/arules_output/report.md</span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <details class="code-fold">
 <summary>
@@ -2946,62 +3033,55 @@ vertical-align: -.125em;
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;age&quot;</span><span class="ot">,</span></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;education&quot;</span><span class="ot">,</span></span>
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;occupation&quot;</span><span class="ot">,</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;dual incomes&quot;</span><span class="ot">,</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;householder status&quot;</span><span class="ot">,</span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;type of home&quot;</span><span class="ot">,</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;ethnic classification&quot;</span><span class="ot">,</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;language in home&quot;</span></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;exclude_cols&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;number in household&quot;</span><span class="fu">,</span></span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;數字欄位、無資料字典，使用者決定不納入&quot;</span></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;number of children&quot;</span><span class="fu">,</span></span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;數字欄位、無資料字典，使用者決定不納入&quot;</span></span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>      <span class="fu">{</span></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;years in bay area&quot;</span><span class="fu">,</span></span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;缺失最多（913），使用者決定排除&quot;</span></span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;dictionary_path&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;missing_values&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;missing_codes&quot;</span><span class="fu">:</span> <span class="fu">{},</span></span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;codebook&quot;</span><span class="fu">:</span> <span class="fu">{},</span></span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;categorical_as_is&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;complete_case_confirmed&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;excluded&quot;</span><span class="fu">:</span> <span class="dv">1187</span><span class="fu">,</span></span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;remaining&quot;</span><span class="fu">:</span> <span class="dv">7806</span></span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;years in bay area&quot;</span><span class="ot">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;dual incomes&quot;</span><span class="ot">,</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;number in household&quot;</span><span class="ot">,</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;number of children&quot;</span><span class="ot">,</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;householder status&quot;</span><span class="ot">,</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;type of home&quot;</span><span class="ot">,</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;ethnic classification&quot;</span><span class="ot">,</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;language in home&quot;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;exclude_cols&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;dictionary_path&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;missing_values&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;missing_codes&quot;</span><span class="fu">:</span> <span class="fu">{},</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;codebook&quot;</span><span class="fu">:</span> <span class="fu">{},</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;categorical_as_is&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;number in household&quot;</span><span class="ot">,</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;number of children&quot;</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;complete_case_confirmed&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;excluded&quot;</span><span class="fu">:</span> <span class="dv">2117</span><span class="fu">,</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;remaining&quot;</span><span class="fu">:</span> <span class="dv">6876</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;question&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;goal&quot;</span><span class="fu">:</span> <span class="st">&quot;rhs&quot;</span><span class="fu">,</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;income=75+&quot;</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;哪些特徵與高所得（income=75+）一起出現&quot;</span></span>
 <span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;question&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;goal&quot;</span><span class="fu">:</span> <span class="st">&quot;rhs&quot;</span><span class="fu">,</span></span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;income=75+&quot;</span></span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;哪些受訪者特徵與高所得（income=75+）一起出現？&quot;</span></span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;algorithm&quot;</span><span class="fu">:</span> <span class="st">&quot;fpgrowth&quot;</span><span class="fu">,</span></span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_support&quot;</span><span class="fu">:</span> <span class="fl">0.01</span><span class="fu">,</span></span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_confidence&quot;</span><span class="fu">:</span> <span class="fl">0.3</span><span class="fu">,</span></span>
-<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_lift&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
-<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;max_lhs&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
-<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_lhs_count&quot;</span><span class="fu">:</span> <span class="dv">79</span><span class="fu">,</span></span>
-<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;try_support&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
-<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;try_confidence&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
-<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;confirmed&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
-<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;使用者接受示範設定：9 條規則可逐條解讀，每條至少 79 人支持；演算法選 FP-growth&quot;</span></span>
-<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;report&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;關聯規則分析報告&quot;</span><span class="fu">,</span></span>
-<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;background&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
-<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;goal&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
-<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;confirmations&quot;</span><span class="fu">:</span> <span class="ot">[]</span></span>
-<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;algorithm&quot;</span><span class="fu">:</span> <span class="st">&quot;fpgrowth&quot;</span><span class="fu">,</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_support&quot;</span><span class="fu">:</span> <span class="fl">0.01</span><span class="fu">,</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_confidence&quot;</span><span class="fu">:</span> <span class="fl">0.3</span><span class="fu">,</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_lift&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;max_lhs&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min_lhs_count&quot;</span><span class="fu">:</span> <span class="dv">69</span><span class="fu">,</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;try_support&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;try_confidence&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;confirmed&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;reason&quot;</span><span class="fu">:</span> <span class="st">&quot;使用者採用示範設定：保留 15 條規則可逐條檢視，每條至少 69 人；演算法選 FP-growth（結果與 Apriori 相同）&quot;</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;report&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;關聯規則分析報告&quot;</span><span class="fu">,</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;background&quot;</span><span class="fu">:</span> <span class="st">&quot;所得問卷（income_esl），8,993 位受訪者、14 個人口特徵欄位，想了解哪些特徵與高所得（income=75+）一起出現。&quot;</span><span class="fu">,</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;goal&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;confirmations&quot;</span><span class="fu">:</span> <span class="ot">[]</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="複製" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <p>執行環境：python 3.14.7、pandas 3.0.5、numpy 2.5.2、mlxtend 0.25.0；腳本版本 3.0。</p>
 </section>
